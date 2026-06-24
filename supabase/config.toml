@@ -1,0 +1,17 @@
+# Supabase project configuration
+# Docs: https://supabase.com/docs/guides/local-development/cli/config
+
+project_id = "gooydkocbowchxoahhlg"
+
+[db]
+# For remote-only workflow (no local dev), port settings are unused
+port = 54322
+
+[auth]
+site_url = "http://localhost:3000"
+
+[api]
+port = 54321
+
+[studio]
+port = 54323

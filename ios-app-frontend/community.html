@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>nuzzly — 社区</title>
+<style>
+/* ===== nuzzly Community — Shared Tokens ===== */
+:root {
+  --bg: #F5F3F1;
+  --card: #FFFFFF;
+  --fg: #171717;
+  --muted: #7B7B7B;
+  --beige: #D7B593;
+  --brown: #8B5E46;
+  --green: #6C8A69;
+  --border: rgba(0,0,0,.06);
+  --shadow-card: 0 8px 30px rgba(0,0,0,.06);
+  --shadow-btn: 0 4px 16px rgba(139,94,70,.18);
+  --shadow-tab: 0 -4px 24px rgba(0,0,0,.06);
+  --radius-card: 36px;
+  --radius-btn: 999px;
+  --radius-tab: 999px;
+  --radius-pill: 999px;
+  --safe-top: env(safe-area-inset-top, 48px);
+  --safe-bottom: env(safe-area-inset-bottom, 34px);
+  --font-display: -apple-system, 'SF Pro Display', 'PingFang SC', system-ui, sans-serif;
+  --font-body: -apple-system, 'SF Pro Text', 'PingFang SC', system-ui, sans-serif;
+  --font-num: 'Inter', -apple-system, system-ui, sans-serif;
+}
+
+/* ===== Reset ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;height:100%;
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--fg);
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior:none;
+}
+
+/* ===== Scroll container ===== */
+.app-shell{
+  width:100%;
+  min-height:100vh;
+  min-height:100dvh;
+  padding-top:var(--safe-top);
+  padding-bottom:calc(88px + var(--safe-bottom));
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  position:relative;
+}
+
+/* ===== Header ===== */
+.header{
+  position:relative;
+  padding:20px 24px 0;
+  z-index:1;
+}
+.header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.brand-logo{
+  height:36px;
+  width:auto;
+  display:block;
+  flex-shrink:0;
+  object-fit:contain;
+}
+.avatar{
+  width:52px;height:52px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--beige),var(--brown));
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;
+  box-shadow:0 2px 12px rgba(139,94,70,.12);
+  flex-shrink:0;
+  overflow:hidden;
+}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.header-actions{display:flex;gap:12px}
+.action-circle{
+  width:44px;height:44px;
+  border-radius:50%;
+  background:var(--card);
+  box-shadow:var(--shadow-card);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+}
+.action-circle:active{transform:scale(.92)}
+.action-circle svg{width:20px;height:20px;color:var(--fg)}
+
+.page-title{
+  margin-top:20px;
+  font-family:var(--font-display);
+  font-size:34px;
+  font-weight:700;
+  line-height:1.15;
+  letter-spacing:-.02em;
+  color:var(--fg);
+}
+
+/* ===== Filter Bar ===== */
+.filter-bar{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:20px 24px 0;
+  position:relative;
+  z-index:10;
+}
+.filter-search{
+  width:44px;height:44px;
+  border-radius:50%;
+  background:var(--card);
+  box-shadow:var(--shadow-card);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);
+  cursor:pointer;
+  transition:transform .2s;
+  flex-shrink:0;
+}
+.filter-search:active{transform:scale(.92)}
+.filter-search svg{width:20px;height:20px;color:var(--fg)}
+
+.filter-pill{
+  height:40px;
+  padding:0 20px;
+  border-radius:var(--radius-pill);
+  background:var(--card);
+  box-shadow:var(--shadow-card);
+  border:1px solid var(--border);
+  font-size:14px;
+  font-weight:500;
+  color:var(--fg);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+  transition:all .2s;
+  letter-spacing:.01em;
+  position:relative;
+}
+.filter-pill:active{transform:scale(.96)}
+.filter-pill.active{
+  background:var(--brown);
+  color:#fff;
+  border-color:transparent;
+  box-shadow:var(--shadow-btn);
+}
+.filter-pill svg{width:16px;height:16px}
+
+/* ===== Toggle Segmented ===== */
+.toggle-group{
+  display:flex;
+  background:var(--card);
+  border-radius:var(--radius-pill);
+  box-shadow:var(--shadow-card);
+  border:1px solid var(--border);
+  overflow:hidden;
+  height:40px;
+}
+.toggle-option{
+  padding:0 18px;
+  font-size:14px;
+  font-weight:500;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:all .25s;
+  letter-spacing:.01em;
+  position:relative;
+}
+.toggle-option.active{
+  color:#fff;
+  background:var(--brown);
+}
+
+/* ===== Feed Section ===== */
+.feed{
+  padding:20px 24px 0;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  position:relative;
+  z-index:1;
+}
+
+/* ===== Post Card ===== */
+.post-card{
+  background:var(--card);
+  border-radius:var(--radius-card);
+  box-shadow:var(--shadow-card);
+  border:1px solid var(--border);
+  padding:20px;
+  display:flex;
+  gap:16px;
+  cursor:pointer;
+  transition:transform .2s;
+}
+.post-card:active{transform:scale(.98)}
+
+.post-user{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  flex-shrink:0;
+}
+.post-avatar{
+  width:48px;height:48px;
+  border-radius:50%;
+  overflow:hidden;
+  background:linear-gradient(135deg,var(--beige),var(--brown));
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+}
+.post-avatar img{width:100%;height:100%;object-fit:cover}
+.post-username{
+  font-size:13px;
+  font-weight:600;
+  color:var(--fg);
+  text-align:center;
+  max-width:64px;
+  line-height:1.2;
+  letter-spacing:.01em;
+}
+.post-bio{
+  font-size:11px;
+  color:var(--muted);
+  text-align:center;
+  max-width:64px;
+  line-height:1.4;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.post-content{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.post-text{
+  font-size:14px;
+  line-height:1.6;
+  color:var(--fg);
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.post-images{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+  border-radius:16px;
+  overflow:hidden;
+}
+.post-img{
+  width:100%;
+  aspect-ratio:1;
+  border-radius:12px;
+  background:linear-gradient(135deg,rgba(215,181,147,.15),rgba(215,181,147,.05));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  overflow:hidden;
+}
+.post-img img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+
+.post-meta{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.post-action{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  font-size:12px;
+  color:var(--muted);
+  cursor:pointer;
+  transition:color .2s;
+  letter-spacing:.01em;
+}
+.post-action:active{color:var(--brown)}
+.post-action svg{width:16px;height:16px}
+
+/* ===== Image Grid Variants ===== */
+.post-images.single{grid-template-columns:1fr}
+.post-images.double{grid-template-columns:1fr 1fr}
+
+/* ===== Animations ===== */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.anim-fade-up{opacity:0;animation:fadeUp .6s cubic-bezier(.22,1,.36,1) forwards}
+.anim-delay-1{animation-delay:.1s}
+.anim-delay-2{animation-delay:.2s}
+.anim-delay-3{animation-delay:.3s}
+.anim-delay-4{animation-delay:.4s}
+.anim-delay-5{animation-delay:.5s}
+
+.status-bar-spacer{height:12px}
+.bottom-spacer{height:40px}
+
+/* ===== Floating Tab Bar ===== */
+.tab-bar.ignore-vw{
+  position:fixed;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  margin-bottom:20px;
+  width:405px;
+  height:51px;
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(40px);
+  -webkit-backdrop-filter:blur(40px);
+  border-radius:var(--radius-tab);
+  box-shadow:var(--shadow-tab),0 4px 20px rgba(0,0,0,.04);
+  border:1px solid rgba(255,255,255,.6);
+  display:flex;
+  align-items:center;
+  justify-content:space-around;
+  z-index:100;
+  padding:0;
+}
+.tab-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  cursor:pointer;padding:8px 16px;border-radius:20px;
+  transition:all .2s;position:relative;
+  -webkit-tap-highlight-color:transparent;
+}
+.tab-item svg{width:24px;height:24px;color:var(--muted);transition:color .2s}
+.tab-item img{width:24px;height:24px;object-fit:contain;display:block}
+.tab-item span{font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.02em;transition:color .2s}
+.tab-item.active svg{color:var(--brown)}
+.tab-item.active span{color:var(--brown);font-weight:600}
+.tab-item.active::after{
+  content:'';position:absolute;top:-2px;
+  width:6px;height:6px;border-radius:50%;background:var(--brown);
+}
+.tab-center{margin-top:-28px}
+.tab-center-btn{
+  width:56px;height:56px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:transform .2s;
+}
+#tabCommunity>.tab-logo{width:60px;height:60px}
+.tab-center-btn:active{transform:scale(.9)}
+.tab-center-btn svg{width:24px;height:24px;color:#fff}
+.tab-center-btn img{width:32px;height:32px;object-fit:contain;display:block;border-radius:8px}
+
+/* ===== Breed dropdown ===== */
+.dropdown{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  min-width:140px;
+  background:var(--card);
+  border-radius:20px;
+  box-shadow:0 12px 40px rgba(0,0,0,.12);
+  border:1px solid var(--border);
+  padding:8px;
+  z-index:50;
+  display:none;
+}
+.dropdown.show{display:block}
+.dropdown-item{
+  padding:12px 16px;
+  font-size:14px;
+  color:var(--fg);
+  border-radius:12px;
+  cursor:pointer;
+  transition:background .15s;
+  letter-spacing:.01em;
+}
+.dropdown-item:active{background:rgba(0,0,0,.04)}
+.dropdown-item.selected{color:var(--brown);font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="app-shell" id="appShell">
+  <div class="status-bar-spacer"></div>
+
+  <!-- Header -->
+  <header class="header anim-fade-up">
+    <div class="header-row">
+      <img class="brand-logo" src="nuzzly-zuhe.png" alt="Nuzzly 毛球镇" />
+      <div class="header-actions">
+        <button class="action-circle" aria-label="搜索">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        </button>
+        <button class="action-circle" aria-label="通知">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar anim-fade-up anim-delay-1">
+    <button class="filter-search" aria-label="搜索社区">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+    </button>
+
+    <div class="toggle-group" id="petTypeToggle">
+      <div class="toggle-option active" data-type="cat">猫猫</div>
+      <div class="toggle-option" data-type="dog">狗狗</div>
+    </div>
+
+    <div style="position:relative">
+      <button class="filter-pill active" id="breedFilter">
+        <span id="breedLabel">全部品种</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="dropdown" id="breedDropdown">
+        <div class="dropdown-item selected" data-breed="all">全部品种</div>
+        <div class="dropdown-item" data-breed="british">英国短毛猫</div>
+        <div class="dropdown-item" data-breed="ragdoll">布偶猫</div>
+        <div class="dropdown-item" data-breed="munchkin">曼基康矮脚猫</div>
+        <div class="dropdown-item" data-breed="persian">波斯猫</div>
+        <div class="dropdown-item" data-breed="siamese">暹罗猫</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feed -->
+  <div class="feed">
+
+    <!-- Post 1 -->
+    <div class="post-card anim-fade-up anim-delay-2">
+      <div class="post-user">
+        <div class="post-avatar">🐱</div>
+        <div class="post-username">毛毛妈</div>
+        <div class="post-bio">家有两只英短</div>
+      </div>
+      <div class="post-content">
+        <p class="post-text">今天带毛毛去体检啦，医生说体重控制得不错，继续保持！🎉 回家路上还遇到了一只超可爱的橘猫～</p>
+        <div class="post-images">
+          <div class="post-img">🏥</div>
+          <div class="post-img">😺</div>
+          <div class="post-img">🧡</div>
+        </div>
+        <div class="post-meta">
+          <div class="post-action" data-action="like">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span>128</span>
+          </div>
+          <div class="post-action" data-action="comment">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>32</span>
+          </div>
+          <div class="post-action" data-action="share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post 2 -->
+    <div class="post-card anim-fade-up anim-delay-3">
+      <div class="post-user">
+        <div class="post-avatar">🐈</div>
+        <div class="post-username">小鱼干</div>
+        <div class="post-bio">布偶猫繁育者</div>
+      </div>
+      <div class="post-content">
+        <p class="post-text">分享一下我家小布偶的成长记录～从刚出生到现在四个月，毛量变化也太大了吧！每天梳毛是必须的功课 🪮</p>
+        <div class="post-images double">
+          <div class="post-img">🐱</div>
+          <div class="post-img">✨</div>
+        </div>
+        <div class="post-meta">
+          <div class="post-action" data-action="like">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span>256</span>
+          </div>
+          <div class="post-action" data-action="comment">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>47</span>
+          </div>
+          <div class="post-action" data-action="share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post 3 -->
+    <div class="post-card anim-fade-up anim-delay-4">
+      <div class="post-user">
+        <div class="post-avatar">🐾</div>
+        <div class="post-username">喵星人日记</div>
+        <div class="post-bio">记录日常的铲屎官</div>
+      </div>
+      <div class="post-content">
+        <p class="post-text">第一次尝试给猫咪做猫饭，用了鸡胸肉+南瓜+蛋黄，没想到居然全吃光了！看来以后要常做了 😋</p>
+        <div class="post-images single">
+          <div class="post-img" style="aspect-ratio:16/9;border-radius:16px">🍗</div>
+        </div>
+        <div class="post-meta">
+          <div class="post-action" data-action="like">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span>89</span>
+          </div>
+          <div class="post-action" data-action="comment">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>15</span>
+          </div>
+          <div class="post-action" data-action="share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post 4 -->
+    <div class="post-card anim-fade-up anim-delay-5">
+      <div class="post-user">
+        <div class="post-avatar">😻</div>
+        <div class="post-username">团子爸</div>
+        <div class="post-bio">矮脚猫爱好者</div>
+      </div>
+      <div class="post-content">
+        <p class="post-text">团子今天学会了握手！虽然只坚持了三秒就跑了，但已经很棒了～训练小零食真的很有用，推荐冻干鸡肉粒！</p>
+        <div class="post-images">
+          <div class="post-img">🤝</div>
+          <div class="post-img">🍗</div>
+          <div class="post-img">😸</div>
+        </div>
+        <div class="post-meta">
+          <div class="post-action" data-action="like">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span>312</span>
+          </div>
+          <div class="post-action" data-action="comment">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>58</span>
+          </div>
+          <div class="post-action" data-action="share">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-spacer"></div>
+</div>
+
+<!-- Floating Tab Bar -->
+<nav class="tab-bar ignore-vw" id="tabBar">
+  <div class="tab-item" data-tab="home" onclick="window.location.href='index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 21H7a4 4 0 0 1-4-4v-6.292a4 4 0 0 1 1.927-3.421l5-3.03a4 4 0 0 1 4.146 0l5 3.03A4 4 0 0 1 21 10.707V17a4 4 0 0 1-4 4m-8-4h6"/></svg>
+    <span>首页</span>
+  </div>
+  <div class="tab-item" data-tab="camera" onclick="openCamera()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M2 19V9a2 2 0 0 1 2-2h.5a2 2 0 0 0 1.6-.8l2.22-2.96A.6.6 0 0 1 8.8 3h6.4a.6.6 0 0 1 .48.24L17.9 6.2a2 2 0 0 0 1.6.8h.5a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2"/><path d="M12 17a4 4 0 1 0 0-8a4 4 0 0 0 0 8"/></g></svg>
+    <span>记录</span>
+  </div>
+  <div class="tab-center">
+    <div class="tab-center-btn" aria-label="毛球镇" id="tabCommunity" onclick="window.location.href='community.html'">
+      <img src="svg/导航栏.png" alt="毛球镇" class="tab-logo">
+    </div>
+  </div>
+  <div class="tab-item" data-tab="butler" onclick="window.location.href='butler.html'">
+    <svg viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M512 624.64c172.032 0 312.32-140.288 312.32-312.32S684.032 0 512 0 199.68 140.288 199.68 312.32 339.968 624.64 512 624.64z m0-557.056c135.168 0 244.736 109.568 244.736 244.736S647.168 557.056 512 557.056 267.264 447.488 267.264 312.32 376.832 67.584 512 67.584z m133.12 568.32l-135.168 52.224-132.096-52.224c-3.072-1.024-6.144-2.048-9.216-2.048-14.336 0-25.6 11.264-25.6 25.6v135.168c0 14.336 11.264 25.6 25.6 25.6 3.072 0 6.144-1.024 9.216-2.048l135.168-52.224L645.12 819.2c3.072 1.024 6.144 2.048 9.216 2.048 14.336 0 25.6-11.264 25.6-25.6V659.456c0-14.336-11.264-25.6-25.6-25.6-3.072 0-6.144 1.024-9.216 2.048z"/><path d="M882.688 715.776L770.048 691.2c-2.048-1.024-5.12-1.024-7.168-1.024-15.36 0-29.696 11.264-32.768 26.624-2.048 9.216 0 17.408 4.096 25.6 5.12 7.168 12.288 13.312 21.504 14.336l112.64 24.576c21.504 5.12 35.84 22.528 35.84 44.032v110.592c0 11.264-9.216 20.48-20.48 20.48H139.264c-11.264 0-20.48-9.216-20.48-20.48V826.368c0-21.504 14.336-39.936 35.84-44.032l112.64-24.576c9.216-2.048 16.384-7.168 21.504-14.336s6.144-16.384 4.096-25.6c-3.072-15.36-17.408-26.624-32.768-26.624-2.048 0-5.12 0-7.168 1.024L140.288 716.8c-51.2 10.24-88.064 55.296-88.064 109.568V936.96c0 48.128 38.912 87.04 87.04 87.04h744.448c48.128 0 87.04-38.912 87.04-87.04V826.368c1.024-54.272-35.84-99.328-88.064-110.592z"/></svg>
+    <span>管家</span>
+  </div>
+  <div class="tab-item" data-tab="profile" onclick="window.location.href='profile.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M7 18v-1a5 5 0 0 1 5-5v0a5 5 0 0 1 5 5v1"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 12a3 3 0 1 0 0-6a3 3 0 0 0 0 6"/><circle cx="12" cy="12" r="10"/></g></svg>
+    <span>我的</span>
+  </div>
+</nav>
+
+<script>
+(function(){
+  'use strict';
+
+  // === Tab navigation ===
+  var tabs = document.querySelectorAll('.tab-item');
+  tabs.forEach(function(tab){
+    tab.addEventListener('click', function(){
+      var target = tab.getAttribute('data-tab');
+      if (target === 'home') { window.location.href = 'index.html'; return; }
+      if (target === 'butler') { window.location.href = 'butler.html'; return; }
+      if (target === 'profile') { window.location.href = 'profile.html'; return; }
+      if (target === 'camera') { openCamera(); return; }
+      tabs.forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      if (navigator.vibrate) navigator.vibrate(10);
+    });
+  });
+
+  // openCamera placeholder
+  if (typeof openCamera !== 'function') {
+    window.openCamera = function(){
+      alert('拍照记录功能开发中');
+    };
+  }
+
+  // === Pet type toggle ===
+  var toggleOptions = document.querySelectorAll('#petTypeToggle .toggle-option');
+  var breedDropdown = document.getElementById('breedDropdown');
+  var breedLabel = document.getElementById('breedLabel');
+  var breedFilter = document.getElementById('breedFilter');
+
+  var breeds = {
+    cat: [
+      {id:'all', label:'全部品种'},
+      {id:'british', label:'英国短毛猫'},
+      {id:'ragdoll', label:'布偶猫'},
+      {id:'munchkin', label:'曼基康矮脚猫'},
+      {id:'persian', label:'波斯猫'},
+      {id:'siamese', label:'暹罗猫'}
+    ],
+    dog: [
+      {id:'all', label:'全部品种'},
+      {id:'corgi', label:'柯基'},
+      {id:'golden', label:'金毛'},
+      {id:'poodle', label:'泰迪'},
+      {id:'husky', label:'哈士奇'},
+      {id:'shiba', label:'柴犬'}
+    ]
+  };
+
+  var currentType = 'cat';
+
+  toggleOptions.forEach(function(opt){
+    opt.addEventListener('click', function(){
+      toggleOptions.forEach(function(o){ o.classList.remove('active'); });
+      opt.classList.add('active');
+      currentType = opt.getAttribute('data-type');
+      // Reset breed selection
+      breedLabel.textContent = '全部品种';
+      renderBreeds();
+    });
+  });
+
+  function renderBreeds(){
+    breedDropdown.innerHTML = '';
+    breeds[currentType].forEach(function(b, i){
+      var div = document.createElement('div');
+      div.className = 'dropdown-item' + (i === 0 ? ' selected' : '');
+      div.setAttribute('data-breed', b.id);
+      div.textContent = b.label;
+      div.addEventListener('click', function(){
+        breedLabel.textContent = b.label;
+        breedDropdown.querySelectorAll('.dropdown-item').forEach(function(d){ d.classList.remove('selected'); });
+        div.classList.add('selected');
+        breedDropdown.classList.remove('show');
+      });
+      breedDropdown.appendChild(div);
+    });
+  }
+
+  breedFilter.addEventListener('click', function(e){
+    e.stopPropagation();
+    breedDropdown.classList.toggle('show');
+  });
+
+  document.addEventListener('click', function(){
+    breedDropdown.classList.remove('show');
+  });
+
+  // === Like interaction ===
+  document.querySelectorAll('[data-action="like"]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var svg = btn.querySelector('svg');
+      var count = btn.querySelector('span');
+      var isLiked = svg.getAttribute('fill') !== 'none';
+      if (isLiked) {
+        svg.setAttribute('fill', 'none');
+        svg.style.color = '';
+        count.textContent = parseInt(count.textContent) - 1;
+      } else {
+        svg.setAttribute('fill', 'var(--brown)');
+        svg.style.color = 'var(--brown)';
+        count.textContent = parseInt(count.textContent) + 1;
+      }
+    });
+  });
+
+})();
+</script>
+</body>
+</html>

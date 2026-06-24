@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>nuzzly — 毛球镇</title>
+<style>
+/* ===== nuzzly iOS Homepage — Tokens ===== */
+:root {
+  --bg: #F5F3F1;
+  --card: #FFFFFF;
+  --fg: #171717;
+  --muted: #7B7B7B;
+  --beige: #D7B593;
+  --brown: #8B5E46;
+  --green: #6C8A69;
+  --border: rgba(0,0,0,.06);
+  --shadow-card: 0 8px 30px rgba(0,0,0,.06);
+  --shadow-btn: 0 4px 16px rgba(139,94,70,.18);
+  --shadow-tab: 0 -4px 24px rgba(0,0,0,.06);
+  --radius-card: 36px;
+  --radius-btn: 999px;
+  --radius-tab: 999px;
+  --safe-top: env(safe-area-inset-top, 48px);
+  --safe-bottom: env(safe-area-inset-bottom, 34px);
+  --font-display: -apple-system, 'SF Pro Display', 'PingFang SC', system-ui, sans-serif;
+  --font-body: -apple-system, 'SF Pro Text', 'PingFang SC', system-ui, sans-serif;
+  --font-num: 'Inter', -apple-system, system-ui, sans-serif;
+}
+
+/* ===== Reset ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;height:100%;
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--fg);
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior:none;
+}
+
+/* ===== Scroll container ===== */
+.app-shell{
+  width:100%;
+  min-height:100vh;
+  min-height:100dvh;
+  padding-top:var(--safe-top);
+  padding-bottom:calc(88px + var(--safe-bottom));
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  position:relative;
+}
+
+/* ===== Watermark Logo ===== */
+.watermark{
+  position:fixed;
+  top:12%;
+  right:-10%;
+  width:340px;
+  height:340px;
+  opacity:.035;
+  pointer-events:none;
+  z-index:0;
+  background-repeat:no-repeat;
+  background-size:contain;
+  background-position:center;
+}
+
+/* ===== Header ===== */
+.header{
+  position:relative;
+  padding:20px 24px 0;
+  z-index:1;
+}
+.header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.avatar{
+  width:52px;height:52px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--beige),var(--brown));
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;
+  box-shadow:0 2px 12px rgba(139,94,70,.12);
+  flex-shrink:0;
+  overflow:hidden;
+}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.header-actions{
+  display:flex;gap:12px;
+}
+.action-circle{
+  width:44px;height:44px;
+  border-radius:50%;
+  background:var(--card);
+  box-shadow:var(--shadow-card);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+}
+.action-circle:active{transform:scale(.92)}
+.action-circle svg{width:20px;height:20px;color:var(--fg)}
+
+.greeting{
+  margin-top:20px;
+}
+.greeting-sub{
+  font-size:15px;
+  color:var(--muted);
+  font-weight:400;
+  letter-spacing:.02em;
+  margin-bottom:4px;
+}
+.greeting-main{
+  font-family:var(--font-display);
+  font-size:34px;
+  font-weight:700;
+  line-height:1.15;
+  letter-spacing:-.02em;
+  color:var(--fg);
+}
+.greeting-main .pet-name{
+  color:var(--brown);
+}
+
+/* ===== Quick Actions ===== */
+.quick-actions{
+  display:flex;
+  gap:16px;
+  padding:24px 24px 0;
+  position:relative;
+  z-index:1;
+}
+.qa-btn{
+  width:64px;height:64px;
+  border-radius:50%;
+  background:var(--card);
+  box-shadow:var(--shadow-card);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+  flex-shrink:0;
+  position:relative;
+}
+.qa-btn:active{transform:scale(.9)}
+.qa-btn svg{width:26px;height:26px;color:var(--fg)}
+.qa-btn.primary{
+  background:var(--brown);
+  border:none;
+  box-shadow:var(--shadow-btn);
+}
+.qa-btn.primary svg{color:#fff}
+.qa-btn .qa-label{
+  position:absolute;
+  bottom:-20px;
+  font-size:11px;
+  color:var(--muted);
+  white-space:nowrap;
+  letter-spacing:.01em;
+}
+
+/* ===== Hero Health Card ===== */
+.hero-card{
+  margin:36px 24px 0;
+  background:var(--card);
+  border-radius:var(--radius-card);
+  box-shadow:var(--shadow-card);
+  border:1px solid var(--border);
+  padding:28px 28px 24px;
+  display:flex;
+  align-items:center;
+  gap:20px;
+  position:relative;
+  z-index:1;
+  overflow:visible;
+  min-height:200px;
+  width:calc(100% - 12.8vw);
+}
+.hero-left{
+  flex:0 0 42%;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.hero-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(108,138,105,.1);
+  color:var(--green);
+  font-size:13px;
+  font-weight:500;
+  padding:5px 12px;
+  border-radius:var(--radius-btn);
+  width:fit-content;
+  letter-spacing:.02em;
+}
+.hero-tag svg{width:14px;height:14px}
+.hero-score{
+  font-family:var(--font-num);
+  font-size:56px;
+  font-weight:600;
+  line-height:1;
+  letter-spacing:-.03em;
+  color:var(--fg);
+}
+.hero-score-label{
+  font-size:14px;
+  color:var(--muted);
+  margin-top:-4px;
+}
+.hero-cta{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:var(--brown);
+  color:#fff;
+  font-size:15px;
+  font-weight:500;
+  padding:14px 24px;
+  border-radius:var(--radius-btn);
+  box-shadow:var(--shadow-btn);
+  border:none;
+  cursor:pointer;
+  width:fit-content;
+  transition:transform .15s;
+  letter-spacing:.01em;
+}
+.hero-cta:active{transform:scale(.96)}
+.hero-cta svg{width:16px;height:16px}
+.hero-right{
+  flex:1;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  position:relative;
+  min-height:0;
+  padding-bottom:4px;
+}
+.hero-pet-img{
+  max-width:100%;
+  max-height:100%;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  object-position:center bottom;
+  pointer-events:none;
+  user-select:none;
+  display:block;
+  transform:scale(1.6);
+  transform-origin:center bottom;
+  position:relative;
+  z-index:10;
+}
+
+/* ===== Dashboard Grid ===== */
+.dashboard{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  padding:28px 24px 0;
+  position:relative;
+  z-index:1;
+}
+.dash-card{
+  background:var(--card);
+  border-radius:var(--radius-card);
+  box-shadow:var(--shadow-card);
+  border:1px solid var(--border);
+  padding:24px;
+  width:155px;height:155px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  cursor:pointer;
+  transition:transform .2s;
+  position:relative;
+  overflow:hidden;
+}
+.dash-card:active{transform:scale(.97)}
+.dash-card.tall{grid-row:span 2}
+.dash-card.accent-bg{background:rgba(215,181,147,.12)}
+.dash-card.green-bg{background:rgba(108,138,105,.08)}
+#cardAge{background-color:#ffffff}
+#cardFeed{background-color:#ffffff}
+
+.dash-icon{
+  width:44px;height:44px;
+  border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+}
+.dash-icon.brown{background:rgba(139,94,70,.1)}
+.dash-icon.beige{background:rgba(215,181,147,.2)}
+.dash-icon.green{background:rgba(108,138,105,.12)}
+.dash-icon.gray{background:rgba(0,0,0,.04)}
+
+.dash-value{
+  font-family:var(--font-num);
+  font-size:36px;
+  font-weight:600;
+  line-height:1.1;
+  letter-spacing:-.02em;
+  color:var(--fg);
+}
+.dash-unit{
+  font-size:16px;
+  font-weight:400;
+  color:var(--muted);
+  margin-left:2px;
+}
+.dash-label{
+  font-size:14px;
+  color:var(--muted);
+  letter-spacing:.01em;
+}
+.dash-action{
+  font-size:14px;
+  color:var(--brown);
+  font-weight:500;
+  display:flex;align-items:center;gap:4px;
+  margin-top:auto;
+  letter-spacing:.01em;
+}
+.dash-action svg{width:14px;height:14px}
+
+.dash-card.diary{
+  justify-content:space-between;
+}
+.diary-title{
+  font-family:var(--font-display);
+  font-size:20px;
+  font-weight:700;
+  line-height:1.3;
+  letter-spacing:-.01em;
+}
+.diary-desc{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.5;
+}
+.diary-arrow{
+  width:36px;height:36px;
+  border-radius:50%;
+  background:var(--brown);
+  display:flex;align-items:center;justify-content:center;
+  align-self:flex-end;
+}
+.diary-arrow svg{width:16px;height:16px;color:#fff}
+
+/* ===== Bottom spacer ===== */
+.bottom-spacer{
+  height:40px;
+}
+
+/* ===== Floating Tab Bar ===== */
+.tab-bar.ignore-vw{
+  position:fixed;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  margin-bottom:20px;
+  width:405px;
+  height:51px;
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(40px);
+  -webkit-backdrop-filter:blur(40px);
+  border-radius:var(--radius-tab);
+  box-shadow:var(--shadow-tab),0 4px 20px rgba(0,0,0,.04);
+  border:1px solid rgba(255,255,255,.6);
+  display:flex;
+  align-items:center;
+  justify-content:space-around;
+  z-index:100;
+  padding:0;
+}
+.tab-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  cursor:pointer;
+  padding:8px 16px;
+  border-radius:20px;
+  transition:all .2s;
+  position:relative;
+  -webkit-tap-highlight-color:transparent;
+}
+.tab-item svg{width:24px;height:24px;color:var(--muted);transition:color .2s}
+.tab-item img{width:24px;height:24px;object-fit:contain;display:block}
+.tab-item span{font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.02em;transition:color .2s}
+.tab-item.active svg{color:var(--brown)}
+.tab-item.active span{color:var(--brown);font-weight:600}
+.tab-item.active::after{
+  content:'';
+  position:absolute;
+  top:-2px;
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--brown);
+}
+.tab-center{
+  margin-top:-28px;
+}
+.tab-center-btn{
+  width:56px;height:56px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  transition:transform .2s;
+}
+#tabCommunity>.tab-logo{width:60px;height:60px}
+.tab-center-btn:active{transform:scale(.9)}
+.tab-center-btn svg{width:24px;height:24px;color:#fff}
+.tab-center-btn img{width:32px;height:32px;object-fit:contain;display:block;border-radius:8px}
+
+/* ===== Animations ===== */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes fadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+@keyframes scaleIn{
+  from{opacity:0;transform:scale(.92)}
+  to{opacity:1;transform:scale(1)}
+}
+.anim-fade-up{
+  opacity:0;
+  animation:fadeUp .6s cubic-bezier(.22,1,.36,1) forwards;
+}
+.anim-delay-1{animation-delay:.1s}
+.anim-delay-2{animation-delay:.2s}
+.anim-delay-3{animation-delay:.3s}
+.anim-delay-4{animation-delay:.4s}
+.anim-delay-5{animation-delay:.5s}
+.anim-delay-6{animation-delay:.6s}
+.anim-scale-in{
+  opacity:0;
+  animation:scaleIn .5s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+/* ===== Status bar spacer (visual only) ===== */
+.status-bar-spacer{
+  height:12px;
+}
+</style>
+</head>
+<body>
+
+<!-- Watermark logo -->
+<div class="watermark" id="watermark"></div>
+
+<!-- App shell -->
+<div class="app-shell" id="appShell">
+
+  <!-- Status bar spacer -->
+  <div class="status-bar-spacer"></div>
+
+  <!-- Header -->
+  <header class="header anim-fade-up">
+    <div class="header-row">
+      <div class="avatar" id="petAvatar">
+        <img src="mqpyqgao-logo.png" alt="nuzzly logo">
+      </div>
+      <div class="header-actions">
+        <button class="action-circle anim-fade-up anim-delay-1" aria-label="搜索" style="width: 33px; height: 33px; padding-right: 0px; margin-top: 18px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m17 17l4 4M3 11a8 8 0 1 0 16 0a8 8 0 0 0-16 0"/></svg>
+        </button>
+        <button class="action-circle anim-fade-up anim-delay-2" aria-label="通知" style="width: 33px; height: 33px; margin-top: 18px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.134 11C18.715 16.375 21 18 21 18H3s3-2.133 3-9.6c0-1.697.632-3.325 1.757-4.525S10.41 2 12 2q.507 0 1 .09M19 8a3 3 0 1 0 0-6a3 3 0 0 0 0 6m-5.27 13a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="greeting">
+      
+      <h1 class="greeting-main" style="height: 91.2px; padding-top: 4px;">Hi，看看<br><span class="pet-name">陈家军</span>今天怎样</h1>
+    </div>
+  </header>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions" style="width: 165px; height: 50px; align-items: center; padding: 0px; gap: 10px; flex-direction: row; justify-content: space-between; margin: 0px 0px 0px 26px;">
+    <button class="qa-btn primary anim-scale-in anim-delay-2" aria-label="AI 问诊" style="width: 40px; height: 40px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3l1.9 5.4a2 2 0 0 0 1.3 1.3L21 12l-5.8 2.3a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.4a2 2 0 0 0-1.3-1.3L3 12l5.8-2.3a2 2 0 0 0 1.3-1.3z"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M19 17v4M17 19h4"/></svg>
+      <span class="qa-label">AI 诊</span>
+    </button>
+    <button class="qa-btn anim-scale-in anim-delay-3" aria-label="疫苗提醒" style="width: 40px; height: 40px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.272 10.445L18 2m-8.684 8.632L5 2m7.762 8.048L8.835 2m5.525 0l-1.04 2.5M6 16a6 6 0 1 0 12 0a6 6 0 0 0-12 0"/></svg>
+      <span class="qa-label">疫苗</span>
+    </button>
+    <button class="qa-btn anim-scale-in anim-delay-3" aria-label="喂食计划" style="width: 40px; height: 40px;">
+      <svg viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M807.822222 551.389867c0-6.4512-2.935467-12.424533-7.7824-15.758223C748.316444 500.0192 637.917867 477.866667 512 477.866667c-125.917867 0-236.305067 22.152533-288.039822 57.764977-4.846933 3.333689-7.7824 9.307022-7.7824 15.758223 0 2.2528 0.364089 4.460089 1.046755 6.508089C202.251378 547.4304 193.422222 534.641778 193.422222 523.377778c0-50.267022 142.631822-91.022222 318.577778-91.022222s318.577778 40.7552 318.577778 91.022222c0 11.264-8.829156 24.052622-23.790934 34.520178 0.682667-2.048 1.035378-4.255289 1.035378-6.508089zM510.293333 769.092267a25.144889 25.144889 0 0 1-24.917333-25.349689c0.170667-13.858133 10.126222-38.479644 24.029867-38.320356 13.903644 0.159289 26.567111 24.974222 26.396444 38.832356a25.213156 25.213156 0 0 1-25.4976 24.837689z m-64.830577 39.185066a25.258667 25.258667 0 0 1-32.676978-14.153955c-5.085867-12.9024-5.154133-39.401244 7.816533-44.487111 12.970667-5.063111 34.042311 13.198222 39.128178 26.112a25.110756 25.110756 0 0 1-14.267733 32.540444z m164.340622-12.515555a25.315556 25.315556 0 0 1-34.736356 11.207111 25.031111 25.031111 0 0 1-9.602844-35.043556c6.621867-12.196978 26.908444-29.366044 39.150933-22.789689 12.242489 6.576356 11.810133 34.417778 5.188267 46.626134zM510.589156 910.222222c-34.042311-0.364089-61.496889-9.898667-61.121423-43.736178 0.386844-33.837511 28.398933-70.155378 62.418489-69.814044 34.019556 0.341333 61.189689 37.239467 60.791467 71.076978-0.398222 33.826133-28.080356 42.814578-62.099911 42.461866z"/><path d="M910.222222 540.444444C910.222222 612.704711 731.932444 671.288889 512 671.288889s-398.222222-58.584178-398.222222-130.844445c0-3.7888 0.512-7.611733 1.513244-11.377777C133.996089 599.495111 296.812089 648.533333 512 648.533333c215.187911 0 378.003911-49.038222 396.708978-119.466666 1.001244 3.766044 1.513244 7.588978 1.513244 11.377777z"/><path d="M512 375.466667c218.976711 0 396.094578 57.389511 430.717156 139.548444C974.085689 589.482667 1024 778.433422 1024 861.866667 1024 945.208889 775.168 1024 512 1024S0 945.208889 0 861.866667c0-97.746489 48.196267-270.813867 81.351111-347.022223C117.077333 432.765156 294.172444 375.466667 512 375.466667z m273.976889 71.441066C709.199644 422.035911 617.8816 409.6 512 409.6c-105.324089 0-196.369067 12.413156-273.112178 37.250844-70.394311 22.789689-112.469333 49.993956-126.225066 81.601423-17.8176 40.925867-34.907022 94.287644-51.3024 160.085333C43.2128 761.400889 34.133333 819.177244 34.133333 861.866667c0 8.487822 9.454933 19.308089 28.3648 32.483555 24.598756 17.123556 59.642311 32.893156 105.119289 47.297422C269.141333 973.789867 383.931733 989.866667 512 989.866667s242.858667-16.0768 344.382578-48.219023c45.476978-14.404267 80.520533-30.173867 105.130666-47.297422C980.400356 881.174756 989.866667 870.343111 989.866667 861.866667c0-36.488533-9.295644-92.706133-27.898311-168.675556-17.373867-70.917689-34.269867-125.906489-50.710756-164.932267-13.266489-31.470933-55.034311-58.595556-125.280711-81.351111z"/></svg>
+      <span class="qa-label">喂食</span>
+    </button>
+
+  </div>
+
+  <!-- Hero Health Card -->
+  <div class="hero-card anim-fade-up anim-delay-3" style="height: 191px; width: 331.2px; gap: 20px; padding: 0px 0px 10px 15px; margin-top: 23px; border-width: 0px; border-radius: 40px; margin-left: 20px; margin-bottom: 0px;">
+    <div class="hero-left" style="padding: 0px 0px 5px 6px; margin-right: -10px; margin-top: 3px; margin-left: 3px;">
+      <div class="hero-tag" style="width: 125.9px; height: 22.6px; padding: 5px 7px 5px 2px; margin-top: 15px; margin-right: 0px; border-top-width: 0px; border-bottom-width: 0px; border-right-width: 0px; border-radius: 999px; gap: 3px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m5 13l4 4L19 7"/></svg>
+        健康状况良好
+      </div>
+      <div class="hero-score" style="letter-spacing: -3.68px; text-align: left; font-size: 56px;">96</div>
+      <div class="hero-score-label" style="font-size: 12px; font-weight: 800;">综合健康评分</div>
+      <button class="hero-cta" id="heroCta" style="width: 121.9px; height: 43.2px; gap: 0px; background-color: rgb(138, 93, 69); margin-top: 0px; border-width: 0px; padding-right: 2px; padding-bottom: 11px; padding-left: 0px; opacity: 1; flex-direction: column-reverse;">
+        查看报告
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 19L19 6m0 0v12.48M19 6H6.52"/></svg>
+      </button>
+    </div>
+    <div class="hero-right" style="width: 210px; height: 160px; padding-bottom: 0px; margin-left: 8px; margin-right: 8px; margin-top: 0px; border-top-width: 0px; border-bottom-width: 0px; border-right-width: 0px; border-radius: 60px;">
+      <img src="cat.png" alt="毛毛" class="hero-pet-img">
+    </div>
+  </div>
+
+  <!-- Dashboard Grid -->
+  <div class="dashboard">
+
+    <!-- 体重卡 -->
+    <div class="dash-card anim-fade-up anim-delay-4" id="cardWeight">
+      <div class="dash-icon brown"></div>
+      <div class="dash-value">4.8<span class="dash-unit">kg</span></div>
+      <div class="dash-label">今日体重</div>
+      <div class="dash-action">
+        记录
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 19L19 6m0 0v12.48M19 6H6.52"/></svg>
+      </div>
+    </div>
+
+    <!-- 养宠日记 -->
+    <div class="dash-card diary anim-fade-up anim-delay-4" id="cardDiary">
+      <div class="dash-icon beige"></div>
+      <div class="diary-title">养宠日记</div>
+      <div class="diary-desc">记录毛毛每天的点滴成长</div>
+      <div class="diary-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 19L19 6m0 0v12.48M19 6H6.52"/></svg>
+      </div>
+    </div>
+
+    <!-- 年龄 -->
+    <div class="dash-card accent-bg anim-fade-up anim-delay-5" id="cardAge">
+      <div class="dash-icon green"></div>
+      <div class="dash-value">2<span class="dash-unit">岁 3 月</span></div>
+      <div class="dash-label">毛毛的年龄</div>
+    </div>
+
+    <!-- 喂食记录 -->
+    <div class="dash-card green-bg anim-fade-up anim-delay-5" id="cardFeed">
+      <div class="dash-icon gray"></div>
+      <div class="dash-value">3<span class="dash-unit">次 / 今日</span></div>
+      <div class="dash-label">喂食记录</div>
+      <div class="dash-action">
+        添加
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 12h6m6 0h-6m0 0V6m0 6v6"/></svg>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="bottom-spacer"></div>
+</div>
+
+<!-- Floating Tab Bar -->
+<nav class="tab-bar ignore-vw" id="tabBar">
+  <div class="tab-item active" data-tab="home" onclick="window.location.href='index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 21H7a4 4 0 0 1-4-4v-6.292a4 4 0 0 1 1.927-3.421l5-3.03a4 4 0 0 1 4.146 0l5 3.03A4 4 0 0 1 21 10.707V17a4 4 0 0 1-4 4m-8-4h6"/></svg>
+    <span>首页</span>
+  </div>
+  <div class="tab-item" data-tab="camera" onclick="openCamera()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M2 19V9a2 2 0 0 1 2-2h.5a2 2 0 0 0 1.6-.8l2.22-2.96A.6.6 0 0 1 8.8 3h6.4a.6.6 0 0 1 .48.24L17.9 6.2a2 2 0 0 0 1.6.8h.5a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2"/><path d="M12 17a4 4 0 1 0 0-8a4 4 0 0 0 0 8"/></g></svg>
+    <span>记录</span>
+  </div>
+  <div class="tab-center">
+    <div class="tab-center-btn" aria-label="毛球镇" id="tabCommunity" onclick="window.location.href='community.html'">
+      <img src="svg/导航栏.png" alt="毛球镇" class="tab-logo">
+    </div>
+  </div>
+  <div class="tab-item" data-tab="butler" onclick="window.location.href='butler.html'">
+    <svg viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M512 624.64c172.032 0 312.32-140.288 312.32-312.32S684.032 0 512 0 199.68 140.288 199.68 312.32 339.968 624.64 512 624.64z m0-557.056c135.168 0 244.736 109.568 244.736 244.736S647.168 557.056 512 557.056 267.264 447.488 267.264 312.32 376.832 67.584 512 67.584z m133.12 568.32l-135.168 52.224-132.096-52.224c-3.072-1.024-6.144-2.048-9.216-2.048-14.336 0-25.6 11.264-25.6 25.6v135.168c0 14.336 11.264 25.6 25.6 25.6 3.072 0 6.144-1.024 9.216-2.048l135.168-52.224L645.12 819.2c3.072 1.024 6.144 2.048 9.216 2.048 14.336 0 25.6-11.264 25.6-25.6V659.456c0-14.336-11.264-25.6-25.6-25.6-3.072 0-6.144 1.024-9.216 2.048z"/><path d="M882.688 715.776L770.048 691.2c-2.048-1.024-5.12-1.024-7.168-1.024-15.36 0-29.696 11.264-32.768 26.624-2.048 9.216 0 17.408 4.096 25.6 5.12 7.168 12.288 13.312 21.504 14.336l112.64 24.576c21.504 5.12 35.84 22.528 35.84 44.032v110.592c0 11.264-9.216 20.48-20.48 20.48H139.264c-11.264 0-20.48-9.216-20.48-20.48V826.368c0-21.504 14.336-39.936 35.84-44.032l112.64-24.576c9.216-2.048 16.384-7.168 21.504-14.336s6.144-16.384 4.096-25.6c-3.072-15.36-17.408-26.624-32.768-26.624-2.048 0-5.12 0-7.168 1.024L140.288 716.8c-51.2 10.24-88.064 55.296-88.064 109.568V936.96c0 48.128 38.912 87.04 87.04 87.04h744.448c48.128 0 87.04-38.912 87.04-87.04V826.368c1.024-54.272-35.84-99.328-88.064-110.592z"/></svg>
+    <span>管家</span>
+  </div>
+  <div class="tab-item" data-tab="profile" onclick="window.location.href='profile.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M7 18v-1a5 5 0 0 1 5-5v0a5 5 0 0 1 5 5v1"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 12a3 3 0 1 0 0-6a3 3 0 0 0 0 6"/><circle cx="12" cy="12" r="10"/></g></svg>
+    <span>我的</span>
+  </div>
+</nav>
+
+<script>
+(function(){
+  'use strict';
+
+  // === Dynamic greeting based on time ===
+  var hour = new Date().getHours();
+  var sub = document.querySelector('.greeting-sub');
+  if (sub) {
+    if (hour < 6) sub.textContent = '夜深了 🌙';
+    else if (hour < 11) sub.textContent = '早上好 ☀️';
+    else if (hour < 14) sub.textContent = '中午好 🌤';
+    else if (hour < 18) sub.textContent = '下午好 ☀️';
+    else sub.textContent = '晚上好 🌙';
+  }
+
+  // === Watermark SVG ===
+  var wm = document.getElementById('watermark');
+  if (wm) {
+    wm.innerHTML = '<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" width="340" height="120"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-family="-apple-system, system-ui, sans-serif" font-size="38" font-weight="700" fill="#171717" letter-spacing="-1">nuzzly</text></svg>';
+    wm.style.opacity = '.035';
+  }
+
+  // === Tab bar interactions ===
+  var tabs = document.querySelectorAll('.tab-item');
+  tabs.forEach(function(tab){
+    tab.addEventListener('click', function(){
+      var target = tab.getAttribute('data-tab');
+      if (target === 'camera') { openCamera(); return; }
+      tabs.forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      // Haptic feedback (iOS)
+      if (navigator.vibrate) navigator.vibrate(10);
+    });
+  });
+
+  // === Card tap feedback ===
+  var cards = document.querySelectorAll('.dash-card, .hero-card');
+  cards.forEach(function(card){
+    card.addEventListener('touchstart', function(){}, {passive:true});
+  });
+
+  // === Camera button pulse ===
+  var camBtn = document.getElementById('tabCommunity');
+  if (camBtn) {
+    camBtn.addEventListener('click', function(){
+      camBtn.style.transform = 'scale(.88)';
+      setTimeout(function(){ camBtn.style.transform = ''; }, 150);
+    });
+  }
+
+  // openCamera placeholder
+  if (typeof openCamera !== 'function') {
+    window.openCamera = function(){
+      alert('拍照记录功能开发中');
+    };
+  }
+
+  // === Score counter animation ===
+  var scoreEl = document.querySelector('.hero-score');
+  if (scoreEl) {
+    var target = parseInt(scoreEl.textContent) || 96;
+    scoreEl.textContent = '0';
+    var start = 0;
+    var duration = 1200;
+    var startTime = null;
+    function countUp(ts) {
+      if (!startTime) startTime = ts;
+      var progress = Math.min((ts - startTime) / duration, 1);
+      var ease = 1 - Math.pow(1 - progress, 3);
+      var current = Math.round(ease * target);
+      scoreEl.textContent = current;
+      if (progress < 1) requestAnimationFrame(countUp);
+    }
+    // Delay to sync with fade-in
+    setTimeout(function(){ requestAnimationFrame(countUp); }, 500);
+  }
+
+  // === Scroll-driven header opacity ===
+  var shell = document.getElementById('appShell');
+  var header = document.querySelector('.header');
+  if (shell && header) {
+    shell.addEventListener('scroll', function(){
+      var s = shell.scrollTop;
+      var opacity = Math.max(0, 1 - s / 200);
+      header.style.opacity = opacity;
+      header.style.transform = 'translateY(' + (-s * .15) + 'px)';
+    }, {passive:true});
+  }
+
+})();
+</script>
+
+
+</body></html>

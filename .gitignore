@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Environment (CRITICAL - never commit secrets)
+.env
+.env.*
+!.env.example
+supabase/.temp/
+
+# IDE / Editor
+.vscode/
+.idea/
+.trae/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# CodeGraph
+.codegraph/
+
+# Next.js
+web/.next/
+web/out/
+web/build/
+
+# Logs (all types)
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+web/next-env.d.ts
+
+# Build artifacts
+dist/
+build/
+
+# Testing
+coverage/
+
+# Claude Code / Agent files
+.claude/
+AGENTS.md
+CLAUDE.md
+
+# Project planning docs (not part of platform build)
+PROJECT_LOG.md
+business_plan_cn.md
+trust_product_prototype_design_cn.md
+petmind-funding.pptx
+策划案/
+charts/
+export_charts.py
+generate_word.py
+
+# Temp files
+*.tmp
+*.temp
+.tmp-*
+
+# Local dev scripts (may contain secrets)
+start-headroom.ps1
+use-headroom.ps1

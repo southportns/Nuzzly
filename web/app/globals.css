@@ -1,0 +1,146 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* PetRWD V2 — Apple Minimal + Premium Pet Trust Infrastructure */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-full: 999px;
+}
+
+/* ── Warm Cream + Soft Orange Theme ── */
+:root {
+  --background: #F7F6F3;
+  --foreground: #111111;
+  --card: #FFFFFF;
+  --card-foreground: #111111;
+  --popover: #FFFFFF;
+  --popover-foreground: #111111;
+
+  /* Warm Coral / Soft Orange */
+  --primary: #FF7A59;
+  --primary-foreground: #ffffff;
+  --secondary: #F7F6F3;
+  --secondary-foreground: #111111;
+
+  --muted: #F0EFED;
+  --muted-foreground: #6B6B6B;
+  --accent: #F0EFED;
+  --accent-foreground: #111111;
+
+  --destructive: #ff3b30;
+  --destructive-foreground: #ffffff;
+
+  --border: rgba(0, 0, 0, 0.06);
+  --input: #F0EFED;
+  --ring: #FF7A5933;
+
+  --chart-1: #FF7A59;
+  --chart-2: #A8C5A0;
+  --chart-3: #E8A87C;
+  --chart-4: #7BA7BC;
+  --chart-5: #C4A882;
+
+  --radius: 1rem;
+
+  --sidebar: #F7F6F3;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: #FF7A59;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #FFFFFF;
+  --sidebar-accent-foreground: #111111;
+  --sidebar-border: rgba(0, 0, 0, 0.06);
+  --sidebar-ring: #FF7A5933;
+
+  --font-sans: 'Quicksand', 'Varela Round', 'Inter', 'SF Pro Display', 'HarmonyOS Sans', system-ui, -apple-system, 'Noto Sans SC', 'PingFang SC', sans-serif;
+}
+
+/* ── Dark Theme ── */
+.dark {
+  --background: #000000;
+  --foreground: #f5f5f7;
+  --card: #1c1c1e;
+  --card-foreground: #f5f5f7;
+  --popover: #1c1c1e;
+  --popover-foreground: #f5f5f7;
+
+  --primary: #FF8A65;
+  --primary-foreground: #ffffff;
+  --secondary: #2c2c2e;
+  --secondary-foreground: #f5f5f7;
+
+  --muted: #2c2c2e;
+  --muted-foreground: #98989d;
+  --accent: #2c2c2e;
+  --accent-foreground: #f5f5f7;
+
+  --destructive: #ff453a;
+  --destructive-foreground: #ffffff;
+
+  --border: #38383a;
+  --input: #2c2c2e;
+  --ring: #FF8A6540;
+
+  --chart-1: #FF8A65;
+  --chart-2: #81C784;
+  --chart-3: #FFB74D;
+  --chart-4: #64B5F6;
+  --chart-5: #CE93D8;
+
+  --sidebar: #1c1c1e;
+  --sidebar-foreground: #f5f5f7;
+  --sidebar-primary: #FF8A65;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2c2c2e;
+  --sidebar-accent-foreground: #f5f5f7;
+  --sidebar-border: #38383a;
+  --sidebar-ring: #FF8A6540;
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground antialiased; }
+  html { @apply font-sans; }
+  html { scrollbar-gutter: stable; }
+}
