@@ -95,6 +95,11 @@ const routes = [
     path: '/dietary-preference',
     name: 'DietaryPreference',
     component: () => import('../views/DietaryPreference.vue')
+  },
+  {
+    path: '/ai',
+    name: 'AIHub',
+    component: () => import('../views/AIHub.vue')
   }
 ]
 

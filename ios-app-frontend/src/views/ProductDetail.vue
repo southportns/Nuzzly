@@ -70,6 +70,31 @@
         </div>
       </div>
 
+      <!-- 趋势概览 -->
+      <div v-if="trendData.length > 1" class="trend-section anim-fade-up anim-delay-2">
+        <h2 class="section-title">趋势概览</h2>
+        <div class="trend-card">
+          <div class="trend-row">
+            <span class="trend-label">评分趋势</span>
+            <div class="trend-bars">
+              <div v-for="(d, i) in trendData" :key="i" class="trend-bar-wrap">
+                <div class="trend-bar" :style="{ height: (d.rating / 5 * 100) + '%', background: d.rating >= 4 ? 'var(--green)' : d.rating >= 3 ? '#FF9500' : '#FF3B30' }"></div>
+                <span class="trend-bar-label">{{ d.month }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="trend-row">
+            <span class="trend-label">复购率</span>
+            <div class="trend-bars">
+              <div v-for="(d, i) in trendData" :key="i" class="trend-bar-wrap">
+                <div class="trend-bar" :style="{ height: (d.repurchase * 100) + '%', background: 'var(--green)' }"></div>
+                <span class="trend-bar-label">{{ d.month }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 长期监控指标 -->
       <div v-if="monitorTags.length" class="monitor-section anim-fade-up anim-delay-3">
         <h2 class="section-title">长期监控指标</h2>
@@ -326,6 +351,17 @@ const monitorTags = computed(() => {
   return tags.map(t => ({ ...t, pct: (Number(t.value) * 100).toFixed(1) }))
 })
 
+// 趋势数据：从 metrics 数组提取最近 6 个月的数据点
+const trendData = computed(() => {
+  const data = metrics.value.slice(0, 6).reverse()
+  return data.map(m => ({
+    month: m.date ? new Date(m.date).toLocaleDateString('zh-CN', { month: 'short' }) : '--',
+    rating: Number(m.average_rating) || 0,
+    repurchase: Number(m.repurchase_rate) || 0,
+    stool: Number(m.stool_issue_rate) || 0
+  }))
+})
+
 const DURATION_LABELS = {
   lt_1w: '一周以内', '1w_to_2w': '半个月内', '2w_to_1m': '一个月内',
   '1m_to_3m': '三个月内', m6: '半年', 'm6_to_1y': '半年到一年',
@@ -524,4 +560,13 @@ onMounted(async () => {
 .risk-intel-recent{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
 .risk-intel-recent-label{font-weight:500}
 .risk-intel-recent-text{color:var(--fg)}
+.trend-section{padding:20px 20px 0}
+.trend-card{background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--shadow-card);border:1px solid var(--border)}
+.trend-row{margin-bottom:16px}
+.trend-row:last-child{margin-bottom:0}
+.trend-label{font-size:12px;color:var(--muted);display:block;margin-bottom:8px}
+.trend-bars{display:flex;align-items:flex-end;gap:6px;height:60px}
+.trend-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+.trend-bar{width:100%;border-radius:4px 4px 0 0;min-height:2px;transition:height .4s}
+.trend-bar-label{font-size:10px;color:var(--muted)}
 </style>
