@@ -26,7 +26,7 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed top-0 z-50 flex h-[72px] w-full items-center justify-center border-b border-[rgba(0,0,0,0.03)] bg-[#F7F6F3]/[.82] backdrop-blur-[24px]">
+      <header className="fixed top-0 z-50 flex w-full items-center justify-center border-b border-[rgba(0,0,0,0.03)] bg-[#F7F6F3]/[.82] backdrop-blur-[24px]" style={{ paddingTop: "var(--safe-top)", height: "calc(72px + var(--safe-top))" }}>
         {/* Gradient fade bottom edge for soft transition */}
         <div className="pointer-events-none absolute bottom-[-24px] left-0 right-0 h-6 bg-gradient-to-b from-[#F7F6F3]/40 to-transparent" />
         <div className="flex w-full max-w-[1440px] items-center px-6 md:px-12">
@@ -59,13 +59,10 @@ export function Header() {
           <div className="flex w-1/3 items-center justify-center">
             <Link href="/" className="flex items-center gap-2.5">
               <img
-                src="/logo.png"
-                alt="PetRWD Logo"
-                className="size-10 rounded-[10px]"
+                src="/nuzzly-zuhe.png"
+                alt="Nuzzly毛球镇 Logo"
+                className="h-10 w-auto"
               />
-              <span className="text-[16px] font-semibold tracking-tight text-[#111111]">
-                PetRWD
-              </span>
             </Link>
           </div>
 

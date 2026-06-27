@@ -8,7 +8,7 @@ export default function MainLayout({
   return (
     <div className="flex min-h-screen flex-col bg-[#F7F6F3]">
       <Header />
-      <main className="flex-1 pt-[72px]">{children}</main>
+      <main className="flex-1" style={{ paddingTop: "calc(72px + var(--safe-top))" }}>{children}</main>
     </div>
   )
 }

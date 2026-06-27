@@ -49,6 +49,25 @@
   --radius-full: 999px;
 }
 
+/* ── Safe Area (iOS) ── */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* ── Touch Optimization (iOS Safari) ── */
+button,
+input,
+select,
+textarea,
+a,
+[role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ── Warm Cream + Soft Orange Theme ── */
 :root {
   --background: #F7F6F3;
