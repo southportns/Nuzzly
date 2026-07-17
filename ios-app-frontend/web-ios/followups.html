@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>长期追踪 - Nuzzly 毛球镇</title>
+<link rel="stylesheet" href="css/common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<style>
+.edit-shell{width:100%;min-height:100vh;min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(100px + var(--safe-bottom));display:flex;flex-direction:column;position:relative;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+.back-btn{width:40px;height:40px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer}
+.back-btn:active{transform:scale(.92)}
+.back-btn svg{width:20px;height:20px;color:var(--fg)}
+.page-title{font-family:var(--font-display);font-size:18px;font-weight:600;flex:1;text-align:center}
+.seg-bar{display:flex;gap:4px;margin:0 20px 16px;padding:4px;background:rgba(0,0,0,.03);border-radius:var(--radius-btn)}
+.seg-item{flex:1;text-align:center;padding:10px 4px;border-radius:var(--radius-btn);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:4px}
+.seg-item.active{background:var(--card);color:var(--brown);font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.seg-badge{font-size:10px;background:var(--brown);color:#fff;padding:1px 6px;border-radius:var(--radius-btn);font-weight:600}
+.list-body{flex:1;padding:0 20px}
+.schedule-list{display:flex;flex-direction:column;gap:12px}
+.schedule-card{display:flex;align-items:center;gap:14px;padding:14px;background:var(--card);border-radius:20px;box-shadow:var(--shadow-card);border:1px solid var(--border);cursor:pointer;transition:transform .15s}
+.schedule-card:active{transform:scale(.98)}
+.card-img-area{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,rgba(215,181,147,.18),rgba(215,181,147,.06));display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.card-img-area img{width:100%;height:100%;object-fit:cover}
+.img-ph{font-size:24px;color:var(--brown);opacity:.4;font-weight:700}
+.card-content{flex:1;min-width:0}
+.card-brand{font-size:11px;color:var(--muted);font-weight:500}
+.card-name{font-size:14px;font-weight:600;color:var(--fg);margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-meta{font-size:11px;color:var(--muted)}
+.card-foot{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.day-tag{font-size:11px;font-weight:600;color:var(--brown);background:rgba(139,94,70,.08);padding:3px 8px;border-radius:var(--radius-btn)}
+.due-tag{font-size:10px;color:var(--muted)}
+.status-tag{font-size:10px;padding:2px 8px;border-radius:var(--radius-btn);font-weight:500}
+.status-tag.pending,.status-tag.reminded{color:#FF9500;background:rgba(255,149,0,.1)}
+.status-tag.completed{color:var(--green);background:rgba(108,138,105,.12)}
+.status-tag.overdue{color:#FF3B30;background:rgba(255,59,48,.1)}
+.card-arrow{width:18px;height:18px;color:var(--muted);flex-shrink:0}
+.loading-list{display:flex;flex-direction:column;gap:12px}
+.sk-card{display:flex;gap:14px;padding:14px;background:var(--card);border-radius:20px;border:1px solid var(--border)}
+.sk-img{width:64px;height:64px;border-radius:16px;flex-shrink:0}
+.sk-info{flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px}
+.sk-line{height:12px;border-radius:6px}
+.sk-line.w60{width:60%}
+.sk-line.w90{width:90%}
+.shimmer{background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 37%,rgba(0,0,0,.04) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+.empty-state{text-align:center;padding:60px 20px}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-text{font-size:16px;color:var(--fg);margin-bottom:8px}
+.empty-desc{font-size:13px;color:var(--muted);margin-bottom:16px}
+.empty-action{padding:8px 20px;border-radius:var(--radius-btn);background:var(--brown);color:#fff;border:none;font-size:13px;font-weight:500;cursor:pointer}
+.pull-refresh{position:fixed;top:calc(var(--safe-top) + 60px);left:50%;transform:translateX(-50%);width:40px;height:40px;display:flex;align-items:center;justify-content:center;transition:transform .3s ease;pointer-events:none;z-index:10;opacity:0}
+.pull-refresh.visible{opacity:1}
+.refresh-icon{width:24px;height:24px;color:var(--brown);transition:transform .2s}
+.refresh-icon.spinning{animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.anim-fade-up{opacity:0;animation:fadeUp .4s cubic-bezier(.22,1,.36,1) forwards}
+</style>
+</head>
+<body>
+<div class="edit-shell" id="shell">
+  <header class="page-header">
+    <button class="back-btn" onclick="history.back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h1 class="page-title">长期追踪</h1><span style="width:40px"></span>
+  </header>
+  <div class="seg-bar" id="segBar"></div>
+  <div class="list-body" id="list"></div>
+</div>
+<div class="pull-refresh" id="pullRefresh"><svg class="refresh-icon" id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg></div>
+<script>
+(function () {
+  const sb = window.sb, D = window.NuzzlyData, A = window.NuzzlyApp
+  const STATUS_LABEL = { pending: '待填写', reminded: '待填写', completed: '已完成', overdue: '已过期' }
+  const SEGS = [{ value: 'pending', label: '待填写' }, { value: 'completed', label: '已完成' }, { value: 'overdue', label: '已过期' }]
+  let tab = 'pending', schedules = [], counts = { pending: 0, completed: 0, overdue: 0 }, loading = true
+  let pullDistance = 0, isRefreshing = false, isPulling = false, startY = 0
+  const PULL_THRESHOLD = 60
+  function esc (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])) }
+  function formatDate (d) { if (!d) return '-'; return new Date(d).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }) }
+  function statusLabel (s) { return STATUS_LABEL[s] || s }
+
+  async function fetchSchedules (status, silent) {
+    const uid = await D.getUid()
+    if (!uid) { if (!silent) { schedules = []; loading = false; render() } return [] }
+    let q = sb.from('review_followup_schedules').select('id,review_id,profile_id,followup_day,due_date,status,reminder_sent_at,completed_at,created_at,product_reviews!inner(id,product_id,pet_id,products!inner(name,brand,image_url),pets!inner(name,breed,species))').eq('profile_id', uid).order('due_date', { ascending: true })
+    if (status === 'pending') q = q.in('status', ['pending', 'reminded'])
+    else if (status === 'completed') q = q.eq('status', 'completed')
+    else if (status === 'overdue') q = q.eq('status', 'overdue')
+    const { data, error } = await q
+    if (error) { console.warn('[followups]', error.message); if (!silent) { schedules = []; loading = false; render() } return [] }
+    if (!silent) { schedules = data || []; loading = false; render() }
+    return data || []
+  }
+  async function loadCounts () {
+    const [p, c, o] = await Promise.all([fetchSchedules('pending', true), fetchSchedules('completed', true), fetchSchedules('overdue', true)])
+    counts = { pending: p.length, completed: c.length, overdue: o.length }; renderSeg()
+  }
+  async function switchTab (v) { tab = v; loading = true; render(); await fetchSchedules(v) }
+
+  function renderSeg () {
+    document.getElementById('segBar').innerHTML = SEGS.map(s => '<div class="seg-item' + (tab === s.value ? ' active' : '') + '" data-v="' + s.value + '">' + s.label + (counts[s.value] ? '<span class="seg-badge">' + counts[s.value] + '</span>' : '') + '</div>').join('')
+    document.querySelectorAll('.seg-item').forEach(el => el.onclick = () => switchTab(el.dataset.v))
+  }
+  function render () {
+    renderSeg()
+    const list = document.getElementById('list')
+    if (loading) { list.innerHTML = '<div class="loading-list">' + Array.from({ length: 3 }, () => '<div class="sk-card"><div class="sk-img shimmer"></div><div class="sk-info"><div class="sk-line w60 shimmer"></div><div class="sk-line w90 shimmer"></div></div></div>').join('') + '</div>'; return }
+    if (!schedules.length) {
+      const icon = tab === 'pending' ? '📝' : tab === 'completed' ? '✅' : '⏰'
+      const title = tab === 'pending' ? '暂无待填写的追踪' : tab === 'completed' ? '暂无已完成的追踪' : '暂无过期追踪'
+      const desc = tab === 'pending' ? '提交产品评价后，系统会自动生成 7/14/30/60/90/180 天追踪计划' : ''
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">' + icon + '</div><div class="empty-text">' + title + '</div>' + (desc ? '<div class="empty-desc">' + desc + '</div>' : '') + (tab === 'pending' ? '<button class="empty-action" id="goProducts">去产品库评价</button>' : '') + '</div>'
+      const gp = document.getElementById('goProducts'); if (gp) gp.onclick = () => location.href = 'products.html'
+      return
+    }
+    list.innerHTML = '<div class="schedule-list">' + schedules.map((s, i) => {
+      const pr = s.product_reviews || {}, prod = pr.products || {}, pet = pr.pets || {}
+      return '<div class="schedule-card anim-fade-up" style="animation-delay:' + (i * 0.04) + 's" data-id="' + s.id + '" data-st="' + s.status + '"><div class="card-img-area">' + (prod.image_url ? '<img src="' + esc(prod.image_url) + '" alt="' + esc(prod.name || '') + '" loading="lazy">' : '<span class="img-ph">' + esc((prod.brand || '🐾').slice(0, 1)) + '</span>') + '</div><div class="card-content"><div class="card-brand">' + esc(prod.brand || '') + '</div><div class="card-name">' + esc(prod.name || '') + '</div><div class="card-meta"><span class="meta-pet">' + esc(pet.name || '') + ' · ' + esc(pet.breed || '未知') + '</span></div><div class="card-foot"><span class="day-tag">Day ' + s.followup_day + '</span><span class="due-tag">到期：' + formatDate(s.due_date) + '</span><span class="status-tag ' + s.status + '">' + statusLabel(s.status) + '</span></div></div>' + (s.status === 'pending' || s.status === 'reminded' ? '<svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>' : '') + '</div>'
+    }).join('') + '</div>'
+    document.querySelectorAll('.schedule-card').forEach(el => el.onclick = () => {
+      const st = el.dataset.st
+      if (st === 'pending' || st === 'reminded' || st === 'overdue') location.href = 'followup-create.html?id=' + el.dataset.id
+    })
+  }
+
+  // 下拉刷新
+  const shell = document.getElementById('shell')
+  shell.addEventListener('touchstart', e => { if (isRefreshing) return; if (shell.scrollTop === 0) { startY = e.touches[0].clientY; isPulling = true } })
+  shell.addEventListener('touchmove', e => { if (!isPulling || isRefreshing) return; const dist = e.touches[0].clientY - startY; if (dist > 0) { pullDistance = Math.min(dist * 0.5, 100); document.getElementById('pullRefresh').style.transform = 'translateX(-50%) translateY(' + pullDistance + 'px)'; document.getElementById('pullRefresh').classList.add('visible') } })
+  shell.addEventListener('touchend', async () => {
+    if (!isPulling || isRefreshing) return
+    isPulling = false
+    const pr = document.getElementById('pullRefresh')
+    if (pullDistance >= PULL_THRESHOLD) { isRefreshing = true; pullDistance = 50; pr.style.transform = 'translateX(-50%) translateY(50px)'; document.getElementById('refreshIcon').classList.add('spinning'); await loadCounts(); await fetchSchedules(tab); isRefreshing = false; document.getElementById('refreshIcon').classList.remove('spinning') }
+    pr.classList.remove('visible'); pr.style.transform = 'translateX(-50%)'; pullDistance = 0
+  })
+
+  async function init () {
+    await A.requireAuth()
+    renderSeg(); render()
+    await loadCounts()
+    await fetchSchedules('pending')
+  }
+  init()
+})()
+</script>
+</body>
+</html>

@@ -472,7 +472,7 @@ onMounted(async () => {
 .monitor-priority{font-size:10px;font-weight:700}
 .monitor-label{font-size:12px;font-weight:600;color:var(--fg)}
 .monitor-value{font-size:12px;color:var(--muted);font-family:var(--font-num)}
-.segment-bar{display:flex;gap:4px;padding:20px 20px 0;background:rgba(0,0,0,.03);border-radius:var(--radius-btn);margin:20px 20px 0;padding:4px}
+.segment-bar{display:flex;gap:4px;padding:4px;background:rgba(0,0,0,.03);border-radius:var(--radius-btn);margin:20px 20px 0}
 .segment-item{flex:1;text-align:center;padding:10px 4px;border-radius:var(--radius-btn);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:4px}
 .segment-item.active{background:var(--card);color:var(--brown);font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .segment-item.disabled{opacity:.4;cursor:not-allowed}

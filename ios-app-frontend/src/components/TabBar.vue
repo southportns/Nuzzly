@@ -14,8 +14,8 @@
       </div>
     </div>
     <div class="tab-item" :class="{ active: activeTab === 'butler' }" @click="$router.push('/ai')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.4a2 2 0 0 0 1.3 1.3L21 12l-5.8 2.3a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.4a2 2 0 0 0-1.3-1.3L3 12l5.8-2.3a2 2 0 0 0 1.3-1.3z"/></svg>
-      <span>AI助手</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-30deg)"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/></svg>
+      <span>镇长</span>
     </div>
     <div class="tab-item" :class="{ active: activeTab === 'profile' }" @click="$router.push('/profile')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>

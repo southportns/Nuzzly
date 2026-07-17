@@ -4,7 +4,7 @@ import { getUser, queryBookmarks } from "@/lib/supabase/query"
 import { Heart } from "lucide-react"
 
 export const metadata = {
-  title: "我的收藏 — PetRWD",
+  title: "我的收藏 — Nuzzly毛球镇",
 }
 
 export default async function BookmarksPage() {

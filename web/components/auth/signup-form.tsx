@@ -43,7 +43,9 @@ export function SignupForm() {
         </label>
         <input
           id="email"
+          name="email"
           type="email"
+          autoComplete="email"
           placeholder="your@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -57,7 +59,9 @@ export function SignupForm() {
         </label>
         <input
           id="password"
+          name="password"
           type="password"
+          autoComplete="new-password"
           placeholder="至少6位密码"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

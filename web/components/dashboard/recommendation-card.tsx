@@ -10,12 +10,12 @@ import { toast } from "sonner"
 interface RecommendationCardProps {
   recommendation: {
     id: string
-    pet_id: string
-    product_id: string
-    score: number
+    pet_id: string | null
+    product_id: string | null
+    score?: number
     score_breakdown?: Record<string, number>
-    reason?: string
-    created_at: string
+    reason?: string | null
+    created_at: string | null
     products?: {
       id: string
       name: string
@@ -23,7 +23,7 @@ interface RecommendationCardProps {
       image_url?: string
       price?: number
       score?: number
-    }
+    } | null
   }
 }
 

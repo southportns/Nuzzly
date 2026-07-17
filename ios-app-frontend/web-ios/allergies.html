@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>过敏管理 - Nuzzly 毛球镇</title>
+<link rel="stylesheet" href="css/common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<style>
+.app-shell{width:100%;min-height:100vh;min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(80px + var(--safe-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+.back-btn{width:40px;height:40px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer}
+.back-btn:active{transform:scale(.92)}
+.back-btn svg{width:20px;height:20px;color:var(--fg)}
+.page-title{font-family:var(--font-display);font-size:18px;font-weight:600;flex:1;text-align:center}
+.header-action{font-size:15px;font-weight:600;color:var(--brown);background:none;border:none;cursor:pointer;padding:8px 12px}
+.skeleton-list{padding:16px}
+.allergy-row.skeleton{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:12px;padding:12px;margin-bottom:8px}
+.shimmer-circle{width:40px;height:40px;border-radius:50%;background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 37%,rgba(0,0,0,.04) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite}
+.shimmer-line{height:14px;border-radius:7px;background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 37%,rgba(0,0,0,.04) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite}
+.shimmer-line.w60{width:60%}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+.empty-state{text-align:center;padding:60px 20px}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-text{font-size:16px;color:var(--fg);margin-bottom:8px}
+.empty-hint{font-size:13px;color:var(--muted)}
+.allergy-list{padding:16px}
+.allergy-card{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:16px;padding:12px;margin-bottom:8px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.03)}
+.allergy-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.severity-mild{background:rgba(108,138,105,.12)}
+.severity-moderate{background:rgba(255,149,0,.12)}
+.severity-severe{background:rgba(255,59,48,.12)}
+.allergy-info{flex:1;min-width:0}
+.allergy-name{font-size:15px;font-weight:500;color:var(--fg)}
+.allergy-meta{display:flex;gap:8px;margin-top:4px}
+.severity-tag{font-size:11px;padding:2px 8px;border-radius:var(--radius-pill);font-weight:500}
+.severity-tag.severity-mild{background:rgba(108,138,105,.12);color:var(--green)}
+.severity-tag.severity-moderate{background:rgba(255,149,0,.12);color:#FF9500}
+.severity-tag.severity-severe{background:rgba(255,59,48,.12);color:#FF3B30}
+.confirmed-tag{font-size:11px;padding:2px 8px;border-radius:var(--radius-pill);background:rgba(59,130,246,.1);color:#3B82F6}
+.delete-btn{width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.04);color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0}
+.delete-btn:active{background:rgba(255,59,48,.1);color:#FF3B30}
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:flex-end;justify-content:center}
+.sheet-content{width:100%;max-width:480px;background:var(--card);border-radius:20px 20px 0 0;padding:20px;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.sheet-title{font-size:17px;font-weight:600;color:var(--fg)}
+.sheet-close{width:28px;height:28px;border:none;background:rgba(0,0,0,.04);border-radius:50%;font-size:18px;cursor:pointer;color:var(--muted)}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:14px;color:var(--muted);margin-bottom:8px;font-weight:500}
+.form-input{width:100%;height:44px;padding:0 14px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;color:var(--fg);outline:none;background:var(--bg);transition:border-color .2s;box-sizing:border-box}
+.form-input:focus{border-color:var(--brown)}
+.severity-options{display:flex;gap:8px}
+.severity-btn{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);font-size:14px;color:var(--fg);cursor:pointer;transition:all .2s}
+.severity-btn.active{background:var(--brown);color:#fff;border-color:var(--brown)}
+.toggle-row{display:flex;justify-content:space-between;align-items:center}
+.toggle-btn{width:48px;height:28px;border-radius:14px;border:none;background:rgba(0,0,0,.15);position:relative;transition:background .3s;cursor:pointer}
+.toggle-btn.active{background:var(--brown)}
+.toggle-dot{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .3s}
+.toggle-btn.active .toggle-dot{transform:translateX(20px)}
+.sheet-footer{display:flex;gap:12px;margin-top:20px}
+.btn-cancel{flex:1;height:46px;border:1.5px solid var(--border);border-radius:var(--radius-btn);background:var(--card);font-size:15px;color:var(--fg);cursor:pointer}
+.btn-confirm{flex:1;height:46px;border:none;border-radius:var(--radius-btn);background:var(--brown);color:#fff;font-size:15px;font-weight:500;cursor:pointer}
+.btn-confirm:disabled{opacity:.5}
+.toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);background:rgba(0,0,0,.78);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:80%;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="page-header">
+    <button class="back-btn" onclick="history.back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h1 class="page-title">过敏管理</h1>
+    <button class="header-action" id="addAction">添加</button>
+  </header>
+  <div id="body"></div>
+</div>
+<div id="toast" class="toast"></div>
+<div id="sheetRoot"></div>
+<script>
+(function () {
+  const sb = window.sb, D = window.NuzzlyData, A = window.NuzzlyApp
+  const petId = new URLSearchParams(location.search).get('pet') || ''
+  const severityOptions = [{ value: 'mild', label: '轻微' }, { value: 'moderate', label: '中度' }, { value: 'severe', label: '严重' }]
+  let allergies = [], loading = true, showAddSheet = false
+  let newAllergen = '', newSeverity = 'mild', newConfirmed = false
+  function toast (msg, theme) { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'toast show ' + (theme || 'success'); clearTimeout(window.__t); window.__t = setTimeout(() => { el.className = 'toast' }, 2000) }
+  function esc (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])) }
+  function getSeverityClass (s) { return { mild: 'severity-mild', moderate: 'severity-moderate', severe: 'severity-severe' }[s] || 'severity-mild' }
+  function getSeverityIcon (s) { return { mild: '⚠️', moderate: '🔶', severe: '🔴' }[s] || '⚠️' }
+  function getSeverityLabel (s) { return { mild: '轻微', moderate: '中度', severe: '严重' }[s] || '未知' }
+
+  async function fetchAllergies () {
+    if (!petId) { loading = false; render(); return }
+    loading = true; render()
+    const { data, error } = await sb.from('pet_allergies').select('*').eq('pet_id', petId).order('created_at', { ascending: false })
+    allergies = error ? [] : (data || [])
+    loading = false; render()
+  }
+  async function handleAdd () {
+    if (!newAllergen.trim()) return
+    try {
+      const uid = await D.getUid()
+      const { data, error } = await sb.from('pet_allergies').insert({ pet_id: petId, allergen: newAllergen.trim(), severity: newSeverity, confirmed: newConfirmed }).select().single()
+      if (error) throw new Error(error.message)
+      allergies = [data, ...allergies]
+      showAddSheet = false; newAllergen = ''; newSeverity = 'mild'; newConfirmed = false
+      document.getElementById('sheetRoot').innerHTML = ''; render(); toast('已添加过敏原')
+    } catch (e) { toast(e.message || '添加失败', 'error') }
+  }
+  async function handleDelete (a) {
+    if (!confirm('确定删除过敏原"' + a.allergen + '"吗？')) return
+    const { error } = await sb.from('pet_allergies').delete().eq('id', a.id)
+    if (error) { toast('删除失败', 'error'); return }
+    allergies = allergies.filter(x => x.id !== a.id); render(); toast('已删除')
+  }
+
+  function render () {
+    const body = document.getElementById('body')
+    if (loading) { body.innerHTML = '<div class="skeleton-list">' + Array.from({ length: 3 }, () => '<div class="allergy-row skeleton"><div class="shimmer-circle"></div><div class="shimmer-line w60"></div></div>').join('') + '</div>'; return }
+    if (!allergies.length) { body.innerHTML = '<div class="empty-state"><div class="empty-icon">🛡️</div><p class="empty-text">暂无过敏记录</p><p class="empty-hint">添加过敏原可以帮助系统避开相关成分</p></div>'; return }
+    body.innerHTML = '<div class="allergy-list">' + allergies.map(a => '<div class="allergy-card"><div class="allergy-icon ' + getSeverityClass(a.severity) + '">' + getSeverityIcon(a.severity) + '</div><div class="allergy-info"><div class="allergy-name">' + esc(a.allergen) + '</div><div class="allergy-meta"><span class="severity-tag ' + getSeverityClass(a.severity) + '">' + getSeverityLabel(a.severity) + '</span>' + (a.confirmed ? '<span class="confirmed-tag">已确认</span>' : '') + '</div></div><button class="delete-btn" data-d="' + a.id + '">×</button></div>').join('') + '</div>'
+    document.querySelectorAll('.delete-btn').forEach(el => el.onclick = () => handleDelete(allergies.find(a => String(a.id) === el.dataset.d)))
+  }
+  function renderSheet () {
+    if (!showAddSheet) return
+    document.getElementById('sheetRoot').innerHTML = '<div class="sheet-overlay" id="overlay"><div class="sheet-content"><div class="sheet-header"><span class="sheet-title">添加过敏原</span><button class="sheet-close" id="closeBtn">×</button></div><div class="sheet-body"><div class="form-group"><label class="form-label">过敏原名称</label><input id="f_allergen" class="form-input" value="' + esc(newAllergen) + '" placeholder="例如：鸡肉、谷物、海鲜"></div><div class="form-group"><label class="form-label">严重程度</label><div class="severity-options">' + severityOptions.map(o => '<button class="severity-btn' + (newSeverity === o.value ? ' active' : '') + '" data-v="' + o.value + '">' + o.label + '</button>').join('') + '</div></div><div class="form-group"><label class="form-label">确认状态</label><div class="toggle-row"><span>已确认</span><button class="toggle-btn' + (newConfirmed ? ' active' : '') + '" id="toggleBtn"><span class="toggle-dot"></span></button></div></div></div><div class="sheet-footer"><button class="btn-cancel" id="cancelBtn">取消</button><button class="btn-confirm" id="confirmBtn"' + (newAllergen.trim() ? '' : ' disabled') + '>添加</button></div></div></div>'
+    document.getElementById('overlay').onclick = e => { if (e.target.id === 'overlay') { showAddSheet = false; document.getElementById('sheetRoot').innerHTML = '' } }
+    document.getElementById('closeBtn').onclick = document.getElementById('cancelBtn').onclick = () => { showAddSheet = false; document.getElementById('sheetRoot').innerHTML = '' }
+    document.getElementById('f_allergen').oninput = e => { newAllergen = e.target.value; document.getElementById('confirmBtn').disabled = !newAllergen.trim() }
+    document.querySelectorAll('.severity-btn').forEach(el => el.onclick = () => { newSeverity = el.dataset.v; renderSheet() })
+    document.getElementById('toggleBtn').onclick = () => { newConfirmed = !newConfirmed; renderSheet() }
+    document.getElementById('confirmBtn').onclick = handleAdd
+  }
+  document.getElementById('addAction').onclick = () => { showAddSheet = true; renderSheet() }
+
+  async function init () { await A.requireAuth(); if (!petId) { toast('缺少宠物参数', 'error') } await fetchAllergies() }
+  init()
+})()
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
   <div v-if="!dismissed" class="onboard-card anim-fade-up">
     <div class="onboard-header">
       <span class="onboard-icon">✨</span>
-      <h2 class="onboard-title">3 步开始精准推荐</h2>
+      <h2 class="onboard-title">2 步开始精准推荐</h2>
     </div>
     <div class="onboard-steps">
       <div v-for="(s, i) in steps" :key="i" class="onboard-step">
@@ -14,7 +14,10 @@
             <div class="step-desc">{{ s.desc }}</div>
           </div>
         </div>
-        <button class="step-btn" :style="{ background: s.color }" @click="$router.push(s.href)">{{ s.action }}</button>
+        <div class="step-actions">
+          <button v-if="s.skipable" class="step-skip" @click="dismissed = true">跳过</button>
+          <button class="step-btn" :style="{ background: s.color }" @click="$router.push(s.href)">{{ s.action }}</button>
+        </div>
       </div>
     </div>
     <div class="onboard-footer">
@@ -30,9 +33,8 @@ import { ref } from 'vue'
 const dismissed = ref(false)
 
 const steps = [
-  { emoji: '🐱', title: '创建宠物档案', desc: '记录品种、年龄、肠胃状况', action: '去创建', href: '/pet/quick', color: '#FF7A59' },
-  { emoji: '🍖', title: '记录饮食', desc: '记录每日喂食，追踪长期效果', action: '去记录', href: '/record/create?type=diet', color: '#ff9500' },
-  { emoji: '💡', title: '获取推荐', desc: '基于档案获得个性化猫粮推荐', action: '去查看', href: '/butler', color: '#8B5E46' },
+  { emoji: '🎨', title: '生成3D卡通形象', desc: '上传照片，AI生成专属卡通宠物', action: '去生成', href: '/avatar/generate', color: '#9B59B6', skipable: true },
+  { emoji: '🐱', title: '创建宠物档案', desc: '记录品种、年龄、肠胃状况', action: '去创建', href: '/pet/create', color: '#FF7A59' },
 ]
 </script>
 
@@ -49,8 +51,11 @@ const steps = [
 .step-text{min-width:0}
 .step-title{font-size:14px;font-weight:600;color:var(--fg)}
 .step-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.step-actions{display:flex;gap:8px;flex-shrink:0}
 .step-btn{padding:6px 14px;border-radius:var(--radius-btn);color:#fff;font-size:12px;font-weight:500;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .step-btn:active{transform:scale(.95)}
+.step-skip{padding:6px 12px;border-radius:var(--radius-btn);background:transparent;color:var(--muted);font-size:12px;font-weight:500;border:1px solid var(--border);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.step-skip:active{transform:scale(.95)}
 .onboard-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
 .onboard-hint{font-size:11px;color:var(--muted)}
 .onboard-skip{background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;padding:4px 8px}

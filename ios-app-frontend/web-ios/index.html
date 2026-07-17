@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>nuzzly 毛球镇</title>
+  <link rel="stylesheet" href="css/common.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <div style="display:flex;align-items:center;justify-content:center;height:60vh;color:var(--muted);font-size:14px">加载中…</div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    // 入口：有 session 进首页，无则去登录
+    sb.auth.getSession().then(({ data }) => {
+      location.replace(data.session ? 'home.html' : 'login.html')
+    })
+  </script>
+</body>
+</html>

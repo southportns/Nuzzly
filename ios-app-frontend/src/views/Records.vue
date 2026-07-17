@@ -43,7 +43,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           健康记录
         </div>
-        <span class="glass-card-badge">5 条</span>
+        <span class="glass-card-badge">{{ rawHealth.length }} 条</span>
       </div>
       <div v-for="record in healthRecords" :key="record.id" class="record-item">
         <div class="record-icon" :class="record.type">{{ record.icon }}</div>
@@ -65,7 +65,7 @@
         <span class="glass-card-more">详情 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>
       </div>
       <div class="weight-chart">
-        <span class="weight-value">4.8 kg</span>
+        <span class="weight-value">{{ latestWeight }}</span>
         <div class="weight-chart-dots">
           <div class="weight-dot" v-for="(dot, i) in weightDots" :key="i" :style="{ marginBottom: dot + 'px' }"></div>
         </div>
@@ -95,7 +95,7 @@
         </div>
       </div>
       <div class="timeline">
-        <div v-for="event in healthEvents" :key="event.date" class="timeline-item">
+        <div v-for="event in timeline" :key="event.date" class="timeline-item">
           <div class="timeline-dot"></div>
           <div class="timeline-date">{{ event.date }}</div>
           <div class="timeline-text">{{ event.text }}</div>
@@ -125,7 +125,7 @@ const { healthRecords: rawHealth, weightRecords, allergies, timeline, fetchHealt
 
 const selectedPet = ref(null)
 
-const SPECIES_EMOJI = { cat: '🐱', dog: '🐶', bird: '🐦', rabbit: '🐰' }
+const SPECIES_EMOJI = { cat: '🐱', dog: '🐶' }
 const FOOD_ICON = { dry_food: '🍖', wet_food: '🐟', water: '💧', treat: '🦴', default: '🍽️' }
 const RECORD_ICON = { vaccination: '💉', symptom: '🩺', medication: '💊', diagnosis: '📋', checkup: '🩻', weight: '⚖️' }
 const SEVERITY_LABEL = { mild: '轻度', moderate: '中度', severe: '重度' }
@@ -171,18 +171,14 @@ const allergyTags = computed(() => allergies.value.map(a => ({
 // 体重趋势点（根据记录数生成高度）
 const weightDots = computed(() => {
   const recs = weightRecords.value.slice(0, 7).reverse()
-  if (!recs.length) return [12, 18, 14, 22, 16, 20, 15]
+  if (!recs.length) return []
   const weights = recs.map(r => Number(r.weight_kg))
   const min = Math.min(...weights), max = Math.max(...weights)
   return weights.map(w => 10 + ((w - min) / (max - min || 1)) * 18)
 })
 
-// 时间线
-const healthEvents = computed(() => timeline.value)
-
 async function loadAll(petId) {
   await Promise.all([
-    fetchPets(),
     fetchHealthRecords(petId),
     fetchDietLogs(petId)
   ])

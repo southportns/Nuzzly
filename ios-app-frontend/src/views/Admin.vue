@@ -1,6 +1,5 @@
 <template>
   <div class="app-shell">
-    <div class="status-bar-spacer"></div>
     <header class="header anim-fade-up">
       <div class="header-row">
         <button class="back-btn" @click="$router.back()" aria-label="返回">
@@ -133,11 +132,11 @@ onMounted(async () => {
 
 <style scoped>
 .app-shell{width:100%;min-height:100vh;min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(88px + var(--safe-bottom));overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
-.header{position:relative;padding:20px 24px 0;z-index:1}
+.header{position:relative;padding:4px 24px 0;z-index:1}
 .header-row{display:flex;align-items:center;justify-content:space-between}
-.back-btn{width:40px;height:40px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer;transition:transform .2s;flex-shrink:0}
+.back-btn{width:36px;height:36px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer;transition:transform .2s;flex-shrink:0}
 .back-btn:active{transform:scale(.9)}
-.back-btn svg{width:20px;height:20px;color:var(--fg)}
+.back-btn svg{width:18px;height:18px;color:var(--fg)}
 .page-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--fg)}
 .admin-badge{font-size:10px;font-weight:600;color:#4A7A91;background:rgba(123,167,188,.12);padding:4px 10px;border-radius:var(--radius-btn)}
 .list-body{padding:16px 20px;display:flex;flex-direction:column;gap:12px}

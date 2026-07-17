@@ -12,6 +12,7 @@ import {
   Settings,
   PawPrint,
   ChevronRight,
+  Pencil,
 } from "lucide-react"
 
 const navItems = [
@@ -25,13 +26,21 @@ const navItems = [
 ]
 
 interface DashboardSidebarProps {
-  displayName: string
+  userId: string
   username: string
   trustScore: number
   email?: string | null
+  avatarUrl?: string | null
+  userNumber?: string | null
+  onEditClick?: () => void
 }
 
-export function DashboardSidebar({ displayName, username, trustScore, email }: DashboardSidebarProps) {
+function formatUserId(num?: string | null): string {
+  if (!num) return "nuzzmily000"
+  return `nuzzmily${String(num).padStart(3, "0")}`
+}
+
+export function DashboardSidebar({ userId, username, trustScore, email, avatarUrl, userNumber, onEditClick }: DashboardSidebarProps) {
   const pathname = usePathname()
 
   const isActive = (href: string, exact?: boolean) => {
@@ -40,28 +49,45 @@ export function DashboardSidebar({ displayName, username, trustScore, email }: D
   }
 
   return (
-    <aside className="sticky top-[88px] hidden h-fit w-[244px] shrink-0 md:block">
+    <aside className="relative sticky top-[88px] hidden h-fit w-[244px] shrink-0 md:block">
       {/* Profile header card (white on background) */}
       <div className="overflow-hidden rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white">
-        <div className="bg-gradient-to-br from-[#FFE4D2] via-[#FFD2BC] to-[#FFB89A] px-5 pb-12 pt-6">
-          <div className="flex size-12 items-center justify-center rounded-full bg-white/95 text-[16px] font-bold text-[#FF7A59] shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
-            {(displayName || username || email || "U").charAt(0).toUpperCase()}
+        <div className="relative h-[150px] bg-gradient-to-br from-[#FFE4D2] via-[#FFD2BC] to-[#FFB89A] px-5 pb-5 pt-5">
+          <button
+            type="button"
+            onClick={() => onEditClick?.()}
+            className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-medium text-[#FF7A59] shadow-[0_2px_8px_rgba(0,0,0,0.06)] backdrop-blur-sm transition-all hover:bg-white hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+          >
+            <Pencil className="size-3" />
+            编辑
+          </button>
+          <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-white/95 text-[16px] font-bold text-[#FF7A59] shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="avatar" className="size-full object-cover" />
+            ) : (
+              (username || email || "U").charAt(0).toUpperCase()
+            )}
           </div>
-          <h2 className="mt-3 truncate text-[15px] font-semibold text-[#111111]">
-            {displayName || username || "PetRWD 用户"}
+          <h2 className="mt-2 truncate text-[15px] font-semibold text-[#111111]">
+            {username || "Nuzzly毛球镇 用户"}
           </h2>
           {email ? (
-            <p className="mt-0.5 truncate text-[11.5px] text-[#6B6B6B]">{email}</p>
+            <p className="truncate text-[11.5px] text-[#6B6B6B]">{email}</p>
           ) : username ? (
-            <p className="mt-0.5 truncate text-[11.5px] text-[#6B6B6B]">@{username}</p>
+            <p className="truncate text-[11.5px] text-[#6B6B6B]">@{username}</p>
           ) : null}
+          {userNumber && (
+            <p className="truncate text-[11.5px] text-[#9A9A95]" title={formatUserId(userNumber)}>
+              ID: {formatUserId(userNumber)}
+            </p>
+          )}
         </div>
-        <div className="-mt-8 mx-4 mb-4 rounded-[14px] border border-[rgba(0,0,0,0.05)] bg-white px-3.5 py-3">
+        <div className="mt-1 mx-4 mb-1 h-[42px] w-[210px] rounded-[14px] border border-solid border-[rgba(0,0,0,0.05)] bg-white px-[13px] py-[3px]">
           <div className="flex items-center justify-between">
-            <span className="text-[12px] font-medium text-[#6B6B6B]">信任分</span>
-            <span className="text-[18px] font-bold leading-none text-[#FF7A59]">{trustScore}</span>
+            <span className="text-[12px] font-medium leading-tight text-[#6B6B6B]">信任分</span>
+            <span className="text-[18px] font-bold leading-tight text-[#FF7A59]">{trustScore}</span>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#F0EFED]">
+          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#F0EFED]">
             <div
               className="h-full rounded-full bg-gradient-to-r from-[#FFB89A] to-[#FF7A59] transition-all"
               style={{ width: `${Math.max(0, Math.min(100, trustScore))}%` }}

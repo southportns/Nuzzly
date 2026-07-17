@@ -12,7 +12,7 @@ import { filterBreakdownForLevel, getAccessLevel, type ScoreBreakdown } from "@/
 
 interface Props {
   recommendation: {
-    product: { id: string; name: string; brand: string; price_max: number | null }
+    product: { id: string; name: string; brand: string; price_min: number | null; price_max: number | null; image_url: string | null }
     score: number
     dimensions: { overall_rating: number; stomach_match: number; stool_safety: number; long_term_stability: number; repurchase_rate: number; breed_match: number }
     explanation: string; confidence: number
@@ -58,13 +58,31 @@ export function RecommendationCard({ recommendation, rank, breakdown }: Props) {
       >
         {/* LAYER 1: Always visible */}
         <CardHeader className="pb-2">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-2">
-                {rank === 1 && <Badge className="bg-primary/20 text-primary shrink-0">最佳匹配</Badge>}
-                <CardTitle className="text-base">{r.product.name}</CardTitle>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex gap-3 min-w-0">
+              {r.product.image_url ? (
+                <img
+                  src={r.product.image_url}
+                  alt={r.product.name}
+                  className="size-14 rounded-xl object-cover bg-muted shrink-0"
+                />
+              ) : (
+                <div className="size-14 rounded-xl bg-muted flex items-center justify-center text-xl shrink-0">🐱</div>
+              )}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  {rank === 1 && <Badge className="bg-primary/20 text-primary shrink-0">最佳匹配</Badge>}
+                  <CardTitle className="text-base truncate">{r.product.name}</CardTitle>
+                </div>
+                <p className="text-sm text-muted-foreground mt-0.5">{r.product.brand}</p>
+                {(r.product.price_min != null || r.product.price_max != null) && (
+                  <p className="text-sm font-medium text-primary mt-0.5">
+                    {r.product.price_min != null && r.product.price_max != null && r.product.price_min !== r.product.price_max
+                      ? `¥${r.product.price_min} - ¥${r.product.price_max}`
+                      : `¥${r.product.price_max ?? r.product.price_min}`}
+                  </p>
+                )}
               </div>
-              <p className="text-sm text-muted-foreground mt-0.5">{r.product.brand}</p>
             </div>
             <div className="text-right shrink-0">
               <span className="text-2xl font-bold tabular-nums">{r.score.toFixed(0)}</span>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>健康提醒 - Nuzzly 毛球镇</title>
+<link rel="stylesheet" href="css/common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<style>
+.app-shell{width:100%;min-height:100vh;min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(88px + var(--safe-bottom));overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.header{position:relative;padding:4px 24px 0;z-index:1}
+.header-row{display:flex;align-items:center;justify-content:space-between}
+.brand-logo{height:32px;width:auto;display:block;flex-shrink:0;object-fit:contain}
+.header-actions{display:flex;gap:10px}
+.action-circle{width:41.31px;height:41.31px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative}
+.action-circle:active{transform:scale(.92)}
+.action-circle svg{width:18px;height:18px;color:var(--fg)}
+.pet-selector{display:flex;gap:8px;padding:16px 24px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;z-index:1}
+.pet-selector::-webkit-scrollbar{display:none}
+.pet-chip{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius-btn);background:var(--card);border:1.5px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.03);cursor:pointer;transition:all .2s}
+.pet-chip.active{border-color:var(--brown);background:rgba(139,94,70,.06)}
+.pet-chip:active{transform:scale(.96)}
+.pet-chip-avatar{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,rgba(215,181,147,.2),rgba(215,181,147,.08));display:flex;align-items:center;justify-content:center;font-size:12px}
+.pet-chip-name{font-size:12px;font-weight:500;color:var(--fg);white-space:nowrap}
+.type-filter{display:flex;gap:6px;padding:12px 24px 0;overflow-x:auto;scrollbar-width:none;z-index:1}
+.type-filter::-webkit-scrollbar{display:none}
+.type-chip{flex-shrink:0;padding:6px 14px;border-radius:var(--radius-btn);background:var(--card);border:1px solid var(--border);font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s}
+.type-chip.active{background:var(--brown);color:#fff;border-color:var(--brown)}
+.type-chip:active{transform:scale(.96)}
+.reminders-list{padding:16px 20px 0;position:relative;z-index:1}
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-text{font-size:16px;font-weight:600;color:var(--fg);margin-bottom:4px}
+.empty-desc{font-size:13px}
+.reminder-card{display:flex;align-items:flex-start;gap:12px;padding:16px;background:var(--card);border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow-card);margin-bottom:10px;transition:opacity .2s}
+.reminder-card.completed{opacity:.5}
+.reminder-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
+.reminder-icon.vaccination{background:rgba(108,138,105,.1)}
+.reminder-icon.medication{background:rgba(59,130,246,.1)}
+.reminder-icon.checkup{background:rgba(215,181,147,.15)}
+.reminder-icon.custom{background:rgba(0,0,0,.04)}
+.reminder-body{flex:1;min-width:0}
+.reminder-title{font-size:15px;font-weight:600;color:var(--fg);margin-bottom:4px}
+.reminder-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
+.reminder-type-tag{font-size:10px;padding:2px 8px;border-radius:var(--radius-btn);background:rgba(0,0,0,.04);color:var(--muted);font-weight:500}
+.reminder-repeat{font-size:10px;padding:2px 8px;border-radius:var(--radius-btn);background:rgba(139,94,70,.08);color:var(--brown);font-weight:500}
+.reminder-desc{font-size:12px;color:var(--muted);margin-bottom:4px;line-height:1.4}
+.reminder-date{font-size:12px;color:var(--muted);font-weight:500}
+.reminder-date.overdue{color:#FF3B30}
+.reminder-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.action-btn{width:32px;height:32px;border-radius:10px;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
+.action-btn:active{transform:scale(.85)}
+.action-btn.done{background:rgba(108,138,105,.1)}
+.action-btn.done svg{width:16px;height:16px;color:var(--green)}
+.action-btn.del{background:rgba(255,59,48,.06)}
+.action-btn.del svg{width:14px;height:14px;color:var(--muted)}
+.fab{position:fixed;bottom:calc(100px + var(--safe-bottom));right:clamp(16px,4vw,24px);width:52px;height:52px;border-radius:50%;background:var(--brown);box-shadow:var(--shadow-btn);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;transition:transform .15s}
+.fab:active{transform:scale(.9)}
+.fab svg{width:24px;height:24px;color:#fff}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.anim-fade-up{opacity:0;animation:fadeUp .6s cubic-bezier(.22,1,.36,1) forwards}
+.anim-delay-1{animation-delay:.1s}.anim-delay-2{animation-delay:.2s}.anim-delay-3{animation-delay:.3s}
+.anim-scale-in{opacity:0;animation:scaleIn .5s cubic-bezier(.22,1,.36,1) forwards}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="header anim-fade-up">
+    <div class="header-row">
+      <img class="brand-logo" src="assets/nuzzly-zuhe.png" alt="Nuzzly 毛球镇">
+      <div class="header-actions">
+        <button class="action-circle" aria-label="通知" onclick="location.href='notifications.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.134 11C18.715 16.375 21 18 21 18H3s3-2.133 3-9.6c0-1.697.632-3.325 1.757-4.525S10.41 2 12 2q.507 0 1 .09M19 8a3 3 0 1 0 0-6a3 3 0 0 0 0 6m-5.27 13a2 2 0 0 1-3.46 0"/></svg></button>
+      </div>
+    </div>
+  </header>
+  <div class="pet-selector anim-fade-up anim-delay-1" id="petSelector"></div>
+  <div class="type-filter anim-fade-up anim-delay-1" id="typeFilter"></div>
+  <div class="reminders-list anim-fade-up anim-delay-2" id="list"></div>
+  <button class="fab anim-scale-in anim-delay-3" id="fab" aria-label="新建提醒"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <div id="tabbar"></div>
+</div>
+<script>
+(function () {
+  const sb = window.sb, D = window.NuzzlyData, A = window.NuzzlyApp
+  const TYPE_FILTERS = [{ value: 'all', label: '全部' }, { value: 'vaccination', label: '疫苗' }, { value: 'medication', label: '用药' }, { value: 'checkup', label: '体检' }, { value: 'custom', label: '自定义' }]
+  const TYPE_ICON = { vaccination: '💉', medication: '💊', checkup: '🩺', custom: '📌' }
+  const TYPE_LABEL = { vaccination: '疫苗', medication: '用药', checkup: '体检', custom: '自定义' }
+  const REPEAT_LABEL = { monthly: '每月', quarterly: '每季', yearly: '每年' }
+  const SPECIES_EMOJI = { cat: '🐱', dog: '🐶' }
+  let pets = [], selectedPet = '', typeFilter = 'all', reminders = [], loading = true
+  function esc (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])) }
+  function isOverdue (r) { if (r.is_completed) return false; return r.due_date < new Date().toISOString().slice(0, 10) }
+  function formatDate (d) { if (!d) return ''; const date = new Date(d + 'T00:00:00'); const now = new Date(); const diff = Math.ceil((date - now) / (1000 * 60 * 60 * 24)); if (diff === 0) return '今天'; if (diff === 1) return '明天'; if (diff === -1) return '昨天'; if (diff > 0 && diff <= 7) return diff + ' 天后'; return (date.getMonth() + 1) + '月' + date.getDate() + '日' }
+
+  async function fetchReminders (pid) {
+    loading = true; render()
+    const uid = await D.getUid()
+    let q = sb.from('health_reminders').select('*').order('due_date', { ascending: true })
+    if (uid) q = q.eq('profile_id', uid)
+    if (pid) q = q.eq('pet_id', pid)
+    const { data, error } = await q
+    reminders = error ? [] : (data || [])
+    loading = false; render()
+  }
+  async function completeReminder (r) {
+    try {
+      const now = new Date().toISOString()
+      const { error } = await sb.from('health_reminders').update({ is_completed: true, completed_at: now }).eq('id', r.id)
+      if (error) throw new Error(error.message)
+      reminders = reminders.filter(x => x.id !== r.id)
+      if (r.repeat_interval && r.repeat_interval !== 'none') {
+        const nextDate = getNextDueDate(r.due_date, r.repeat_interval)
+        if (!r.repeat_end_date || nextDate <= r.repeat_end_date) {
+          const { data: created } = await sb.from('health_reminders').insert({ pet_id: r.pet_id, profile_id: r.profile_id, reminder_type: r.reminder_type, title: r.title, description: r.description, due_date: nextDate, repeat_interval: r.repeat_interval, repeat_end_date: r.repeat_end_date }).select().single()
+          if (created) reminders = [...reminders, created]
+        }
+      }
+      render()
+    } catch (e) { console.warn('完成失败:', e.message) }
+  }
+  function getNextDueDate (dateStr, interval) { const d = new Date(dateStr); if (interval === 'monthly') d.setMonth(d.getMonth() + 1); else if (interval === 'quarterly') d.setMonth(d.getMonth() + 3); else if (interval === 'yearly') d.setFullYear(d.getFullYear() + 1); return d.toISOString().slice(0, 10) }
+  async function deleteReminder (r) { try { const { error } = await sb.from('health_reminders').delete().eq('id', r.id); if (error) throw new Error(error.message); reminders = reminders.filter(x => x.id !== r.id); render() } catch (e) { console.warn('删除失败:', e.message) } }
+
+  function render () {
+    const petBox = document.getElementById('petSelector')
+    petBox.innerHTML = pets.map(p => '<div class="pet-chip' + (selectedPet === p.id ? ' active' : '') + '" data-pid="' + p.id + '"><div class="pet-chip-avatar">' + (SPECIES_EMOJI[p.species] || '🐾') + '</div><span class="pet-chip-name">' + esc(p.name) + '</span></div>').join('')
+    petBox.querySelectorAll('.pet-chip').forEach(el => el.onclick = () => { selectedPet = el.dataset.pid; fetchReminders(selectedPet) })
+    document.getElementById('typeFilter').innerHTML = TYPE_FILTERS.map(t => '<div class="type-chip' + (typeFilter === t.value ? ' active' : '') + '" data-t="' + t.value + '">' + t.label + '</div>').join('')
+    document.querySelectorAll('.type-chip').forEach(el => el.onclick = () => { typeFilter = el.dataset.t; render() })
+    const list = document.getElementById('list')
+    let filtered = reminders.filter(r => r.pet_id === selectedPet)
+    if (typeFilter !== 'all') filtered = filtered.filter(r => r.reminder_type === typeFilter)
+    if (loading) { list.innerHTML = '<div class="empty-state">加载中…</div>'; return }
+    if (!filtered.length) { list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">暂无健康提醒</div><div class="empty-desc">点击右下角 + 添加提醒</div></div>'; return }
+    list.innerHTML = filtered.map(r => {
+      const od = isOverdue(r)
+      return '<div class="reminder-card' + (r.is_completed ? ' completed' : '') + '"><div class="reminder-icon ' + r.reminder_type + '">' + (TYPE_ICON[r.reminder_type] || '📌') + '</div><div class="reminder-body"><div class="reminder-title">' + esc(r.title) + '</div><div class="reminder-meta"><span class="reminder-type-tag">' + (TYPE_LABEL[r.reminder_type] || r.reminder_type) + '</span>' + (r.repeat_interval && r.repeat_interval !== 'none' ? '<span class="reminder-repeat">🔁 ' + (REPEAT_LABEL[r.repeat_interval] || r.repeat_interval) + '</span>' : '') + '</div>' + (r.description ? '<div class="reminder-desc">' + esc(r.description) + '</div>' : '') + '<div class="reminder-date' + (od && !r.is_completed ? ' overdue' : '') + '">' + (od && !r.is_completed ? '已过期 · ' : '') + formatDate(r.due_date) + '</div></div><div class="reminder-actions">' + (r.is_completed ? '' : '<button class="action-btn done" data-done="' + r.id + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg></button>') + '<button class="action-btn del" data-del="' + r.id + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div></div>'
+    }).join('')
+    document.querySelectorAll('.action-btn[data-done]').forEach(el => el.onclick = () => completeReminder(filtered.find(r => String(r.id) === el.dataset.done)))
+    document.querySelectorAll('.action-btn[data-del]').forEach(el => el.onclick = () => deleteReminder(filtered.find(r => String(r.id) === el.dataset.del)))
+  }
+
+  document.getElementById('fab').onclick = () => { location.href = 'health-reminder-create.html?petId=' + selectedPet }
+
+  async function init () {
+    await A.requireAuth()
+    A.injectTabBar('home', document.getElementById('tabbar'))
+    const uid = await D.getUid(); pets = await D.getPets(uid) || []
+    if (pets.length) { selectedPet = pets[0].id; await fetchReminders(selectedPet) }
+    else render()
+  }
+  init()
+})()
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@ import { getUser } from "@/lib/supabase/query"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata = {
-  title: "推荐反馈 — PetRWD",
+  title: "推荐反馈 — Nuzzly毛球镇",
 }
 
 const eventMeta: Record<string, { label: string; icon: typeof ThumbsUp; color: string }> = {

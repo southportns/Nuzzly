@@ -7,6 +7,7 @@ const BUCKETS = {
   petAttachments: "pet-attachments",
   productImages: "product-images",
   reviewVouchers: "review-vouchers",
+  userAvatars: "user-avatars",
 } as const
 
 export type UploadResult = {
@@ -103,4 +104,35 @@ export async function uploadVoucher(file: File, reviewId: string): Promise<Uploa
 
 export async function uploadProductImage(file: File, productId: string): Promise<UploadResult> {
   return uploadFile(BUCKETS.productImages, file, productId)
+}
+
+/**
+ * Upload a user avatar to the user-avatars bucket.
+ * Uses a fixed path per user so repeated uploads overwrite the previous avatar.
+ */
+export async function uploadUserAvatar(file: File, userId: string): Promise<UploadResult> {
+  const supabase = createClient()
+  const path = `${userId}/avatar.jpg`
+
+  const { data, error } = await supabase.storage
+    .from(BUCKETS.userAvatars)
+    .upload(path, file, {
+      cacheControl: "3600",
+      upsert: true,
+      contentType: "image/jpeg",
+    })
+
+  if (error) {
+    return { url: null, path: null, error: error.message }
+  }
+
+  const { data: urlData } = supabase.storage
+    .from(BUCKETS.userAvatars)
+    .getPublicUrl(data.path)
+
+  return { url: urlData.publicUrl, path: data.path, error: null }
+}
+
+export async function deleteUserAvatar(userId: string): Promise<{ error: string | null }> {
+  return deleteFile(BUCKETS.userAvatars, `${userId}/avatar.jpg`)
 }

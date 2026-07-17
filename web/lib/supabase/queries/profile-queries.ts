@@ -28,6 +28,15 @@ export async function getUser() {
 
 // ── Pets ──
 
+export async function queryTotalPetCount() {
+  const supabase = await createServerClient()
+  const { count, error } = await supabase
+    .from("pets")
+    .select("*", { count: "exact", head: true })
+    .eq("is_active", true)
+  return { count: count ?? 0, error }
+}
+
 export async function queryPets(profileId: string) {
   const supabase = await createServerClient()
   const { data, error } = await supabase

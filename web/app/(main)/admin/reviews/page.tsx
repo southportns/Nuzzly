@@ -4,7 +4,7 @@ import { Star, ChevronRight } from "lucide-react"
 import Link from "next/link"
 
 export const metadata = {
-  title: "评价审核 — PetRWD 管理员",
+  title: "评价审核 — Nuzzly毛球镇 管理员",
 }
 
 export default async function AdminReviewsPage() {

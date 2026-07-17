@@ -26,7 +26,7 @@ interface SelectDropdownProps {
 /**
  * Custom dropdown built on Radix Popover.
  * - Does NOT cause the body scrollbar to appear (Popover positions to the trigger)
- * - Compact, premium look matching the PetRWD design system
+ * - Compact, premium look matching the Nuzzly毛球镇 design system
  * - Keyboard accessible (Radix handles arrow keys / enter / escape)
  */
 export function SelectDropdown({

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>设置 - Nuzzly 毛球镇</title>
+<link rel="stylesheet" href="css/common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<style>
+.edit-shell{width:100%;min-height:100vh;min-height:100dvh;background:var(--bg);padding-top:var(--safe-top)}
+.settings-header{display:flex;align-items:center;padding:12px 16px;gap:12px}
+.back-btn{width:40px;height:40px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer}
+.back-btn:active{transform:scale(.92)}
+.back-btn svg{width:20px;height:20px;color:var(--fg)}
+.page-title{font-family:var(--font-display);font-size:18px;font-weight:600;flex:1;text-align:center;margin-right:40px}
+.edit-body{padding:0 16px 40px}
+.form-group{background:var(--card);border-radius:12px;padding:16px;margin-bottom:12px}
+.form-group.center{display:flex;flex-direction:column;align-items:center;gap:6px;padding:24px 16px}
+.form-label{font-size:13px;color:var(--muted);display:block;margin-bottom:8px;letter-spacing:.01em}
+.form-input{width:100%;height:44px;border:1px solid var(--border);border-radius:10px;padding:0 14px;font-size:15px;font-family:var(--font-body);color:var(--fg);background:var(--bg);outline:none;transition:border-color .2s;box-sizing:border-box}
+.form-input:focus{border-color:var(--brown)}
+.form-textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:15px;font-family:var(--font-body);color:var(--fg);background:var(--bg);outline:none;resize:none;transition:border-color .2s;box-sizing:border-box}
+.form-textarea:focus{border-color:var(--brown)}
+.readonly-value{font-size:15px;color:var(--fg);padding:10px 0}
+.primary-btn{width:100%;height:48px;border-radius:var(--radius-btn);background:var(--brown);color:#fff;font-size:16px;font-weight:500;border:none;cursor:pointer;transition:transform .15s;margin-top:8px}
+.primary-btn:active{transform:scale(.98)}
+.primary-btn:disabled{opacity:.5}
+.danger-btn{width:100%;height:48px;border-radius:var(--radius-btn);background:transparent;color:#FF3B30;font-size:16px;font-weight:500;border:1px solid rgba(255,59,48,.2);cursor:pointer;margin-top:12px}
+.danger-btn:active{background:rgba(255,59,48,.05)}
+.settings-group{background:var(--card);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.cell{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+.cell:last-child{border-bottom:none}
+.cell span{font-size:16px;color:var(--fg)}
+.cell svg{width:16px;height:16px;color:var(--muted)}
+.cell.toggle{cursor:default}
+.toggle-switch{accent-color:var(--brown);width:20px;height:20px}
+.chip-group{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 16px;border-radius:var(--radius-pill);background:var(--bg);border:1px solid var(--border);font-size:14px;color:var(--fg);cursor:pointer;transition:all .2s}
+.chip.active{background:var(--brown);color:#fff;border-color:var(--brown)}
+.pet-row{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.pet-row-main{display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer}
+.pet-emoji{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--beige),var(--brown));display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.pet-info{flex:1;min-width:0}
+.pet-name{font-size:16px;font-weight:600;color:var(--fg)}
+.pet-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.pet-del-btn{flex-shrink:0;height:30px;padding:0 10px;border-radius:8px;background:transparent;color:#FF3B30;font-size:12px;font-weight:500;border:1px solid rgba(255,59,48,.2);cursor:pointer}
+.pet-del-btn:active{background:rgba(255,59,48,.08);transform:scale(.95)}
+.empty-hint{text-align:center;color:var(--muted);font-size:14px;padding:24px 0}
+.app-logo{font-size:48px}
+.app-name{font-size:18px;font-weight:600;color:var(--fg);margin-top:4px}
+.app-version{font-size:13px;color:var(--muted)}
+.check{color:var(--brown);font-weight:700;font-size:16px}
+.cell-value{font-size:13px;color:var(--green)}
+.hint-text{text-align:center;font-size:12px;color:var(--muted);padding:16px 0}
+.membership-card{background:linear-gradient(135deg,var(--brown),#D7B593);border-radius:20px;padding:28px 20px;text-align:center;margin-bottom:16px}
+.membership-badge{font-size:40px;margin-bottom:8px}
+.membership-title{font-size:20px;font-weight:700;color:#fff}
+.membership-desc{font-size:13px;color:rgba(255,255,255,.7);margin-top:4px}
+.fontsize-preview{background:var(--card);border-radius:16px;padding:24px 20px;margin-bottom:16px;text-align:center}
+.fontsize-preview p{color:var(--fg);margin-bottom:8px}
+.fontsize-preview .small{color:var(--muted);font-size:12px}
+.fontsize-control{display:flex;align-items:center;gap:12px;padding:0 8px;margin-bottom:8px}
+.fontsize-label{font-size:14px;color:var(--muted);font-weight:500}
+.fontsize-label.big{font-size:20px}
+.fontsize-slider{flex:1;accent-color:var(--brown);height:4px}
+.fontsize-value{text-align:center;font-size:13px;color:var(--muted);margin-bottom:16px}
+.delete-section{margin-top:32px;padding-top:20px;border-top:1px solid var(--border)}
+.delete-warning{display:flex;align-items:flex-start;gap:8px;padding:12px 14px;background:rgba(255,59,48,.05);border-radius:10px;margin-bottom:12px}
+.delete-warning svg{width:18px;height:18px;color:#FF3B30;flex-shrink:0;margin-top:1px}
+.delete-warning span{font-size:13px;color:#FF3B30;line-height:1.5}
+.delete-btn{width:100%;height:48px;border-radius:var(--radius-btn);background:transparent;color:#FF3B30;font-size:16px;font-weight:500;border:1px solid rgba(255,59,48,.2);cursor:pointer}
+.delete-btn:active{background:rgba(255,59,48,.05);transform:scale(.98)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px}
+.modal-box{width:100%;max-width:320px;background:var(--card);border-radius:20px;padding:28px 24px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-icon{font-size:40px;margin-bottom:8px}
+.modal-title{font-size:18px;font-weight:700;color:var(--fg);margin:0 0 8px}
+.modal-desc{font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 16px}
+.modal-desc strong{color:#FF3B30}
+.modal-input-group{margin-bottom:16px;text-align:left}
+.modal-label{font-size:12px;color:var(--muted);margin-bottom:6px;display:block}
+.modal-label strong{color:var(--fg)}
+.modal-actions{display:flex;gap:10px}
+.modal-cancel{flex:1;height:44px;border-radius:var(--radius-btn);background:var(--bg);border:1px solid var(--border);font-size:15px;color:var(--fg);font-weight:500;cursor:pointer}
+.modal-cancel:active{background:rgba(0,0,0,.04)}
+.modal-confirm{flex:1;height:44px;border-radius:var(--radius-btn);background:#FF3B30;border:none;font-size:15px;color:#fff;font-weight:500;cursor:pointer}
+.modal-confirm:active{opacity:.85}
+.modal-confirm:disabled{opacity:.4;cursor:default}
+.toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);background:rgba(0,0,0,.78);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:80%;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+</style>
+</head>
+<body>
+<div class="edit-shell">
+  <header class="settings-header">
+    <button class="back-btn" onclick="history.back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h1 class="page-title" id="pageTitle">设置</h1>
+  </header>
+  <div class="edit-body" id="body"></div>
+</div>
+<div id="toast" class="toast"></div>
+<div id="modalRoot"></div>
+<script>
+(function () {
+  const sb = window.sb, D = window.NuzzlyData, A = window.NuzzlyApp
+  const key = new URLSearchParams(location.search).get('type') || ''
+  const TITLE_MAP = { account: '账号与安全', pets: '宠物档案', membership: '会员', language: '语言', fontsize: '文字大小', notification: '通知', general: '通用', privacy: '隐私', content: '我的内容', interaction: '互动设置', about: '关于我们', feedback: '帮助与反馈' }
+  document.getElementById('pageTitle').textContent = TITLE_MAP[key] || '设置'
+  const SPECIES_EMOJI = { cat: '🐱', dog: '🐶' }
+  const FEEDBACK_TYPES = ['功能建议', '问题反馈', '体验问题', '其他']
+  function toast (msg, theme) { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'toast show ' + (theme || 'success'); clearTimeout(window.__t); window.__t = setTimeout(() => { el.className = 'toast' }, 2000) }
+  function loadJson (k, fb) { try { return JSON.parse(localStorage.getItem(k)) || fb } catch (e) { return fb } }
+  function saveJson (k, v) { localStorage.setItem(k, JSON.stringify(v)) }
+  function esc (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])) }
+  const body = document.getElementById('body')
+
+  const TEMPLATES = {
+    account: () => `<div class="form-group"><label class="form-label">邮箱</label><div class="readonly-value" id="userEmail">加载中…</div></div>
+<div class="form-group"><label class="form-label">新密码</label><input id="pw1" type="password" class="form-input" placeholder="至少 6 位"></div>
+<div class="form-group"><label class="form-label">确认新密码</label><input id="pw2" type="password" class="form-input" placeholder="再次输入"></div>
+<button class="primary-btn" id="pwBtn">更新密码</button>
+<div class="delete-section"><div class="delete-warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>注销账号后，所有数据将被永久删除且无法恢复</span></div><button class="delete-btn" id="delBtn">注销账号</button></div>`,
+    pets: () => `<div id="petList"></div><button class="primary-btn" onclick="location.href='pet-create.html'">+ 添加宠物</button>`,
+    membership: () => `<div class="membership-card"><div class="membership-badge">🌟</div><div class="membership-title">基础会员</div><div class="membership-desc">享受所有核心功能</div></div>
+<div class="settings-group"><div class="cell"><span>专属推荐</span><span class="cell-value">已解锁</span></div><div class="cell"><span>AI 问答</span><span class="cell-value">已解锁</span></div><div class="cell"><span>长期追踪</span><span class="cell-value">已解锁</span></div><div class="cell"><span>社区互动</span><span class="cell-value">已解锁</span></div></div>
+<p class="hint-text">更多高级功能即将推出，敬请期待</p>`,
+    language: () => { const lang = localStorage.getItem('nuzzly_lang') || 'zh-CN'; return `<div class="settings-group"><div class="cell toggle" data-lang="zh-CN"><span>简体中文</span>${lang === 'zh-CN' ? '<span class="check">✓</span>' : ''}</div><div class="cell toggle" data-lang="en"><span>English</span>${lang === 'en' ? '<span class="check">✓</span>' : ''}</div><div class="cell toggle" data-lang="ja"><span>日本語</span>${lang === 'ja' ? '<span class="check">✓</span>' : ''}</div></div><p class="hint-text">语言切换将在下次启动时生效</p>` },
+    fontsize: () => { const fs = Number(localStorage.getItem('nuzzly_fontsize')) || 14; return `<div class="fontsize-preview" style="font-size:${fs}px" id="fsPreview"><p>这是预览文字效果</p><p class="small">较小的辅助文字</p></div><div class="fontsize-control"><span class="fontsize-label">A</span><input type="range" id="fsSlider" min="12" max="20" step="1" value="${fs}" class="fontsize-slider"><span class="fontsize-label big">A</span></div><div class="fontsize-value" id="fsValue">${fs}px</div><button class="primary-btn" id="fsBtn">保存</button>` },
+    notification: () => { const n = Object.assign({ push: true, diet: true, vaccine: true, social: false }, loadJson('nuzzly_notif', {})); return `<div class="settings-group"><div class="cell toggle"><span>推送通知</span><input type="checkbox" class="toggle-switch" data-k="push" ${n.push ? 'checked' : ''}></div><div class="cell toggle"><span>饮食提醒</span><input type="checkbox" class="toggle-switch" data-k="diet" ${n.diet ? 'checked' : ''}></div><div class="cell toggle"><span>疫苗提醒</span><input type="checkbox" class="toggle-switch" data-k="vaccine" ${n.vaccine ? 'checked' : ''}></div><div class="cell toggle"><span>社区互动</span><input type="checkbox" class="toggle-switch" data-k="social" ${n.social ? 'checked' : ''}></div></div><button class="primary-btn" id="notifBtn">保存</button>` },
+    general: () => { const g = Object.assign({ darkMode: false, autoPlay: true, highQuality: true }, loadJson('nuzzly_general', {})); return `<div class="settings-group"><div class="cell toggle"><span>深色模式</span><input type="checkbox" class="toggle-switch" data-k="darkMode" ${g.darkMode ? 'checked' : ''}></div><div class="cell toggle"><span>自动播放视频</span><input type="checkbox" class="toggle-switch" data-k="autoPlay" ${g.autoPlay ? 'checked' : ''}></div><div class="cell toggle"><span>图片高质量加载</span><input type="checkbox" class="toggle-switch" data-k="highQuality" ${g.highQuality ? 'checked' : ''}></div></div><button class="primary-btn" id="genBtn">保存</button><button class="danger-btn" id="cacheBtn">清除缓存</button>` },
+    privacy: () => { const p = Object.assign({ publicProfile: true, showReviews: true, allowRecommend: true, shareData: false }, loadJson('nuzzly_privacy', {})); return `<div class="settings-group"><div class="cell toggle"><span>公开我的主页</span><input type="checkbox" class="toggle-switch" data-k="publicProfile" ${p.publicProfile ? 'checked' : ''}></div><div class="cell toggle"><span>显示评价记录</span><input type="checkbox" class="toggle-switch" data-k="showReviews" ${p.showReviews ? 'checked' : ''}></div><div class="cell toggle"><span>允许推荐算法</span><input type="checkbox" class="toggle-switch" data-k="allowRecommend" ${p.allowRecommend ? 'checked' : ''}></div><div class="cell toggle"><span>分享使用数据</span><input type="checkbox" class="toggle-switch" data-k="shareData" ${p.shareData ? 'checked' : ''}></div></div><button class="primary-btn" id="privBtn">保存</button>` },
+    content: () => `<div class="settings-group"><div class="cell" onclick="location.href='community.html'"><span>我的评价</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></div><div class="cell" onclick="location.href='followups.html'"><span>长期追踪</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></div><div class="cell" onclick="location.href='products.html'"><span>收藏的产品</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></div></div>`,
+    interaction: () => { const it = Object.assign({ allowComment: true, allowFollow: true, likeNotify: true, commentNotify: true }, loadJson('nuzzly_interaction', {})); return `<div class="settings-group"><div class="cell toggle"><span>允许评论</span><input type="checkbox" class="toggle-switch" data-k="allowComment" ${it.allowComment ? 'checked' : ''}></div><div class="cell toggle"><span>允许关注</span><input type="checkbox" class="toggle-switch" data-k="allowFollow" ${it.allowFollow ? 'checked' : ''}></div><div class="cell toggle"><span>点赞通知</span><input type="checkbox" class="toggle-switch" data-k="likeNotify" ${it.likeNotify ? 'checked' : ''}></div><div class="cell toggle"><span>评论通知</span><input type="checkbox" class="toggle-switch" data-k="commentNotify" ${it.commentNotify ? 'checked' : ''}></div></div><button class="primary-btn" id="interBtn">保存</button>` },
+    about: () => `<div class="form-group center"><div class="app-logo">🐾</div><div class="app-name">毛球镇 Nuzzly</div><div class="app-version">版本 1.0.0</div></div>
+<div class="settings-group"><div class="cell"><span>用户协议</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></div><div class="cell"><span>隐私政策</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></div><div class="cell"><span>开源许可</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></div></div>`,
+    feedback: () => `<div class="form-group"><label class="form-label">反馈类型 <span style="color:#FF3B30">*</span></label><div class="chip-group" id="fbChips">${FEEDBACK_TYPES.map((t, i) => `<div class="chip${i === 0 ? ' active' : ''}" data-v="${t}">${t}</div>`).join('')}</div></div>
+<div class="form-group"><label class="form-label">详细描述</label><textarea id="fbContent" class="form-textarea" rows="4" placeholder="请描述您遇到的问题或建议…"></textarea></div>
+<div class="form-group"><label class="form-label">联系方式（可选）</label><input id="fbContact" type="text" class="form-input" placeholder="邮箱或手机号"></div>
+<button class="primary-btn" id="fbBtn">提交反馈</button>`
+  }
+
+  let fbType = '功能建议'
+
+  function bindAccount () {
+    (async () => { const u = await D.getCurrentUser(); document.getElementById('userEmail').textContent = u?.email || '未登录' })()
+    document.getElementById('pwBtn').onclick = async () => {
+      const p1 = document.getElementById('pw1').value, p2 = document.getElementById('pw2').value
+      if (!p1 || p1.length < 6) { toast('密码至少 6 位', 'error'); return }
+      if (p1 !== p2) { toast('两次密码不一致', 'error'); return }
+      const btn = document.getElementById('pwBtn'); btn.disabled = true; btn.textContent = '更新中…'
+      const { error } = await sb.auth.updateUser({ password: p1 })
+      btn.disabled = false; btn.textContent = '更新密码'
+      if (error) { toast(error.message || '更新失败', 'error'); return }
+      toast('密码已更新'); document.getElementById('pw1').value = ''; document.getElementById('pw2').value = ''
+    }
+    document.getElementById('delBtn').onclick = () => {
+      document.getElementById('modalRoot').innerHTML = `<div class="modal-overlay" id="delModal"><div class="modal-box"><div class="modal-icon">⚠️</div><h3 class="modal-title">确认注销账号？</h3><p class="modal-desc">此操作将永久删除您的账号及所有关联数据，包括宠物档案、评价记录、健康数据等，且<strong>无法恢复</strong>。</p><div class="modal-input-group"><label class="modal-label">请输入 <strong>注销</strong> 以确认</label><input id="delConfirm" class="form-input" placeholder="输入「注销」"></div><div class="modal-actions"><button class="modal-cancel" id="delCancel">取消</button><button class="modal-confirm" id="delOk" disabled>确认注销</button></div></div></div>`
+      const inp = document.getElementById('delConfirm'), ok = document.getElementById('delOk')
+      inp.oninput = () => { ok.disabled = inp.value !== '注销' }
+      document.getElementById('delCancel').onclick = () => { document.getElementById('modalRoot').innerHTML = '' }
+      ok.onclick = async () => {
+        if (inp.value !== '注销') return; ok.disabled = true; ok.textContent = '注销中…'
+        try { await sb.from('profiles').update({ is_deleted: true, deleted_at: new Date().toISOString() }).eq('id', await D.getUid()); await sb.auth.signOut(); toast('账号已注销'); setTimeout(() => location.replace('login.html'), 800) }
+        catch (e) { toast(e.message || '注销失败，请联系客服', 'error'); ok.disabled = false; ok.textContent = '确认注销' }
+      }
+    }
+  }
+
+  async function bindPets () {
+    const uid = await D.getUid(); const pets = await D.getPets(uid) || []
+    document.getElementById('petList').innerHTML = pets.length ? pets.map(p => `<div class="pet-row"><div class="pet-row-main" onclick="location.href='pet-create.html?id=${p.id}'"><div class="pet-emoji">${SPECIES_EMOJI[p.species] || '🐾'}</div><div class="pet-info"><div class="pet-name">${esc(p.name)}</div><div class="pet-meta">${esc(p.breed || p.species)} · ${p.age_years || 0}岁${p.age_months || 0}月 · ${p.weight_kg ? Number(p.weight_kg).toFixed(1) : '--'}kg</div></div></div><button class="pet-del-btn" data-pid="${p.id}" data-pname="${esc(p.name)}">删除</button></div>`).join('') : '<div class="empty-hint">还没有宠物档案</div>'
+    document.querySelectorAll('.pet-del-btn').forEach(b => b.onclick = async () => {
+      if (!confirm('确定要删除「' + b.dataset.pname + '」的档案吗？此操作不可恢复。')) return
+      const { error } = await sb.from('pets').update({ is_active: false }).eq('id', b.dataset.pid)
+      if (error) { toast('删除失败', 'error'); return }
+      toast('已删除'); bindPets()
+    })
+  }
+
+  function bindLanguage () { document.querySelectorAll('.cell.toggle[data-lang]').forEach(c => c.onclick = () => { localStorage.setItem('nuzzly_lang', c.dataset.lang); bindLanguage(); toast('语言切换将在下次启动时生效') }) }
+  function bindFontsize () { const slider = document.getElementById('fsSlider'); slider.oninput = () => { document.getElementById('fsPreview').style.fontSize = slider.value + 'px'; document.getElementById('fsValue').textContent = slider.value + 'px' }; document.getElementById('fsBtn').onclick = () => { localStorage.setItem('nuzzly_fontsize', slider.value); toast('文字大小已保存') } }
+  function bindToggleSave (btnId, storageKey, msg) { document.getElementById(btnId).onclick = () => { const obj = {}; document.querySelectorAll('.toggle-switch[data-k]').forEach(el => obj[el.dataset.k] = el.checked); saveJson(storageKey, obj); toast(msg) } }
+  function bindFeedback () { document.querySelectorAll('#fbChips .chip').forEach(c => c.onclick = () => { fbType = c.dataset.v; document.querySelectorAll('#fbChips .chip').forEach(x => x.classList.toggle('active', x === c)) }); document.getElementById('fbBtn').onclick = () => { const content = document.getElementById('fbContent').value; if (!content.trim()) { toast('请填写描述', 'error'); return } const list = JSON.parse(localStorage.getItem('nuzzly_feedback') || '[]'); list.push({ type: fbType, content, contact: document.getElementById('fbContact').value, created_at: new Date().toISOString() }); localStorage.setItem('nuzzly_feedback', JSON.stringify(list)); toast('反馈已提交，感谢支持'); setTimeout(() => history.back(), 800) } }
+
+  async function init () {
+    await A.requireAuth()
+    if (!TEMPLATES[key]) { body.innerHTML = '<div class="empty-hint">页面不存在</div>'; return }
+    body.innerHTML = TEMPLATES[key]()
+    if (key === 'account') bindAccount()
+    else if (key === 'pets') bindPets()
+    else if (key === 'language') bindLanguage()
+    else if (key === 'fontsize') bindFontsize()
+    else if (key === 'notification') bindToggleSave('notifBtn', 'nuzzly_notif', '通知设置已保存')
+    else if (key === 'general') { bindToggleSave('genBtn', 'nuzzly_general', '通用设置已保存'); document.getElementById('cacheBtn').onclick = () => { const ks = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('nuzzly_')) ks.push(k) } ks.forEach(k => localStorage.removeItem(k)); toast('缓存已清除') } }
+    else if (key === 'privacy') bindToggleSave('privBtn', 'nuzzly_privacy', '隐私设置已保存')
+    else if (key === 'interaction') bindToggleSave('interBtn', 'nuzzly_interaction', '互动设置已保存')
+    else if (key === 'feedback') bindFeedback()
+  }
+  init()
+})()
+</script>
+</body>
+</html>

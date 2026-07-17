@@ -44,6 +44,7 @@ export function DietLogForm({ petId }: { petId: string }) {
   const [foodType, setFoodType] = useState("dry_food")
   const [products, setProducts] = useState<ProductOption[]>([])
   const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(null)
+  const [foodName, setFoodName] = useState("")
   const [open, setOpen] = useState(false)
   const supabase = createClient()
 
@@ -65,6 +66,7 @@ export function DietLogForm({ petId }: { petId: string }) {
     setSelectedProduct(product)
     if (product) {
       setFoodType("dry_food")
+      setFoodName(product.name)
     }
   }, [])
 
@@ -78,7 +80,6 @@ export function DietLogForm({ petId }: { petId: string }) {
     setLoading(true)
 
     const formData = new FormData(form)
-    const foodName = (formData.get("food_name") as string) || ""
     const amount = (formData.get("amount") as string) || ""
     const notes = (formData.get("notes") as string) || ""
     const mergedNotes = amount ? `用量:${amount}${notes ? ` | ${notes}` : ""}` : notes || null
@@ -103,6 +104,7 @@ export function DietLogForm({ petId }: { petId: string }) {
     form.reset()
     setFoodType("dry_food")
     setSelectedProduct(null)
+    setFoodName("")
     router.refresh()
   }
 
@@ -164,8 +166,9 @@ export function DietLogForm({ petId }: { petId: string }) {
             id="food_name"
             name="food_name"
             required
-            value={selectedProduct?.name ?? ""}
+            value={foodName}
             onChange={(e) => {
+              setFoodName(e.target.value)
               if (selectedProduct && e.target.value !== selectedProduct.name) {
                 setSelectedProduct(null)
               }

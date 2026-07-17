@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { HotCatFoodSection } from "@/components/home/hot-cat-food-section"
+import { HeroVideo } from "@/components/home/hero-video"
+import { queryTotalPetCount } from "@/lib/supabase/queries/profile-queries"
 
 // ---------- Mock feedback data ----------
 
@@ -12,59 +14,15 @@ const feedbacks = [
 
 // ---------- Page ----------
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { count: petCount } = await queryTotalPetCount()
   return (
-    <div className="bg-[#F7F6F3]">
+    <div className="bg-[#F7F6F3] overflow-x-hidden">
       {/* ========== Hero Section ========== */}
-      <section className="px-6 py-8 md:px-12 md:py-10">
+      <section className="px-6 pt-[29px] pb-8 md:px-12 md:pb-10">
         <div className="relative mx-auto max-w-[1440px] overflow-hidden rounded-[32px]">
-          {/* Background Image */}
-          <div className="relative aspect-[2.8/1] w-full">
-            <img
-              src="/hero-background.png"
-              alt="Premium cat and cat food hero background"
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-            
-            {/* Content Overlay */}
-            <div className="absolute inset-0 z-10 flex items-center">
-              <div className="w-full max-w-[600px] px-8 md:px-16">
-                <span className="mb-4 block text-[12px] font-bold uppercase tracking-[0.2em] text-[#FF7A59] md:mb-6 md:text-[13px]">
-                  Pet Food Trust Infrastructure
-                </span>
-
-                <h1 className="text-[36px] font-bold leading-[1.05] tracking-[-0.04em] text-[#111111] md:text-[52px] lg:text-[64px]">
-                  让每一次选择
-                  <br />
-                  都值得信赖
-                </h1>
-
-                <p className="mt-4 max-w-[420px] text-[14px] leading-[1.8] text-[#6B6B6B] md:mt-6 md:text-[16px] lg:text-[18px]">
-                  基于长期数据与真实口碑，建立透明、可信赖的猫咪消费决策基础设施。
-                </p>
-
-                {/* CTA Button */}
-                <Button
-                  asChild
-                  className="mt-6 h-[48px] rounded-full bg-[#FF7A59] px-7 text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(255,122,89,0.25)] transition-transform hover:translate-y-[-2px] md:mt-8 md:h-[52px] md:px-8 md:text-[16px]"
-                >
-                  <Link href="/signup">立即加入 →</Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* Floating Data Card */}
-            <div className="absolute right-[15%] top-[30%] z-20 hidden rounded-[14px] bg-white/95 px-4 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.06)] backdrop-blur-sm md:block lg:right-[18%]">
-              <div className="flex items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-[#FF7A59]">
-                  <path d="M2 10L5 6L8 8L14 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="text-[12px] text-[#6B6B6B]">累计追踪</span>
-                <span className="text-[14px] font-semibold text-[#111111]">128,560+</span>
-                <span className="text-[12px] text-[#6B6B6B]">只猫咪</span>
-              </div>
-            </div>
-          </div>
+          {/* Background Video */}
+          <HeroVideo petCount={petCount} />
         </div>
       </section>
 
@@ -167,7 +125,9 @@ export default function HomePage() {
       </section>
 
       {/* ========== Product Carousel — Hot Cat Food ========== */}
-      <HotCatFoodSection />
+      <div>
+        <HotCatFoodSection />
+      </div>
 
       {/* ========== Footer ========== */}
       <footer className="bg-white">
@@ -176,20 +136,19 @@ export default function HomePage() {
             <div className="flex items-center gap-2.5">
               <img
                 src="/logo.png"
-                alt="PetRWD Logo"
+                alt="Nuzzly毛球镇 Logo"
                 className="size-8 rounded-[8px]"
               />
-              <span className="text-[15px] font-semibold text-[#111111]">PetRWD</span>
+              <span className="text-[15px] font-semibold text-[#111111]">Nuzzly毛球镇</span>
             </div>
 
             <nav className="flex flex-wrap items-center justify-center gap-6">
-              <Link href="/products" className="text-[13px] text-[#6B6B6B] transition-colors hover:text-[#111111]">产品库</Link>
               <span className="text-[13px] text-[#6B6B6B]">隐私政策</span>
               <span className="text-[13px] text-[#6B6B6B]">服务条款</span>
             </nav>
 
             <p className="text-[12px] text-[#D2D1CF]">
-              &copy; 2026 PetRWD · Pet Real World Data. 数据驱动，理性养宠。
+              &copy; 2026 Nuzzly毛球镇 · 数据驱动，理性养宠。
             </p>
           </div>
         </div>

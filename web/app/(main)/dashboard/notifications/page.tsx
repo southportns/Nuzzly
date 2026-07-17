@@ -4,7 +4,7 @@ import { getUser, queryNotifications } from "@/lib/supabase/query"
 import { NotificationList } from "@/components/notifications/notification-list"
 
 export const metadata = {
-  title: "通知中心 — PetRWD",
+  title: "通知中心 — Nuzzly毛球镇",
 }
 
 export default async function NotificationsPage() {

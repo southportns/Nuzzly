@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 export const metadata = {
-  title: "保护计划 — PetRWD",
+  title: "保护计划 — Nuzzly毛球镇",
 }
 
 const features = [

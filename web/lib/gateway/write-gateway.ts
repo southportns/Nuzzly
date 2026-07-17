@@ -282,13 +282,11 @@ export function getWriteGateway(): WriteGateway {
 
 // ─── Helper: Generate Idempotency Key ───────────────────────────────────────
 
+import { createHash } from "crypto"
+
 export function generateIdempotencyKey(type: string, payload: Record<string, unknown>): string {
+  // 使用 SHA-256 替代 DJB2 变种哈希，避免 32-bit 哈希碰撞导致幂等键误判
   const stable = JSON.stringify({ type, ...payload })
-  let hash = 0
-  for (let i = 0; i < stable.length; i++) {
-    const char = stable.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash // Convert to 32bit integer
-  }
-  return `ik_${type}_${Math.abs(hash).toString(36)}_${Date.now().toString(36)}`
+  const hash = createHash("sha256").update(stable).digest("hex").slice(0, 32)
+  return `ik_${type}_${hash}`
 }

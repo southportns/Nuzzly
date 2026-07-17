@@ -47,6 +47,13 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
   --radius-full: 999px;
+
+  /* Nuzzly 户口簿主题色 */
+  --color-nuzzly-coral: #FF7A59;
+  --color-nuzzly-sage: #A8C5A0;
+  --color-nuzzly-pink: #FFD1D9;
+  --color-nuzzly-yellow: #FEF3C7;
+  --color-nuzzly-warm-brown: #8B5E46;
 }
 
 /* ── Safe Area (iOS) ── */
@@ -162,4 +169,34 @@ a,
   body { @apply bg-background text-foreground antialiased; }
   html { @apply font-sans; }
   html { scrollbar-gutter: stable; }
+  a { color: inherit; text-decoration: none; }
+}
+
+/* Custom scrollbar - rounded orange style */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #FFB89A transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 100px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #FFB89A;
+  border-radius: 100px;
+  border: 1px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #FF7A59;
+  border-color: transparent;
+  background-clip: content-box;
 }

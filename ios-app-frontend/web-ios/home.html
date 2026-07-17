@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>毛球镇 · 首页</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <style>
+    /* === Home.vue scoped 样式（忠实复刻） === */
+    .header{position:relative;padding:0 24px;z-index:1}
+    .header-row{display:flex;align-items:center;justify-content:space-between}
+    .avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--beige),var(--brown));display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 2px 12px rgba(139,94,70,.12);flex-shrink:0;overflow:hidden}
+    .avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+    .header-actions{display:flex;gap:12px}
+    .action-circle{width:41.31px;height:41.31px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative}
+    .action-circle:active{transform:scale(.92)}
+    .action-circle svg{width:20px;height:20px;color:var(--fg)}
+    .greeting{margin-top:0}
+    .greeting-main{font-family:var(--font-display);font-size:20px;font-weight:700;line-height:1.15;letter-spacing:-.02em;color:var(--fg)}
+    .greeting-main .pet-name{color:var(--brown)}
+    .quick-actions{display:flex;gap:16px;padding:0 24px;position:relative;z-index:1;margin-top:20px}
+    .qa-btn{width:45px;height:45px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer;transition:transform .2s,box-shadow .2s;flex-shrink:0;position:relative;text-decoration:none}
+    .qa-btn:active{transform:scale(.9)}
+    .qa-btn svg{width:18px;height:18px;color:var(--fg)}
+    .qa-btn.primary{background:var(--brown);border:none;box-shadow:var(--shadow-btn)}
+    .qa-btn.primary svg{color:#fff}
+    .qa-btn .qa-label{position:absolute;bottom:-20px;font-size:11px;color:var(--muted);white-space:nowrap;letter-spacing:.01em}
+    .hero-card{margin:28px 24px 0;background:var(--card);border-radius:var(--radius-card);box-shadow:var(--shadow-card);border:1px solid var(--border);padding:16px 16px 13px;display:flex;align-items:flex-end;gap:12px;position:relative;z-index:1;overflow:visible}
+    .hero-left{flex:0 0 48%;display:flex;flex-direction:column;gap:8px;padding-left:3px}
+    .hero-tag{display:inline-flex;align-items:center;gap:4px;background:rgba(108,138,105,.1);color:var(--green);font-size:11px;font-weight:500;padding:3px 8px;border-radius:var(--radius-btn);width:100%;box-sizing:border-box;letter-spacing:.02em;white-space:nowrap}
+    .hero-tag svg{width:10px;height:10px;flex-shrink:0}
+    .hero-tag.good{background:rgba(108,138,105,.1);color:var(--green)}
+    .hero-tag.warn{background:rgba(255,149,0,.1);color:#FF9500}
+    .hero-tag.bad{background:rgba(255,59,48,.1);color:#FF3B30}
+    .hero-score{font-family:var(--font-num);font-size:clamp(28px,8vw,42px);font-weight:600;line-height:1;letter-spacing:-.03em;color:var(--fg)}
+    .hero-score-unit{font-size:20px;font-weight:500;color:var(--muted)}
+    .hero-progress{margin-top:0;width:100%}
+    .hero-progress-bar{width:100%;height:4px;border-radius:2px;background:rgba(0,0,0,.06);overflow:hidden}
+    .hero-progress-fill{height:100%;border-radius:2px;transition:width .4s ease;width:0}
+    .hero-progress-fill.good{background:linear-gradient(90deg,var(--green),#34C759)}
+    .hero-progress-fill.warn{background:linear-gradient(90deg,#FF9500,#FFCC02)}
+    .hero-progress-fill.bad{background:linear-gradient(90deg,#FF3B30,#FF9500)}
+    .hero-cta{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--brown);color:#fff;font-size:13px;font-weight:500;padding:10px 19px;border-radius:var(--radius-btn);box-shadow:var(--shadow-btn);border:none;cursor:pointer;width:100%;box-sizing:border-box;transition:transform .15s;letter-spacing:.01em;white-space:nowrap;text-decoration:none}
+    .hero-cta:active{transform:scale(.96)}
+    .hero-right{position:absolute;right:0;bottom:0;width:48%;display:flex;align-items:flex-end;justify-content:flex-start;pointer-events:none;z-index:10}
+    .hero-pet-img{width:80%;height:auto;object-fit:contain;object-position:center bottom;pointer-events:none;user-select:none;display:block}
+    .dashboard{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:28px 24px 0;position:relative;z-index:1}
+    .dash-card{background:var(--card);border-radius:var(--radius-card);box-shadow:var(--shadow-card);border:1px solid var(--border);padding:24px;width:100%;aspect-ratio:1;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:transform .2s;position:relative;overflow:hidden;text-decoration:none;color:inherit}
+    .dash-card:active{transform:scale(.97)}
+    .dash-card.accent-bg{background:rgba(215,181,147,.12)}
+    .dash-card.green-bg{background:rgba(108,138,105,.08)}
+    .dash-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px}
+    .dash-icon.green{background:rgba(108,138,105,.12)}
+    .dash-icon.gray{background:rgba(0,0,0,.04)}
+    .dash-value{font-family:var(--font-num);font-size:clamp(24px,7vw,36px);font-weight:600;line-height:1.1;letter-spacing:-.02em;color:var(--fg)}
+    .dash-unit{font-size:16px;font-weight:400;color:var(--muted);margin-left:2px}
+    .dash-label{font-size:14px;color:var(--muted);letter-spacing:.01em}
+    .dash-action{font-size:14px;color:var(--brown);font-weight:500;display:flex;align-items:center;gap:4px;margin-top:auto;letter-spacing:.01em;cursor:pointer}
+    .dash-action svg{width:14px;height:14px}
+    .notif-badge{position:absolute;top:8px;right:8px;min-width:16px;height:16px;border-radius:8px;background:#FF3B30;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;line-height:1}
+
+    /* === WeightCarousel 样式（忠实复刻自 WeightCarousel.vue scoped） === */
+    .weight-carousel{position:relative;overflow:hidden;background:var(--card);border-radius:var(--radius-card);box-shadow:var(--shadow-card);border:1px solid var(--border);padding:16px;width:100%;aspect-ratio:1;cursor:grab;user-select:none;-webkit-user-select:none}
+    .weight-carousel:active{cursor:grabbing}
+    .carousel-track{display:flex;gap:8px;height:calc(100% - 28px)}
+    .carousel-item{flex-shrink:0;display:flex;flex-direction:column;justify-content:space-between;transition:transform .35s cubic-bezier(.22,1,.36,1),opacity .35s cubic-bezier(.22,1,.36,1)}
+    .item-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+    .item-avatar{width:100%;height:100%;object-fit:cover;border-radius:14px}
+    .item-emoji{font-size:22px;line-height:1}
+    .item-body{display:flex;flex-direction:column;gap:2px}
+    .item-weight{font-family:var(--font-num);font-size:clamp(24px,7vw,36px);font-weight:600;line-height:1.1;letter-spacing:-.02em;color:var(--fg)}
+    .item-unit{font-size:16px;font-weight:400;color:var(--muted);margin-left:2px}
+    .item-name{font-size:14px;color:var(--muted);letter-spacing:.01em;margin-top:2px}
+    .item-label{font-size:14px;color:var(--muted);letter-spacing:.01em}
+    .carousel-indicators{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+    .indicator{height:6px;width:6px;border:none;padding:0;border-radius:50%;cursor:pointer;transition:background-color .2s,transform .2s;background-color:rgba(0,0,0,.15)}
+    .indicator.active{background-color:var(--fg);transform:scale(1.2)}
+    .carousel-action{position:absolute;bottom:10px;right:16px;font-size:13px;color:var(--brown);font-weight:500;display:flex;align-items:center;gap:3px;cursor:pointer}
+    .carousel-action svg{width:12px;height:12px}
+  </style>
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+
+    <!-- Header -->
+    <header class="header anim-fade-up">
+      <div class="header-row">
+        <div class="avatar">
+          <img src="assets/mqpyqgao-logo.png" alt="nuzzly logo">
+        </div>
+        <div class="header-actions">
+          <a class="action-circle anim-fade-up anim-delay-1" aria-label="通知" href="notifications.html" style="margin-top:18px;position:relative">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.134 11C18.715 16.375 21 18 21 18H3s3-2.133 3-9.6c0-1.697.632-3.325 1.757-4.525S10.41 2 12 2q.507 0 1 .09M19 8a3 3 0 1 0 0-6a3 3 0 0 0 0 6m-5.27 13a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notif-badge" style="display:none">0</span>
+          </a>
+        </div>
+      </div>
+      <div class="greeting">
+        <h1 class="greeting-main">HI,<span class="pet-name">铲屎官</span><br>欢迎来到毛球镇</h1>
+      </div>
+    </header>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <a class="qa-btn primary anim-scale-in anim-delay-2" aria-label="镇长" href="aihub.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-30deg)"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/></svg>
+        <span class="qa-label">镇长</span>
+      </a>
+      <a class="qa-btn anim-scale-in anim-delay-3 pet-btn" aria-label="宠物" href="pet-create.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        <span class="qa-label">宠物建档</span>
+      </a>
+    </div>
+
+    <!-- Hero Task Card -->
+    <div class="hero-card anim-fade-up anim-delay-3">
+      <div class="hero-left">
+        <div class="hero-tag good">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13l4 4L19 7"/></svg>
+          <span class="hero-tag-text">暂无到期任务</span>
+        </div>
+        <div class="hero-score"><span class="hero-score-num">0</span><span class="hero-score-unit">%</span></div>
+        <div class="hero-progress">
+          <div class="hero-progress-bar">
+            <div class="hero-progress-fill good"></div>
+          </div>
+        </div>
+        <a class="hero-cta" href="pet-create.html">管理任务</a>
+      </div>
+      <div class="hero-right">
+        <img src="assets/cat.png" alt="宠物" class="hero-pet-img" loading="lazy">
+      </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard">
+      <div class="weight-carousel anim-fade-up anim-delay-4"></div>
+
+      <a class="dash-card dash-reminders anim-fade-up anim-delay-4" href="health-reminders.html">
+        <div class="dash-icon green"></div>
+        <div class="dash-value"><span class="dash-value-num">0</span><span class="dash-unit">条</span></div>
+        <div class="dash-label">健康提醒</div>
+        <div class="dash-action">查看全部<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19L19 6m0 0v12.48M19 6H6.52"/></svg></div>
+      </a>
+
+      <div class="dash-card accent-bg dash-age anim-fade-up anim-delay-5">
+        <div class="dash-icon green"></div>
+        <div class="dash-value">- 岁 - 月</div>
+        <div class="dash-label">毛毛的年龄</div>
+      </div>
+
+      <a class="dash-card green-bg dash-diet anim-fade-up anim-delay-5" href="profile.html">
+        <div class="dash-icon gray"></div>
+        <div class="dash-value"><span class="dash-value-num">0</span><span class="dash-unit">次 / 今日</span></div>
+        <div class="dash-label">饮食记录</div>
+        <div class="dash-action diet-add">添加<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h6m6 0h-6m0 0V6m0 6v6"/></svg></div>
+      </a>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+  (async function () {
+    const App = window.NuzzlyApp, Data = window.NuzzlyData
+    const user = await App.requireAuth()
+    if (!user) return
+    const uid = user.id
+
+    // 先注入 TabBar 与 header 渐隐（骨架已静态渲染）
+    App.injectTabBar('home')
+    App.bindHeaderFade(document.querySelector('.header'))
+
+    // 饮食"添加"按钮：阻止冒泡到 card 跳转
+    const dietAdd = document.querySelector('.diet-add')
+    if (dietAdd) dietAdd.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); location.href = 'record-create.html?type=diet' })
+
+    // 非阻塞并行加载
+    const [profile, pets, records, dietLogs, notifications] = await Promise.all([
+      Data.getProfile(uid), Data.getPets(uid), Data.getHealthRecords(uid),
+      Data.getDietLogs(uid), Data.getNotifications(uid)
+    ])
+
+    // greeting
+    const userName = profile?.display_name || profile?.username || '铲屎官'
+    document.querySelector('.greeting-main .pet-name').textContent = userName
+
+    // 通知 badge
+    const unread = Data.computeUnreadCount(notifications)
+    const badge = document.querySelector('.notif-badge')
+    if (badge) {
+      if (unread > 0) { badge.style.display = 'flex'; badge.textContent = unread > 99 ? '99+' : unread }
+      else badge.style.display = 'none'
+    }
+
+    // 宠物按钮
+    const petBtn = document.querySelector('.pet-btn')
+    if (pets.length) { petBtn.href = 'profile.html'; petBtn.querySelector('.qa-label').textContent = '宠物管理' }
+
+    const mainPet = pets[0] || null
+    const heroImg = document.querySelector('.hero-pet-img')
+    const heroCta = document.querySelector('.hero-cta')
+    if (mainPet) {
+      if (mainPet.avatar_url) heroImg.src = mainPet.avatar_url
+      heroCta.href = 'tasks.html?petId=' + mainPet.id
+    }
+
+    // 每只宠物最新体重（独立查询，对齐 fetchPerPetWeights）
+    const latestWeight = {}
+    for (const p of pets) {
+      const { data } = await sb.from('health_records').select('weight_kg')
+        .eq('profile_id', uid).eq('record_type', 'weight').eq('pet_id', p.id)
+        .order('record_time', { ascending: false }).limit(1)
+      if (data && data.length && data[0].weight_kg != null) latestWeight[p.id] = data[0].weight_kg
+    }
+    const carouselItems = pets.map(p => ({
+      id: p.id, name: p.name, avatar: p.avatar_url || p.photo_url,
+      weight: latestWeight[p.id] != null ? Number(latestWeight[p.id]).toFixed(1)
+            : (p.weight_kg != null ? Number(p.weight_kg).toFixed(1) : null),
+      emoji: p.species === 'dog' ? '🐕' : p.species === 'cat' ? '🐱' : '🐾',
+      color: p.species === 'dog' ? 'rgba(139,94,70,.1)' : 'rgba(215,181,147,.2)'
+    }))
+    App.initWeightCarousel(document.querySelector('.weight-carousel'), carouselItems, () => {
+      location.href = 'record-create.html?type=weight'
+    })
+
+    // 今日任务评分 + 健康提醒
+    let score = 100, progress = { completedCount: 0, totalCount: 0 }
+    if (mainPet) {
+      const [tasks, logs] = await Promise.all([Data.getDailyTasks(mainPet.id), Data.getTodayLogs(mainPet.id)])
+      const r = Data.computeTodayScore(tasks, logs)
+      score = r.score; progress = r
+      const reminders = await Data.getHealthReminders(uid, mainPet.id)
+      document.querySelector('.dash-reminders .dash-value-num').textContent = Data.computeDueCount(reminders)
+
+      // 宠物年龄
+      const ageEl = document.querySelector('.dash-age .dash-value')
+      ageEl.innerHTML = (mainPet.age_years || 0) + '<span class="dash-unit">岁 ' + (mainPet.age_months || 0) + ' 月</span>'
+      document.querySelector('.dash-age .dash-label').textContent = (mainPet.name || '毛毛') + '的年龄'
+    }
+
+    // hero-tag
+    const tag = App.scoreTag(score)
+    const heroTag = document.querySelector('.hero-tag')
+    heroTag.className = 'hero-tag ' + tag.cls
+    heroTag.querySelector('.hero-tag-text').textContent =
+      progress.totalCount === 0 ? '暂无到期任务'
+      : progress.completedCount === progress.totalCount ? '今日任务全部完成'
+      : '今日完成 ' + progress.completedCount + '/' + progress.totalCount + ' 项'
+
+    const fill = document.querySelector('.hero-progress-fill')
+    fill.className = 'hero-progress-fill ' + tag.cls
+    requestAnimationFrame(() => { fill.style.width = score + '%' })
+
+    setTimeout(() => App.animateCount(document.querySelector('.hero-score-num'), score, 1200), 500)
+
+    // 今日饮食次数
+    const today = new Date().toISOString().slice(0, 10)
+    const todayDiet = dietLogs.filter(d => (d.logged_date || '').slice(0, 10) === today).length
+    document.querySelector('.dash-diet .dash-value-num').textContent = todayDiet
+  })().catch(e => console.error('[home]', e))
+  </script>
+</body>
+</html>

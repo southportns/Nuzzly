@@ -17,33 +17,44 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       href={`/products/${product.id}`}
-      className="group rounded-[24px] border border-[rgba(0,0,0,0.06)] bg-white p-5 transition-all hover:shadow-[0_8px_40px_rgba(0,0,0,0.06)]"
+      className="group overflow-hidden rounded-[20px] border border-[#E5E7EB] bg-white transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)]"
     >
       {/* Product image placeholder */}
-      <div className="flex aspect-[4/3] items-center justify-center rounded-[16px] bg-[#F0EFED] text-[32px]">
+      <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-[#FEF3C7] to-[#FDE68A] text-[40px] transition-transform duration-300 group-hover:scale-105">
         🐱
       </div>
-      <div className="mt-4">
-        <p className="text-[14px] text-[#6B6B6B]">{product.brand}</p>
-        <p className="mt-0.5 text-[17px] font-semibold leading-[1.24] tracking-[-0.022em] text-[#111111]">
+
+      {/* Info section */}
+      <div className="p-4">
+        <p className="text-[12px] font-medium tracking-wide text-[#9CA3AF]">{product.brand}</p>
+        <p className="mt-1 text-[15px] font-semibold leading-snug text-[#1A1A1A] line-clamp-2">
           {product.name}
         </p>
-      </div>
-      <div className="mt-3 flex items-center justify-between border-t border-[rgba(0,0,0,0.06)] pt-3">
-        <div className="flex gap-2">
-          <span className="rounded-full bg-[#F0EFED] px-2 py-0.5 text-[12px] text-[#6B6B6B]">
-            {product.applicable_species === "cats" ? "猫咪" : product.applicable_species === "dogs" ? "狗狗" : "通用"}
+
+        {/* Tags row */}
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <span className="inline-flex items-center rounded-[8px] bg-[#F3F4F6] px-2 py-0.5 text-[11px] font-medium text-[#6B7280]">
+            {product.applicable_species === "cats" ? "🐱 猫咪" : product.applicable_species === "dogs" ? "🐶 狗狗" : "🐾 通用"}
           </span>
           {product.product_categories && (
-            <span className="rounded-full bg-[#F0EFED] px-2 py-0.5 text-[12px] text-[#6B6B6B]">
+            <span className="inline-flex items-center rounded-[8px] bg-[#FEF3C7] px-2 py-0.5 text-[11px] font-medium text-[#D97706]">
               {product.product_categories.name}
             </span>
           )}
         </div>
+
+        {/* Price */}
         {product.price_min != null && (
-          <span className="text-[14px] font-semibold text-[#111111]">
-            ¥{Number(product.price_min)}
-          </span>
+          <div className="mt-3 flex items-baseline gap-1">
+            <span className="text-[17px] font-bold text-[#F59E0B]">
+              ¥{Number(product.price_min)}
+            </span>
+            {product.price_max != null && product.price_max > product.price_min && (
+              <span className="text-[12px] text-[#9CA3AF]">
+                - ¥{Number(product.price_max)}
+              </span>
+            )}
+          </div>
         )}
       </div>
     </Link>

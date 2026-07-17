@@ -5,7 +5,7 @@ import { Search } from "lucide-react"
 import { UserRowActions } from "@/components/admin/user-row-actions"
 
 export const metadata = {
-  title: "用户管理 — PetRWD 管理员",
+  title: "用户管理 — Nuzzly毛球镇 管理员",
 }
 
 type SearchParams = Promise<{

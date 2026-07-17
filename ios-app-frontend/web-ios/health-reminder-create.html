@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>新建提醒 - Nuzzly 毛球镇</title>
+<link rel="stylesheet" href="css/common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<style>
+.create-shell{width:100%;min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;padding-top:calc(24px + var(--safe-top));position:relative;overflow:hidden}
+.create-bg{position:fixed;inset:0;background:linear-gradient(160deg,rgba(215,181,147,.15) 0%,rgba(245,240,235,.6) 40%,rgba(108,138,105,.08) 100%);z-index:0}
+.card-wrapper{position:relative;z-index:1;width:100%;max-width:400px}
+.glass-card{background:rgba(255,255,255,.72);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-radius:28px;border:1px solid rgba(255,255,255,.6);box-shadow:0 24px 80px rgba(0,0,0,.08),0 8px 32px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.8);padding:28px 24px 32px;position:relative}
+.card-top{display:flex;justify-content:flex-end;margin-bottom:4px}
+.close-btn{width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.05);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
+.close-btn:active{transform:scale(.85)}
+.close-btn svg{width:18px;height:18px;color:var(--muted)}
+.card-title{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--fg);text-align:center;margin-bottom:24px;letter-spacing:-.01em}
+.field{margin-bottom:18px}
+.field-label{display:block;font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:500;letter-spacing:.01em}
+.optional{font-weight:400;opacity:.6}
+.field-input{width:100%;border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:12px 16px;font-size:14px;background:rgba(255,255,255,.6);color:var(--fg);outline:none;font-family:var(--font-body);transition:border-color .2s,box-shadow .2s;box-sizing:border-box}
+.field-input:focus{border-color:var(--brown);box-shadow:0 0 0 3px rgba(139,94,70,.08)}
+.field-input::placeholder{color:var(--muted)}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.type-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.5);border:1.5px solid rgba(0,0,0,.06);cursor:pointer;transition:all .2s}
+.type-btn:active{transform:scale(.96)}
+.type-btn.active{background:rgba(139,94,70,.08);border-color:var(--brown)}
+.type-icon{font-size:18px}
+.type-text{font-size:13px;font-weight:500;color:var(--fg)}
+.repeat-row{display:flex;gap:6px;flex-wrap:wrap}
+.repeat-chip{padding:8px 16px;border-radius:var(--radius-btn);background:rgba(255,255,255,.5);border:1.5px solid rgba(0,0,0,.06);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s}
+.repeat-chip:active{transform:scale(.96)}
+.repeat-chip.active{background:rgba(139,94,70,.08);border-color:var(--brown);color:var(--brown)}
+.submit-btn{width:100%;height:50px;border-radius:16px;background:var(--brown);color:#fff;border:none;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 8px 24px rgba(139,94,70,.25);margin-top:8px;transition:transform .15s,box-shadow .15s;letter-spacing:.01em}
+.submit-btn:disabled{opacity:.35;cursor:default;box-shadow:none}
+.submit-btn:active:not(:disabled){transform:scale(.97);box-shadow:0 4px 12px rgba(139,94,70,.2)}
+@keyframes scaleIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.anim-scale-in{opacity:0;animation:scaleIn .45s cubic-bezier(.22,1,.36,1) forwards}
+.toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);background:rgba(0,0,0,.78);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:80%;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+</style>
+</head>
+<body>
+<div class="create-shell">
+  <div class="create-bg"></div>
+  <div class="card-wrapper anim-scale-in">
+    <div class="glass-card">
+      <div class="card-top">
+        <button class="close-btn" id="closeBtn" aria-label="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <h2 class="card-title">新建提醒</h2>
+      <div class="field"><label class="field-label">提醒类型</label><div class="type-grid" id="typeGrid"></div></div>
+      <div class="field"><label class="field-label">标题</label><input id="f_title" class="field-input" placeholder="例如：猫三联加强针"></div>
+      <div class="field"><label class="field-label">描述 <span class="optional">可选</span></label><input id="f_desc" class="field-input" placeholder="补充说明…"></div>
+      <div class="field"><label class="field-label">到期日期</label><input id="f_due" type="date" class="field-input"></div>
+      <div class="field"><label class="field-label">循环提醒</label><div class="repeat-row" id="repeatRow"></div></div>
+      <button class="submit-btn" id="submitBtn" disabled>创建提醒</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+(function () {
+  const sb = window.sb, D = window.NuzzlyData, A = window.NuzzlyApp
+  const TYPE_OPTIONS = [{ value: 'vaccination', label: '疫苗', icon: '💉' }, { value: 'medication', label: '用药', icon: '💊' }, { value: 'checkup', label: '体检', icon: '🩺' }, { value: 'custom', label: '自定义', icon: '📌' }]
+  const REPEAT_OPTIONS = [{ value: 'none', label: '不循环' }, { value: 'monthly', label: '每月' }, { value: 'quarterly', label: '每季' }, { value: 'yearly', label: '每年' }]
+  const petId = new URLSearchParams(location.search).get('petId') || ''
+  const form = { type: 'vaccination', title: '', description: '', dueDate: '', repeat: 'none' }
+  let submitting = false
+  function toast (msg, theme) { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'toast show ' + (theme || 'success'); clearTimeout(window.__t); window.__t = setTimeout(() => { el.className = 'toast' }, 2000) }
+  function canSubmit () { return form.title.trim() && form.dueDate && petId }
+  function refreshSubmit () { document.getElementById('submitBtn').disabled = !canSubmit() || submitting; document.getElementById('submitBtn').textContent = submitting ? '创建中…' : '创建提醒' }
+  function render () {
+    document.getElementById('typeGrid').innerHTML = TYPE_OPTIONS.map(t => '<div class="type-btn' + (form.type === t.value ? ' active' : '') + '" data-v="' + t.value + '"><span class="type-icon">' + t.icon + '</span><span class="type-text">' + t.label + '</span></div>').join('')
+    document.getElementById('repeatRow').innerHTML = REPEAT_OPTIONS.map(r => '<div class="repeat-chip' + (form.repeat === r.value ? ' active' : '') + '" data-v="' + r.value + '">' + r.label + '</div>').join('')
+    document.querySelectorAll('.type-btn').forEach(el => el.onclick = () => { form.type = el.dataset.v; render() })
+    document.querySelectorAll('.repeat-chip').forEach(el => el.onclick = () => { form.repeat = el.dataset.v; render() })
+  }
+  document.getElementById('f_title').oninput = e => { form.title = e.target.value; refreshSubmit() }
+  document.getElementById('f_desc').oninput = e => form.description = e.target.value
+  document.getElementById('f_due').oninput = e => { form.dueDate = e.target.value; refreshSubmit() }
+  document.getElementById('closeBtn').onclick = () => history.back()
+  document.getElementById('submitBtn').onclick = async () => {
+    if (!canSubmit() || submitting) return
+    if (!petId) { toast('缺少宠物信息', 'error'); return }
+    submitting = true; refreshSubmit()
+    try {
+      const uid = await D.getUid()
+      const { error } = await sb.from('health_reminders').insert({ pet_id: petId, profile_id: uid, reminder_type: form.type, title: form.title.trim(), description: form.description.trim() || null, due_date: form.dueDate, repeat_interval: form.repeat, repeat_end_date: null })
+      if (error) throw new Error(error.message)
+      toast('提醒已创建')
+      setTimeout(() => history.back(), 700)
+    } catch (e) { toast(e.message || '创建失败', 'error'); submitting = false; refreshSubmit() }
+  }
+  async function init () { await A.requireAuth(); if (!petId) { toast('请从健康提醒页面进入', 'error') } render(); refreshSubmit() }
+  init()
+})()
+</script>
+</body>
+</html>

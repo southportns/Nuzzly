@@ -4,7 +4,7 @@ import { Clock } from "lucide-react"
 import { getUser, queryPendingSchedules } from "@/lib/supabase/query"
 
 export const metadata = {
-  title: "长期追踪 — PetRWD",
+  title: "长期追踪 — Nuzzly毛球镇",
 }
 
 export default async function FollowupsPage() {

@@ -4,7 +4,7 @@ import { requireAdmin, listProductsForAdmin } from "@/lib/supabase/query"
 import { Search, ChevronRight } from "lucide-react"
 
 export const metadata = {
-  title: "产品管理 — PetRWD 管理员",
+  title: "产品管理 — Nuzzly毛球镇 管理员",
 }
 
 type SearchParams = Promise<{ search?: string }>

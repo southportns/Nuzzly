@@ -35,10 +35,6 @@
         <div class="settings-cell" @click="$router.push('/settings/sub/about')"><span>关于我们</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></div>
         <div class="settings-cell" @click="$router.push('/settings/sub/feedback')"><span>帮助与反馈</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></div>
       </div>
-      <div v-if="isAdmin" class="settings-group">
-        <div class="settings-group-title">管理</div>
-        <div class="settings-cell" @click="$router.push('/admin')"><span>管理员控制台</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></div>
-      </div>
       <button class="logout-btn" @click="handleLogout">退出登录</button>
     </div>
   </div>

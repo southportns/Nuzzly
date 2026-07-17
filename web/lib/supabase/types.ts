@@ -72,3 +72,8 @@ export type HealthRecordType = 'weight' | 'symptom' | 'diagnosis' | 'medication'
 export type CausalChainType = 'food_reaction' | 'health_progression' | 'treatment_outcome' | 'custom'
 
 export type SampleQuality = 'excellent' | 'good' | 'fair' | 'poor'
+
+// ===== Health Reminders =====
+export type HealthReminder = Tables<"health_reminders">
+export type HealthReminderType = 'vaccination' | 'medication' | 'checkup' | 'custom'
+export type RepeatInterval = 'none' | 'monthly' | 'quarterly' | 'yearly'

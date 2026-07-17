@@ -1,14 +1,15 @@
 import { redirect } from "next/navigation"
 import { Progress } from "@/components/ui/progress"
-import { ShieldCheck, Star, PawPrint, Clock, ChevronRight, ThumbsUp, ThumbsDown, Eye, Bell, Heart, Sparkles, ArrowRight, Plus } from "lucide-react"
+import { ShieldCheck, Star, PawPrint, Clock, ChevronRight, ThumbsUp, ThumbsDown, Eye, Bell, Heart, Sparkles, ArrowRight, Plus, CheckSquare, Activity, Pill, Paperclip, Calendar } from "lucide-react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { formatPetAge } from "@/lib/utils"
-import { getUser, queryProfile, queryPets, queryUserReviews, queryPendingSchedules, queryNotifications, queryBookmarks } from "@/lib/supabase/query"
+import { getUser, queryProfile, queryPets, queryUserReviews, queryPendingSchedules, queryNotifications, queryBookmarks, queryAllergies, queryWeightLogs } from "@/lib/supabase/query"
 import { NotificationList } from "@/components/notifications/notification-list"
-import { OnboardingGuide } from "@/components/dashboard/onboarding-guide"
 import { RecommendationCard } from "@/components/dashboard/recommendation-card"
-import { HealthOverview } from "@/components/dashboard/health-overview"
+import ResidentBookSection from "@/components/resident-book/resident-book-section"
+import { buildResidentBookData } from "@/components/resident-book/utils"
+import { getMedicationRecords } from "@/lib/supabase/queries/medication-queries"
 
 export default async function DashboardPage() {
   const { data: { user } } = await getUser()
@@ -37,26 +38,42 @@ export default async function DashboardPage() {
       .from("recommendation_contexts")
       .select("*, products(id, name, brand, image_url, price, score, score_breakdown)")
       .eq("profile_id", user.id)
-      .eq("is_active", true)
       .order("score", { ascending: false })
       .limit(5),
   ])
   const feedbackEvents = (feedbackResult.data ?? []) as Array<{ id: string; event_type: string; product_id: string | null; created_at: string; metadata: Record<string, unknown> | null }>
   const hasPets = pets && pets.length > 0
 
+  // 构建单一户口簿：户主=用户，成员=所有宠物
+  const allergiesMap: Record<string, any[]> = {}
+  const medsMap: Record<string, any[]> = {}
+  const weightLogsMap: Record<string, any[]> = {}
+
+  if (pets && pets.length > 0) {
+    await Promise.all(
+      pets.map(async (pet) => {
+        const [allergiesRes, meds, weightLogsRes] = await Promise.all([
+          queryAllergies(pet.id),
+          getMedicationRecords(pet.id).catch(() => []),
+          queryWeightLogs(pet.id, 2),
+        ])
+        allergiesMap[pet.id] = allergiesRes.data ?? []
+        medsMap[pet.id] = meds ?? []
+        weightLogsMap[pet.id] = weightLogsRes.data ?? []
+      })
+    )
+  }
+
+  const residentBook = buildResidentBookData(
+    profile,
+    pets ?? [],
+    allergiesMap,
+    medsMap,
+    weightLogsMap
+  )
+
   return (
     <div className="space-y-6">
-      {/* Onboarding Guide (shown when no pets) */}
-      {!hasPets && <OnboardingGuide />}
-
-      {/* Greeting */}
-      <div>
-        <h1 className="text-[28px] font-semibold leading-[1.1] tracking-normal text-[#111111]">
-          我的概览
-        </h1>
-        <p className="mt-2 text-[14px] text-[#6B6B6B]">这里汇总了你的信任分、宠物、追踪和反馈</p>
-      </div>
-
       {/* Personalized Recommendations */}
       {hasPets && recommendations && recommendations.length > 0 && (
         <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
@@ -77,8 +94,8 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      {/* Health Overview (shown when has pets) */}
-      {hasPets && <HealthOverview pets={pets} />}
+      {/* 毛球镇户口簿（无宠物时显示添加引导） */}
+      <ResidentBookSection book={residentBook} hasPets={hasPets ?? false} />
 
       {/* Trust Score (white card on background) */}
       <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
@@ -127,6 +144,31 @@ export default async function DashboardPage() {
             <ChevronRight className="size-4 text-[#D2D1CF] transition-transform group-hover:translate-x-0.5" />
           </div>
         </Link>
+      </section>
+
+      {/* New Modules Quick Access */}
+      <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
+        <div className="mb-4">
+          <span className="text-[15px] font-semibold text-[#111111]">健康管理</span>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Link href="/dashboard/daily-tasks" className="flex flex-col items-center gap-2 rounded-[12px] bg-[#F7F6F3] p-4 transition-colors hover:bg-[#F0EFED]">
+            <CheckSquare className="size-6 text-[#FF7A59]" />
+            <span className="text-[12px] text-[#111111]">每日任务</span>
+          </Link>
+          <Link href="/dashboard/health/diseases" className="flex flex-col items-center gap-2 rounded-[12px] bg-[#F7F6F3] p-4 transition-colors hover:bg-[#F0EFED]">
+            <Activity className="size-6 text-[#ff9500]" />
+            <span className="text-[12px] text-[#111111]">疾病记录</span>
+          </Link>
+          <Link href="/dashboard/health/medications" className="flex flex-col items-center gap-2 rounded-[12px] bg-[#F7F6F3] p-4 transition-colors hover:bg-[#F0EFED]">
+            <Pill className="size-6 text-[#007AFF]" />
+            <span className="text-[12px] text-[#111111]">用药记录</span>
+          </Link>
+          <Link href="/dashboard/health/events" className="flex flex-col items-center gap-2 rounded-[12px] bg-[#F7F6F3] p-4 transition-colors hover:bg-[#F0EFED]">
+            <Calendar className="size-6 text-[#34c759]" />
+            <span className="text-[12px] text-[#111111]">宠物事件</span>
+          </Link>
+        </div>
       </section>
 
       {/* Notifications (white card) */}

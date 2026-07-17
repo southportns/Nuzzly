@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { queryPet, queryDietLogs, queryWeightLogs, queryAllergies, getUser } from "@/lib/supabase/query"
+import { queryPet, queryDietLogs, queryWeightLogs, queryAllergies, getUser, queryProfile } from "@/lib/supabase/query"
 import Link from "next/link"
 import { DietLogForm } from "@/components/pets/diet-log-form"
 import { DietLogList } from "@/components/pets/diet-log-list"
@@ -16,7 +16,8 @@ import { FoodHistory } from "@/components/pets/food-history"
 import { DietTrendChart } from "@/components/pets/diet-trend-chart"
 import { SymptomTracker } from "@/components/pets/symptom-tracker"
 import { RepurchaseReminder } from "@/components/pets/repurchase-reminder"
-import { Utensils, Activity, Heart, Edit3, AlertTriangle, Clock, Stethoscope, ChevronRight } from "lucide-react"
+import { generatePetCode } from "@/components/resident-book/utils"
+import { Utensils, Activity, Heart, Edit3, AlertTriangle, Clock, Stethoscope, ChevronRight, Fingerprint } from "lucide-react"
 
 const lifeStageLabels: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
   kitten: { label: "幼年", variant: "default" },
@@ -30,18 +31,22 @@ const lifeStageLabels: Record<string, { label: string; variant: "default" | "sec
 export default async function DashboardPetDetailPage({ params }: { params: Promise<{ petId: string }> }) {
   const { petId } = await params
 
-  const [{ data: pet }, { data: dietLogs }, { data: weightLogs }, { data: allergies }, { data: { user } }] = await Promise.all([
+  const [{ data: pet }, { data: dietLogs }, { data: weightLogs }, { data: allergies }, { data: { user } }, profile] = await Promise.all([
     queryPet(petId),
     queryDietLogs(petId),
     queryWeightLogs(petId),
     queryAllergies(petId),
     getUser(),
+    queryProfile(user!.id),
   ])
 
   if (!pet) notFound()
 
   const lifeStage = (pet as { life_stage?: string }).life_stage
   const lifeStageInfo = lifeStage ? lifeStageLabels[lifeStage] : null
+  
+  // 生成深圳地标 DB4403/T 467-2024 格式的宠物唯一标识编码
+  const petCode = generatePetCode(pet.species, pet.breed, profile?.user_number, 0)
 
   return (
     <div className="space-y-6">
@@ -77,6 +82,10 @@ export default async function DashboardPetDetailPage({ params }: { params: Promi
                 {pet.stomach_health === "normal" ? "肠胃正常" : pet.stomach_health === "sensitive" ? "肠胃敏感" : "极易敏感"}
               </Badge>
               {lifeStageInfo && <Badge variant={lifeStageInfo.variant}>{lifeStageInfo.label}</Badge>}
+              <Badge variant="outline" className="gap-1 font-mono text-[11px]">
+                <Fingerprint className="size-3" />
+                {petCode}
+              </Badge>
             </div>
           </div>
           <Button asChild variant="outline" size="sm">

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>毛球镇 · 镇长球球</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3/dist/model-viewer.min.js"></script>
+  <style>
+    .app-shell{width:100%;min-height:100vh;min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(80px + var(--safe-bottom));overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+    .header{position:relative;padding:4px 24px 0;z-index:1}
+    .header-row{display:flex;align-items:center;justify-content:space-between}
+    .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--beige),var(--brown));display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 12px rgba(139,94,70,.12);flex-shrink:0;overflow:hidden}
+    .avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+    .header-actions{display:flex;gap:10px}
+    .action-circle{width:41.31px;height:41.31px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative;text-decoration:none}
+    .action-circle:active{transform:scale(.92)}
+    .action-circle svg{width:18px;height:18px;color:var(--fg)}
+    .notif-badge{position:absolute;top:6px;right:6px;min-width:16px;height:16px;border-radius:8px;background:#FF3B30;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;line-height:1}
+
+    /* 镇长 3D 模型 - Hero 风格布局（含放大+降亮，忠实当前状态） */
+    .mayor-card{margin:8px 20px 0;background:var(--card);border-radius:var(--radius-card);box-shadow:var(--shadow-card);padding:16px 16px 13px;display:flex;align-items:flex-end;gap:12px;position:relative;z-index:1;overflow:visible}
+    .mayor-left{flex:0 0 clamp(140px,35%,200px);display:flex;flex-direction:column;gap:8px;padding-left:3px}
+    .mayor-name-row{display:flex;align-items:center;gap:8px}
+    .mayor-name{font-family:var(--font-display);font-size:clamp(20px,5.5vw,28px);font-weight:700;color:var(--fg);letter-spacing:-.01em;margin:0;line-height:1.1}
+    .mayor-badge{display:inline-flex;align-self:flex-start;font-size:10px;font-weight:600;color:var(--brown);background:rgba(139,94,70,.08);padding:3px 11px;margin:8px 0;border:0;border-radius:12px;letter-spacing:.03em}
+    .mayor-desc{font-size:13px;color:var(--muted);margin:0;line-height:1.4}
+    .mayor-right{position:absolute;right:24px;top:0;bottom:0;width:42%;display:flex;align-items:flex-end;justify-content:flex-start;pointer-events:none;z-index:10;transform-origin:left bottom}
+    .globe-container{width:100%;height:clamp(110px,40vw,168px);border-radius:12px;box-sizing:border-box;overflow:hidden;pointer-events:auto}
+    .mayor-model{width:100%;height:100%;--poster-color:transparent;background:transparent!important;filter:brightness(0.7)}
+
+    .seg-bar{display:flex;gap:4px;margin:8px 20px 0;padding:4px;background:rgba(0,0,0,.03);border-radius:var(--radius-btn)}
+    .seg-item{flex:1;text-align:center;padding:10px 4px;border-radius:var(--radius-btn);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s}
+    .seg-item.active{background:var(--card);color:var(--brown);font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    .tab-content{padding:10px 16px 30px;min-height:470px;display:none}
+    .tab-content.active{display:block}
+    .card{background:var(--card);border-radius:16px;padding:12px;box-shadow:var(--shadow-card);border:1px solid var(--border);margin-bottom:10px}
+    .card-header{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+    .card-title{font-size:15px;font-weight:700;color:var(--fg)}
+    .card-desc{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+    .field{margin-bottom:12px;position:relative}
+    .field-label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    .field-input,.field-textarea{width:100%;border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:14px;background:var(--card);color:var(--fg);outline:none;font-family:var(--font-body)}
+    .field-input::placeholder,.field-textarea::placeholder{color:var(--muted)}
+    .field-textarea{resize:vertical;min-height:80px;width:100%;box-sizing:border-box}
+    .custom-select{display:flex;align-items:center;justify-content:space-between;width:100%;border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:14px;background:var(--card);color:var(--fg);cursor:pointer;transition:border-color .2s;box-sizing:border-box}
+    .custom-select:active{border-color:var(--brown)}
+    .select-value{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .select-placeholder{flex:1;color:var(--muted)}
+    .select-arrow{width:16px;height:16px;color:var(--muted);flex-shrink:0;transition:transform .2s}
+    .select-arrow.open{transform:rotate(180deg)}
+    .dropdown-menu{position:absolute;left:0;right:0;top:100%;margin-top:6px;background:rgba(255,255,255,.82);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,.6);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:50;overflow:hidden;max-height:240px;overflow-y:auto;display:none}
+    .dropdown-menu.show{display:block}
+    .dropdown-item{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;transition:background .15s}
+    .dropdown-item:active{background:rgba(0,0,0,.04)}
+    .dropdown-item.active{background:rgba(139,94,70,.08)}
+    .dd-emoji{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(215,181,147,.2),rgba(215,181,147,.08));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .dd-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+    .dd-name{font-size:14px;font-weight:600;color:var(--fg)}
+    .dd-meta{font-size:11px;color:var(--muted)}
+    .dd-check{color:var(--brown);font-size:15px;font-weight:700}
+    .submit-btn{width:100%;height:44px;border-radius:var(--radius-btn);background:var(--brown);color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-btn)}
+    .submit-btn:disabled{opacity:.4;cursor:default}
+    .submit-btn:active{transform:scale(.97)}
+    .empty-hint{text-align:center;padding:16px;font-size:13px;color:var(--muted)}
+    .link{color:var(--brown);font-weight:500;cursor:pointer}
+    .error-card{background:rgba(255,59,48,.05);border:1px solid rgba(255,59,48,.15);border-radius:12px;padding:12px 14px;font-size:13px;color:#FF3B30;margin-bottom:12px}
+    .result-area{margin-top:12px}
+    .summary-card{background:rgba(255,122,89,.05);border:1px solid rgba(255,122,89,.15);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+    .summary-label{font-size:13px;font-weight:600;color:var(--brown)}
+    .summary-text{font-size:13px;color:var(--muted);margin-left:6px}
+    .context-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+    .ctx-tag{font-size:12px;padding:5px 12px;border-radius:var(--radius-btn);background:rgba(0,0,0,.04);color:var(--fg)}
+    .ctx-tag.warn{background:rgba(255,59,48,.08);color:#FF3B30}
+    .rec-card{display:flex;gap:12px;background:var(--card);border-radius:16px;padding:14px;box-shadow:var(--shadow-card);border:1px solid var(--border);margin-bottom:10px}
+    .rec-rank{font-size:18px;font-weight:800;color:var(--brown);font-family:var(--font-num);width:32px;text-align:center;flex-shrink:0}
+    .rec-body{flex:1;min-width:0}
+    .rec-name{font-size:14px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rec-brand{font-size:11px;color:var(--muted)}
+    .rec-price{font-size:14px;font-weight:700;color:var(--brown);font-family:var(--font-num);margin-top:4px}
+    .rec-score{font-size:20px;font-weight:700;font-family:var(--font-num);margin-top:4px}
+    .rec-reason{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+    .rec-dims{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .dim-chip{font-size:10px;padding:3px 8px;border-radius:var(--radius-btn);background:rgba(0,0,0,.04);color:var(--muted)}
+    .warning-card{background:rgba(255,149,0,.05);border:1px solid rgba(255,149,0,.15);border-radius:12px;padding:12px 14px;margin-top:12px}
+    .warning-title{font-size:13px;font-weight:600;color:#FF9500;margin-bottom:8px}
+    .warning-item{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.04)}
+    .warning-item:last-child{border-bottom:none}
+    .warning-reason{color:var(--muted)}
+    .result-card{margin-top:12px}
+    .result-label{font-size:13px;font-weight:600;color:var(--fg);margin-bottom:8px}
+    .result-text{font-size:13px;color:var(--muted);line-height:1.7;white-space:pre-wrap}
+    .tip-card{background:var(--card);border:1px dashed var(--border);border-radius:16px;padding:14px;margin-top:12px}
+    .tip-title{font-size:13px;font-weight:600;color:var(--fg);margin-bottom:8px}
+    .tip-item{font-size:12px;color:var(--muted);line-height:1.8}
+    .tip-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+    .tip-grid span{font-size:12px;color:var(--muted)}
+    .compare-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+    .compare-row{display:flex;align-items:center;gap:8px}
+    .compare-num{width:24px;height:24px;border-radius:50%;background:rgba(255,122,89,.1);color:var(--brown);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .compare-input{flex:1;box-sizing:border-box}
+    .compare-input-wrap{flex:1;position:relative}
+    .compare-dropdown{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:rgba(255,255,255,.88);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.5);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:50;overflow:hidden;display:none}
+    .compare-dropdown.show{display:block}
+    .compare-dd-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;border-bottom:1px solid rgba(0,0,0,.04)}
+    .compare-dd-item:last-child{border-bottom:none}
+    .compare-dd-item:active{background:rgba(139,94,70,.06)}
+    .dd-prod-name{font-size:13px;font-weight:500;color:var(--fg)}
+    .dd-prod-brand{font-size:11px;color:var(--muted)}
+    .compare-del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px}
+    .add-btn{background:none;border:none;color:var(--brown);font-size:13px;cursor:pointer;padding:4px 0;margin-bottom:12px}
+    .input-mode-toggle{display:flex;gap:8px;margin-bottom:12px}
+    .mode-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s}
+    .mode-btn svg{width:16px;height:16px}
+    .mode-btn.active{background:rgba(139,94,70,.08);border-color:var(--brown);color:var(--brown)}
+    /* Chat */
+    .chat-card{display:flex;flex-direction:column;padding:0;margin-bottom:0}
+    .chat-welcome{display:flex;flex-direction:column;align-items:center;padding:2px 16px;margin-top:20px}
+    .chat-welcome-title{font-size:16px;font-weight:700;color:var(--fg);margin-bottom:4px;margin-top:6px}
+    .chat-welcome-desc{font-size:12px;color:var(--muted);text-align:center;max-width:260px;margin-bottom:12px}
+    .chat-suggestions{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:2px}
+    .suggestion-chip{padding:8px 12px;border-radius:14px;background:var(--bg);border:1px solid var(--border);font-size:11px;color:var(--fg);cursor:pointer;max-width:240px}
+    .suggestion-chip:active{background:var(--brown);color:#fff;border-color:var(--brown)}
+    .chat-messages{min-height:clamp(200px,45vh,300px);max-height:clamp(200px,45vh,300px);overflow-y:auto;padding:8px 0;display:flex;flex-direction:column;gap:8px}
+    .chat-row{display:flex;align-items:flex-end;gap:8px;padding:0 12px}
+    .chat-row.user{justify-content:flex-end}
+    .chat-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+    .chat-avatar.ai{background:linear-gradient(135deg,var(--beige),var(--brown))}
+    .chat-avatar.user{background:var(--border)}
+    .chat-bubble{max-width:75%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.5;color:var(--fg);white-space:pre-wrap;word-break:break-word}
+    .chat-bubble.assistant{background:var(--bg);border:1px solid var(--border);border-bottom-left-radius:4px}
+    .chat-bubble.user{background:var(--brown);color:#fff;border-bottom-right-radius:4px}
+    .typing-indicator{display:flex;gap:4px;padding:4px 0}
+    .typing-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:typingBounce 1.2s infinite}
+    .typing-dot:nth-child(2){animation-delay:.2s}
+    .typing-dot:nth-child(3){animation-delay:.4s}
+    @keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-4px)}}
+    .chat-input-bar{display:flex;gap:6px;padding:10px 18px;margin:0;border:0;flex-shrink:0}
+    .chat-input{flex:1;height:36px;border:1px solid var(--border);border-radius:18px;padding:0 12px;font-size:13px;background:var(--bg);color:var(--fg);outline:none;font-family:var(--font-body)}
+    .chat-input::placeholder{color:var(--muted)}
+    .chat-send{padding:0 14px;height:36px;border-radius:18px;background:var(--brown);color:#fff;border:none;font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0}
+    .chat-send:disabled{opacity:.4;cursor:default}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .anim-fade-up{opacity:0;animation:fadeUp .6s cubic-bezier(.22,1,.36,1) forwards}
+    .anim-delay-1{animation-delay:.1s}.anim-delay-2{animation-delay:.2s}
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+
+    <header class="header anim-fade-up">
+      <div class="header-row">
+        <div class="avatar"><img src="assets/mqpyqgao-logo.png" alt="nuzzly logo"></div>
+        <div class="header-actions">
+          <a class="action-circle" aria-label="通知" href="notifications.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.134 11C18.715 16.375 21 18 21 18H3s3-2.133 3-9.6c0-1.697.632-3.325 1.757-4.525S10.41 2 12 2q.507 0 1 .09M19 8a3 3 0 1 0 0-6a3 3 0 0 0 0 6m-5.27 13a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notif-badge" id="notifBadge" style="display:none">0</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- 3D 镇长模型 -->
+    <div class="mayor-card anim-fade-up anim-delay-1">
+      <div class="mayor-left">
+        <div class="mayor-name-row">
+          <h2 class="mayor-name">球球</h2>
+          <div class="mayor-badge">镇长</div>
+        </div>
+        <p class="mayor-desc">我是公正的镇长<br>可爱的村民有什么需要帮助</p>
+      </div>
+      <div class="mayor-right">
+        <div class="globe-container">
+          <model-viewer src="assets/qiuqiu.glb" alt="球球 镇长 3D 模型"
+            interaction-prompt="none" shadow-intensity="1" exposure="0.2"
+            class="mayor-model"></model-viewer>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 切换 -->
+    <div class="seg-bar anim-fade-up anim-delay-1">
+      <div class="seg-item active" data-tab="chat">自由问答</div>
+      <div class="seg-item" data-tab="recommend">智能推荐</div>
+      <div class="seg-item" data-tab="ingredients">成分分析</div>
+      <div class="seg-item" data-tab="compare">产品对比</div>
+    </div>
+
+    <!-- 自由问答 -->
+    <div class="tab-content active" id="tab-chat">
+      <div class="card chat-card">
+        <div class="chat-welcome" id="chatWelcome">
+          <h3 class="chat-welcome-title">✨ AI 宠物营养助手</h3>
+          <p class="chat-welcome-desc">基于毛球镇村民们真实长期反馈数据，为你的毛球提供个性化推荐与分析</p>
+          <div class="chat-suggestions" id="chatSuggestions"></div>
+        </div>
+        <div class="chat-messages" id="chatMessages" style="display:none"></div>
+        <div class="chat-input-bar">
+          <input class="chat-input" id="chatInput" placeholder="问我任何关于宠物食品的问题…" />
+          <button class="chat-send" id="chatSend" disabled>发送</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 智能推荐 -->
+    <div class="tab-content" id="tab-recommend">
+      <div class="card">
+        <div class="card-header"><span class="card-title">AI 智能产品推荐</span></div>
+        <p class="card-desc">基于社区真实长期反馈数据，为你的宠物精准匹配最适合的产品</p>
+        <div id="recPetArea">
+          <div class="field">
+            <label class="field-label">选择宠物</label>
+            <div class="custom-select" id="petSelect">
+              <span class="select-placeholder">选择要推荐的宠物…</span>
+              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="dropdown-menu" id="petDropdown"></div>
+          </div>
+          <div class="field">
+            <label class="field-label">具体需求或症状（可选）</label>
+            <input class="field-input" id="recQuery" placeholder="例如：布偶猫长期软便、低敏幼猫粮…" />
+          </div>
+          <button class="submit-btn" id="btnRecommend" disabled>获取智能推荐</button>
+        </div>
+      </div>
+      <div id="recError"></div>
+      <div class="result-area" id="recResult"></div>
+    </div>
+
+    <!-- 成分分析 -->
+    <div class="tab-content" id="tab-ingredients">
+      <div class="card">
+        <div class="card-header"><span class="card-title">成分分析</span></div>
+        <p class="card-desc">上传成分表图片或粘贴文字，AI 将自动分析风险等级和适配性</p>
+        <div class="input-mode-toggle">
+          <button class="mode-btn active" data-mode="text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>文字输入</button>
+          <button class="mode-btn" data-mode="image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>图片识别</button>
+        </div>
+        <div id="ingTextMode">
+          <textarea class="field-textarea" id="ingInput" rows="5" placeholder="例如：鸡肉粉、鱼肉、玉米、糙米、鸡脂肪、啤酒酵母…"></textarea>
+          <button class="submit-btn" id="btnAnalyze" disabled>开始分析</button>
+        </div>
+      </div>
+      <div id="ingError"></div>
+      <div class="card result-card" id="ingResult" style="display:none">
+        <div class="result-label">AI 分析摘要</div>
+        <div class="result-text" id="ingResultText"></div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-title">使用示例</div>
+        <div class="tip-item">• 上传猫粮包装背面的成分表图片</div>
+        <div class="tip-item">• 或直接粘贴成分表文字内容</div>
+        <div class="tip-item">• AI 会识别主要蛋白来源、填充物、添加剂等</div>
+        <div class="tip-item">• 给出风险评估和品种适配建议</div>
+      </div>
+    </div>
+
+    <!-- 产品对比 -->
+    <div class="tab-content" id="tab-compare">
+      <div class="card">
+        <div class="card-header"><span class="card-title">产品对比</span></div>
+        <p class="card-desc">从数据库选取或手动输入 2-4 款产品，AI 将多维度对比分析</p>
+        <div class="compare-list" id="compareList"></div>
+        <button class="add-btn" id="btnAddProduct">+ 添加产品</button>
+        <button class="submit-btn" id="btnCompare" disabled>开始对比</button>
+      </div>
+      <div id="cmpError"></div>
+      <div class="card result-card" id="cmpResult" style="display:none">
+        <div class="result-text" id="cmpResultText"></div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-title">对比维度</div>
+        <div class="tip-grid"><span>• 适口性评分</span><span>• 软便反馈率</span><span>• 复购率</span><span>• 成分优劣</span><span>• 价格区间</span><span>• 适合品种</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+  (async function () {
+    const App = window.NuzzlyApp, Data = window.NuzzlyData
+    const user = await App.requireAuth()
+    if (!user) return
+    const uid = user.id
+    App.injectTabBar('ai')
+
+    const SPECIES_EMOJI = { cat: '🐱', dog: '🐶' }
+    const API_BASE = 'http://localhost:3000'
+    async function api(path, opts = {}) {
+      const { data: { session } } = await sb.auth.getSession()
+      const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) }
+      if (session) headers.Authorization = 'Bearer ' + session.access_token
+      try {
+        const res = await fetch(API_BASE + path, { ...opts, headers })
+        return await res.json()
+      } catch (e) { return { error: '后端服务未启动（' + API_BASE + '），AI 接口暂不可用' } }
+    }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])) }
+
+    // 通知 badge
+    const notifications = await Data.getNotifications(uid)
+    const unread = Data.computeUnreadCount(notifications)
+    const badge = document.getElementById('notifBadge')
+    if (unread > 0) { badge.style.display = 'flex'; badge.textContent = unread > 99 ? '99+' : unread }
+
+    // 加载宠物
+    const pets = await Data.getPets(uid)
+    let selectedPetId = pets.length ? pets[0].id : ''
+
+    // === Tab 切换 ===
+    document.querySelectorAll('.seg-item').forEach(el => {
+      el.addEventListener('click', () => {
+        document.querySelectorAll('.seg-item').forEach(x => x.classList.remove('active'))
+        document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'))
+        el.classList.add('active')
+        document.getElementById('tab-' + el.dataset.tab).classList.add('active')
+      })
+    })
+
+    // === 智能推荐：宠物下拉 ===
+    const petDropdown = document.getElementById('petDropdown')
+    const petSelect = document.getElementById('petSelect')
+    function renderPetDropdown() {
+      if (!pets.length) {
+        petSelect.querySelector('.select-placeholder').textContent = '请先添加宠物'
+        petDropdown.innerHTML = ''
+        return
+      }
+      petSelect.querySelector('.select-placeholder').textContent = pets.find(p => p.id === selectedPetId)?.name + ' · ' + (pets.find(p => p.id === selectedPetId)?.breed || '未知品种') || '选择要推荐的宠物…'
+      petDropdown.innerHTML = pets.map(p => `<div class="dropdown-item ${p.id === selectedPetId ? 'active' : ''}" data-pid="${p.id}">
+        <span class="dd-emoji">${SPECIES_EMOJI[p.species] || '🐾'}</span>
+        <div class="dd-info"><span class="dd-name">${esc(p.name)}</span><span class="dd-meta">${esc(p.breed || '未知品种')}${p.stomach_health === 'sensitive' ? ' · 肠胃敏感' : ''}</span></div>
+        ${p.id === selectedPetId ? '<span class="dd-check">✓</span>' : ''}
+      </div>`).join('')
+      petDropdown.querySelectorAll('.dropdown-item').forEach(it => it.addEventListener('click', () => {
+        selectedPetId = it.dataset.pid; petDropdown.classList.remove('show')
+        petSelect.querySelector('.select-arrow').classList.remove('open'); renderPetDropdown(); refreshRecBtn()
+      }))
+    }
+    petSelect.addEventListener('click', () => {
+      petDropdown.classList.toggle('show')
+      petSelect.querySelector('.select-arrow').classList.toggle('open')
+    })
+    function refreshRecBtn() { document.getElementById('btnRecommend').disabled = !selectedPetId }
+    renderPetDropdown(); refreshRecBtn()
+
+    function stomachLabel(v) { return v === 'sensitive' ? '敏感' : v === 'very_sensitive' ? '极易敏感' : '正常' }
+    function scoreColor(s) { const p = Math.round(s * 100); return p >= 80 ? '#34C759' : p >= 60 ? '#FF9500' : '#FF3B30' }
+    const DIM_LABELS = { overall_rating: '评分', stomach_match: '肠胃匹配', stool_safety: '软便安全', long_term_stability: '长期稳定', repurchase_rate: '复购率', breed_match: '品种适配' }
+
+    document.getElementById('btnRecommend').addEventListener('click', async () => {
+      if (!selectedPetId) return
+      const btn = document.getElementById('btnRecommend')
+      btn.disabled = true; btn.textContent = '正在分析…'
+      document.getElementById('recError').innerHTML = ''
+      document.getElementById('recResult').innerHTML = ''
+      try {
+        const data = await api('/api/ai/recommend', { method: 'POST', body: JSON.stringify({ petId: selectedPetId, query: document.getElementById('recQuery').value }) })
+        if (data.error) throw new Error(data.error)
+        const r = data
+        let html = `<div class="summary-card"><span class="summary-label">分析结果</span><span class="summary-text">${esc(r.summary)}</span></div>`
+        if (r.pet_context) {
+          html += `<div class="context-tags">
+            <span class="ctx-tag">品种：${esc(r.pet_context.breed)}</span>
+            <span class="ctx-tag">年龄：${esc(r.pet_context.age)}</span>
+            <span class="ctx-tag ${r.pet_context.stomach_health === 'sensitive' || r.pet_context.stomach_health === 'very_sensitive' ? 'warn' : ''}">肠胃：${stomachLabel(r.pet_context.stomach_health)}</span></div>`
+        }
+        if (r.recommendations) {
+          html += r.recommendations.map((rec, i) => `<div class="rec-card"><div class="rec-rank">#${i + 1}</div><div class="rec-body">
+            <div class="rec-name">${esc(rec.product.name)}</div><div class="rec-brand">${esc(rec.product.brand)}</div>
+            ${rec.product.price_max ? `<div class="rec-price">¥${esc(rec.product.price_max)}</div>` : ''}
+            <div class="rec-score" style="color:${scoreColor(rec.score)}">${Math.round(rec.score * 100)}分</div>
+            ${rec.explanation ? `<div class="rec-reason">${esc(rec.explanation)}</div>` : ''}
+            ${rec.dimensions ? `<div class="rec-dims">${Object.entries(rec.dimensions).map(([k, v]) => `<span class="dim-chip">${DIM_LABELS[k] || k} ${Math.round(v * 100)}%</span>`).join('')}</div>` : ''}
+          </div></div>`).join('')
+        }
+        if (r.warnings && r.warnings.length) {
+          html += `<div class="warning-card"><div class="warning-title">⚠️ 风险提示</div>${r.warnings.map(w => `<div class="warning-item"><span>${esc(w.product.brand)} ${esc(w.product.name)}</span><span class="warning-reason">${esc(w.reason)}</span></div>`).join('')}</div>`
+        }
+        document.getElementById('recResult').innerHTML = html
+      } catch (e) { document.getElementById('recError').innerHTML = `<div class="error-card">${esc(e.message)}</div>` }
+      finally { btn.disabled = false; btn.textContent = '获取智能推荐' }
+    })
+
+    // === 成分分析 ===
+    document.querySelectorAll('.mode-btn').forEach(b => b.addEventListener('click', () => {
+      document.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('active'))
+      b.classList.add('active')
+      // 图片模式暂未实现，提示
+      if (b.dataset.mode === 'image') alert('图片识别功能开发中，当前请使用文字输入')
+      else document.querySelector('.mode-btn[data-mode="text"]').classList.add('active')
+    }))
+    const ingInput = document.getElementById('ingInput')
+    function refreshAnalyzeBtn() { document.getElementById('btnAnalyze').disabled = !ingInput.value.trim() }
+    ingInput.addEventListener('input', refreshAnalyzeBtn)
+    document.getElementById('btnAnalyze').addEventListener('click', async () => {
+      if (!ingInput.value.trim()) return
+      const btn = document.getElementById('btnAnalyze')
+      btn.disabled = true; btn.textContent = '分析中…'
+      document.getElementById('ingError').innerHTML = ''
+      document.getElementById('ingResult').style.display = 'none'
+      try {
+        const data = await api('/api/ai/chat', { method: 'POST', body: JSON.stringify({ message: '请分析以下猫粮成分表，给出每个成分的风险等级、主要蛋白来源、适合的猫咪品种，以及整体评价：\n\n' + ingInput.value }) })
+        if (data.error) throw new Error(data.error)
+        document.getElementById('ingResultText').textContent = data.reply || '分析完成'
+        document.getElementById('ingResult').style.display = 'block'
+      } catch (e) { document.getElementById('ingError').innerHTML = `<div class="error-card">${esc(e.message)}</div>` }
+      finally { btn.disabled = false; btn.textContent = '开始分析' }
+    })
+
+    // === 产品对比 ===
+    let compareProducts = ['', '']
+    const compareList = document.getElementById('compareList')
+    function renderCompare() {
+      compareList.innerHTML = compareProducts.map((p, i) => `<div class="compare-row">
+        <span class="compare-num">${i + 1}</span>
+        <div class="compare-input-wrap">
+          <input class="field-input compare-input" data-ci="${i}" value="${esc(p)}" placeholder="搜索或输入产品名称…" />
+          <div class="compare-dropdown" data-cd="${i}"></div>
+        </div>
+        ${compareProducts.length > 2 ? `<button class="compare-del" data-del="${i}">×</button>` : ''}
+      </div>`).join('')
+      compareList.querySelectorAll('.compare-input').forEach(inp => {
+        let timer = null
+        inp.addEventListener('input', e => {
+          compareProducts[+inp.dataset.ci] = e.target.value
+          refreshCompareBtn()
+          clearTimeout(timer)
+          const q = e.target.value.trim()
+          const dd = compareList.querySelector(`.compare-dropdown[data-cd="${inp.dataset.ci}"]`)
+          if (!q) { dd.classList.remove('show'); return }
+          timer = setTimeout(async () => {
+            const { data } = await sb.from('products').select('id, name, brand').or(`name.ilike.%${q}%,brand.ilike.%${q}%`).limit(6)
+            if (data && data.length) {
+              dd.innerHTML = data.map(it => `<div class="compare-dd-item" data-name="${esc(it.brand + ' ' + it.name)}"><span class="dd-prod-name">${esc(it.name)}</span><span class="dd-prod-brand">${esc(it.brand)}</span></div>`).join('')
+              dd.classList.add('show')
+              dd.querySelectorAll('.compare-dd-item').forEach(item => item.addEventListener('click', () => {
+                compareProducts[+inp.dataset.ci] = item.dataset.name; inp.value = item.dataset.name
+                dd.classList.remove('show'); refreshCompareBtn()
+              }))
+            } else dd.classList.remove('show')
+          }, 300)
+        })
+      })
+      compareList.querySelectorAll('.compare-del').forEach(b => b.addEventListener('click', () => {
+        compareProducts.splice(+b.dataset.del, 1); renderCompare(); refreshCompareBtn()
+      }))
+    }
+    function refreshCompareBtn() { document.getElementById('btnCompare').disabled = compareProducts.filter(p => p.trim()).length < 2 }
+    document.getElementById('btnAddProduct').addEventListener('click', () => { if (compareProducts.length < 4) { compareProducts.push(''); renderCompare() } })
+    document.getElementById('btnCompare').addEventListener('click', async () => {
+      const valid = compareProducts.filter(p => p.trim())
+      if (valid.length < 2) return
+      const btn = document.getElementById('btnCompare')
+      btn.disabled = true; btn.textContent = '对比中…'
+      document.getElementById('cmpError').innerHTML = ''
+      document.getElementById('cmpResult').style.display = 'none'
+      try {
+        const data = await api('/api/ai/chat', { method: 'POST', body: JSON.stringify({ message: '请对比以下猫粮产品，从适口性、软便率、复购率、价格、成分优劣、适合品种等维度进行详细对比分析：\n\n' + valid.map((p, i) => (i + 1) + '. ' + p).join('\n') }) })
+        if (data.error) throw new Error(data.error)
+        document.getElementById('cmpResultText').textContent = data.reply || '对比分析完成'
+        document.getElementById('cmpResult').style.display = 'block'
+      } catch (e) { document.getElementById('cmpError').innerHTML = `<div class="error-card">${esc(e.message)}</div>` }
+      finally { btn.disabled = false; btn.textContent = '开始对比' }
+    })
+    renderCompare(); refreshCompareBtn()
+
+    // === 自由问答 ===
+    const CHAT_SUGGESTIONS = ['5岁布偶猫，肠胃敏感，应该选什么猫粮？', '如何判断猫粮蛋白质来源是否优质？', '渴望六种鱼和爱肯拿农场盛宴哪个好？', '无谷猫粮真的比有谷猫粮好吗？']
+    document.getElementById('chatSuggestions').innerHTML = CHAT_SUGGESTIONS.map(s => `<div class="suggestion-chip">${esc(s)}</div>`).join('')
+    document.querySelectorAll('.suggestion-chip').forEach(c => c.addEventListener('click', () => sendChat(c.textContent)))
+    const chatMessages = document.getElementById('chatMessages')
+    const chatWelcome = document.getElementById('chatWelcome')
+    const chatInput = document.getElementById('chatInput')
+    const chatSend = document.getElementById('chatSend')
+    let chatLog = [], chatLoading = false
+    chatInput.addEventListener('input', () => { chatSend.disabled = !chatInput.value.trim() || chatLoading })
+    chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendChat(chatInput.value) } })
+    chatSend.addEventListener('click', () => sendChat(chatInput.value))
+
+    function appendBubble(role, content) {
+      const row = document.createElement('div')
+      row.className = 'chat-row ' + role
+      if (role === 'assistant') row.innerHTML = '<div class="chat-avatar ai">✨</div>'
+      row.innerHTML += `<div class="chat-bubble ${role}">${role === 'typing' ? '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>' : esc(content)}</div>`
+      if (role === 'user') row.innerHTML += '<div class="chat-avatar user">👤</div>'
+      chatMessages.appendChild(row)
+      chatMessages.scrollTop = chatMessages.scrollHeight
+      return row
+    }
+    async function sendChat(text) {
+      text = (text || '').trim()
+      if (!text || chatLoading) return
+      chatWelcome.style.display = 'none'
+      chatMessages.style.display = 'flex'
+      chatInput.value = ''; chatSend.disabled = true
+      chatLog.push({ role: 'user', content: text })
+      appendBubble('user', text)
+      const typing = appendBubble('typing', '')
+      chatLoading = true; chatSend.disabled = true
+      try {
+        const data = await api('/api/ai/chat', { method: 'POST', body: JSON.stringify({ messages: chatLog.filter(m => m.role !== 'typing') }) })
+        typing.remove()
+        const reply = data.reply || data.message || '收到，让我想想…'
+        chatLog.push({ role: 'assistant', content: reply })
+        appendBubble('assistant', reply)
+      } catch { typing.remove(); appendBubble('assistant', '连接失败，请稍后重试。') }
+      finally { chatLoading = false; chatSend.disabled = !chatInput.value.trim() }
+    }
+  })().catch(e => console.error('[aihub]', e))
+  </script>
+</body>
+</html>

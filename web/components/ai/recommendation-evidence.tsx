@@ -47,7 +47,7 @@ export function RecommendationEvidence({ breakdown, level }: Props) {
           <div className="space-y-2">
             {ma.factors.map((f) => (
               <div key={f.factor} className="flex items-center gap-2">
-                <span className="text-xs w-14 shrink-0">{f.factor}</span>
+                <span className="text-xs w-14 shrink-0">{f.label}</span>
                 <Progress value={(f.contribution / f.max_contribution) * 100} className="h-1.5 flex-1" />
                 <span className="text-xs tabular-nums w-14 text-right text-muted-foreground">
                   +{f.contribution.toFixed(0)}<span className="text-[10px] ml-0.5">({f.weight_pct}%)</span>

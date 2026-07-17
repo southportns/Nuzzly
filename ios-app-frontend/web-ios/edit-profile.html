@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>编辑资料 - Nuzzly 毛球镇</title>
+<link rel="stylesheet" href="css/common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<style>
+.edit-shell{width:100%;min-height:100vh;min-height:100dvh;background:var(--bg);padding-top:var(--safe-top)}
+.settings-header{display:flex;align-items:center;padding:12px 16px;gap:12px}
+.back-btn{width:40px;height:40px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer}
+.back-btn:active{transform:scale(.92)}
+.back-btn svg{width:20px;height:20px;color:var(--fg)}
+.page-title{font-family:var(--font-display);font-size:18px;font-weight:600;flex:1;text-align:center;margin-right:40px}
+.edit-body{padding:0 16px 40px}
+.avatar-section{display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 0;cursor:pointer}
+.edit-avatar{width:80px;height:80px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--beige),var(--brown));display:flex;align-items:center;justify-content:center}
+.edit-avatar img{width:100%;height:100%;object-fit:cover}
+.change-avatar{font-size:13px;color:var(--brown);font-weight:500}
+.avatar-file-input{position:absolute;width:1px;height:1px;opacity:0;left:-9999px;top:-9999px}
+.form-group{background:var(--card);border-radius:12px;padding:16px;margin-bottom:12px}
+.form-label{font-size:13px;color:var(--muted);display:block;margin-bottom:8px;letter-spacing:.01em}
+.form-label .req{color:#FF3B30}
+.form-input{width:100%;height:44px;border:1px solid var(--border);border-radius:10px;padding:0 14px;font-size:15px;font-family:var(--font-body);color:var(--fg);background:var(--bg);outline:none;transition:border-color .2s;box-sizing:border-box}
+.form-input:focus{border-color:var(--brown)}
+.form-textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:15px;font-family:var(--font-body);color:var(--fg);background:var(--bg);outline:none;resize:none;transition:border-color .2s;box-sizing:border-box}
+.form-textarea:focus{border-color:var(--brown)}
+.radio-group{display:flex;gap:16px}
+.radio-item{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--fg);cursor:pointer}
+.radio-item input{accent-color:var(--brown)}
+.form-select{flex:1;height:48px;border-radius:var(--radius-btn);border:1.5px solid var(--border);background:var(--card);padding:0 12px;font-size:14px;font-family:var(--font-body);color:var(--fg);outline:none;appearance:none;cursor:pointer;box-sizing:border-box}
+.form-select:focus{border-color:var(--brown)}
+.save-btn{width:100%;height:48px;border-radius:var(--radius-btn);background:var(--brown);color:#fff;font-size:15px;font-weight:600;font-family:var(--font-body);border:none;cursor:pointer;box-shadow:var(--shadow-btn);transition:transform .15s,opacity .15s;margin-top:5px}
+.save-btn:active{transform:scale(.97)}
+.save-btn:disabled{opacity:.45;cursor:default;transform:none}
+.toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);background:rgba(0,0,0,.78);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:80%;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+</style>
+</head>
+<body>
+<div class="edit-shell">
+  <header class="settings-header">
+    <button class="back-btn" onclick="history.back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h1 class="page-title">编辑资料</h1>
+  </header>
+  <div class="edit-body">
+    <div class="avatar-section" id="avatarSection">
+      <div class="edit-avatar" id="avatarBox"><img src="assets/mqpyqgao-logo.png" alt="头像" id="avatarImg"></div>
+      <span class="change-avatar">更换头像</span>
+      <input type="file" id="fileInput" accept="image/*" class="avatar-file-input">
+    </div>
+    <div class="form-group">
+      <label class="form-label">用户名 <span class="req">*</span></label>
+      <input id="f_username" class="form-input" placeholder="请输入用户名" maxlength="30">
+    </div>
+    <div class="form-group">
+      <label class="form-label">简介</label>
+      <textarea id="f_bio" class="form-textarea" rows="3" placeholder="写一段简介让更多人认识你…" maxlength="200"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">性别</label>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="gender" value="female"><span>女</span></label>
+        <label class="radio-item"><input type="radio" name="gender" value="male"><span>男</span></label>
+        <label class="radio-item"><input type="radio" name="gender" value="other" checked><span>其他</span></label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">地区</label>
+      <input id="f_region" class="form-input" placeholder="如：广东·深圳" maxlength="40">
+    </div>
+    <button class="save-btn" id="saveBtn">保存</button>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+(function () {
+  const sb = window.sb, D = window.NuzzlyData, A = window.NuzzlyApp
+  const form = { username: '', bio: '', gender: 'other', region: '', avatar_url: '' }
+  let saving = false
+  let avatarFile = null
+  function toast (msg, theme) { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'toast show ' + (theme || 'success'); clearTimeout(window.__t); window.__t = setTimeout(() => { el.className = 'toast' }, 2000) }
+
+  const avatarSection = document.getElementById('avatarSection')
+  const fileInput = document.getElementById('fileInput')
+  avatarSection.addEventListener('click', () => fileInput.click())
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files?.[0]; if (!file) return
+    if (!file.type.startsWith('image/')) { toast('请选择图片文件', 'error'); return }
+    if (file.size > 5 * 1024 * 1024) { toast('图片不能超过 5MB', 'error'); return }
+    avatarFile = file
+    document.getElementById('avatarImg').src = URL.createObjectURL(file)
+  })
+
+  async function handleSave () {
+    if (saving) return
+    const uid = await D.getUid(); if (!uid) { toast('未登录', 'error'); return }
+    form.username = document.getElementById('f_username').value
+    form.bio = document.getElementById('f_bio').value
+    form.gender = document.querySelector('input[name="gender"]:checked').value
+    form.region = document.getElementById('f_region').value
+    if (!form.username.trim()) { toast('请填写用户名', 'error'); return }
+    if (form.bio.length > 200) { toast('简介最多 200 个字符', 'error'); return }
+    const btn = document.getElementById('saveBtn'); saving = true; btn.disabled = true; btn.textContent = '保存中...'
+    try {
+      if (avatarFile) {
+        const filePath = uid + '/avatar.jpg'
+        const { error: ue } = await sb.storage.from('user-avatars').upload(filePath, avatarFile, { upsert: true, contentType: 'image/jpeg' })
+        if (ue) throw ue
+        const { data: urlData } = sb.storage.from('user-avatars').getPublicUrl(filePath)
+        form.avatar_url = urlData.publicUrl
+      }
+      const { error } = await sb.from('profiles').update({ username: form.username, display_name: form.username, bio: form.bio, gender: form.gender, region: form.region, avatar_url: form.avatar_url }).eq('id', uid)
+      if (error) throw error
+      toast('保存成功')
+      setTimeout(() => history.back(), 800)
+    } catch (e) { toast(e.message || '保存失败', 'error') }
+    finally { saving = false; btn.disabled = false; btn.textContent = '保存' }
+  }
+  document.getElementById('saveBtn').addEventListener('click', handleSave)
+
+  async function init () {
+    await A.requireAuth()
+    const uid = await D.getUid()
+    const p = await D.getProfile(uid)
+    if (p) {
+      form.username = p.username || ''; form.bio = p.bio || ''; form.avatar_url = p.avatar_url || ''; form.gender = p.gender || 'other'; form.region = p.region || ''
+      document.getElementById('f_username').value = form.username
+      document.getElementById('f_bio').value = form.bio
+      document.getElementById('f_region').value = form.region
+      const g = document.querySelector('input[name="gender"][value="' + form.gender + '"]'); if (g) g.checked = true
+      if (form.avatar_url) document.getElementById('avatarImg').src = form.avatar_url
+    }
+  }
+  init()
+})()
+</script>
+</body>
+</html>

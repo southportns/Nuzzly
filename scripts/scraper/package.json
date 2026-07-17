@@ -1,15 +1,25 @@
 {
   "name": "pet-food-scraper",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "type": "module",
   "scripts": {
-    "scrape": "tsx src/index.ts",
+    "scrape": "tsx scrape.ts",
+    "scrape:taobao": "tsx scrape.ts taobao 猫粮 50",
+    "scrape:boqii": "tsx scrape.ts boqii 猫粮 50",
+    "scrape:custom": "tsx scrape.ts",
+    "xhs-login": "tsx xiaohongshu.ts login",
+    "scrape:xhs": "tsx xiaohongshu.ts",
+    "tabbit:taobao": "tsx tabbit_scraper.ts taobao 猫粮 50",
+    "tabbit:boqii": "tsx tabbit_scraper.ts boqii 猫粮 50",
+    "tabbit:jd": "tsx tabbit_scraper.ts jd 猫粮 50",
+    "tabbit:xhs": "tsx tabbit_scraper.ts xhs 猫粮推荐 20",
     "test": "vitest"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
     "cheerio": "^1.0.0-rc.12",
     "playwright": "^1.40.0",
+    "ws": "^8.21.0",
     "zod": "^3.22.0"
   },
   "devDependencies": {

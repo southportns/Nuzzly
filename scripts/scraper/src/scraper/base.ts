@@ -5,7 +5,7 @@ export abstract class BaseScraper {
   protected browser: Browser | null = null
   protected page: Page | null = null
   protected platform: string
-  protected delayMs = 1000
+  protected delayMs = 500
 
   constructor(platform: string) {
     this.platform = platform

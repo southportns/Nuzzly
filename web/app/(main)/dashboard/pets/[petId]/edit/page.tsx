@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import { EditPetForm } from "./edit-form"
 
 export const metadata = {
-  title: "编辑宠物档案 — PetRWD",
+  title: "编辑宠物档案 — Nuzzly毛球镇",
 }
 
 export default async function EditPetPage({ params }: { params: Promise<{ petId: string }> }) {

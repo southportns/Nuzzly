@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>记录 - Nuzzly 毛球镇</title>
+<link rel="stylesheet" href="css/common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<style>
+.records-shell{width:100%;min-height:100vh;min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(100px + var(--safe-bottom));overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;position:relative}
+.records-header{position:relative;padding:20px 24px 0;z-index:1}
+.records-header-row{display:flex;align-items:center;justify-content:space-between}
+.back-btn{width:40px;height:40px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer;transition:transform .2s}
+.back-btn:active{transform:scale(.92)}
+.back-btn svg{width:20px;height:20px;color:var(--fg)}
+.records-title{margin-top:20px;font-family:var(--font-display);font-size:34px;font-weight:700;line-height:1.15;letter-spacing:-.02em}
+.pet-selector{display:flex;gap:8px;padding:20px 24px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;z-index:1}
+.pet-selector::-webkit-scrollbar{display:none}
+.pet-chip{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius-btn);background:var(--card);border:1.5px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.03);cursor:pointer;transition:all .2s}
+.pet-chip.active{border-color:var(--brown);background:rgba(139,94,70,.06)}
+.pet-chip:active{transform:scale(.96)}
+.pet-chip-avatar{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,rgba(215,181,147,.2),rgba(215,181,147,.08));display:flex;align-items:center;justify-content:center;font-size:12px}
+.pet-chip-name{font-size:12px;font-weight:500;color:var(--fg);white-space:nowrap}
+.glass-card{margin:16px 20px 0;background:rgba(255,255,255,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:24px;border:1px solid rgba(255,255,255,.6);box-shadow:0 8px 32px rgba(0,0,0,.06),inset 0 1px 0 rgba(255,255,255,.8);padding:20px;position:relative;z-index:1}
+.glass-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.glass-card-title{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:600;color:var(--fg)}
+.glass-card-title svg{width:18px;height:18px;color:var(--brown)}
+.glass-card-badge{font-size:12px;color:var(--muted);background:rgba(0,0,0,.04);padding:4px 10px;border-radius:var(--radius-btn);font-weight:500}
+.glass-card-more{font-size:13px;color:var(--brown);font-weight:500;cursor:pointer;display:flex;align-items:center;gap:2px}
+.glass-card-more svg{width:14px;height:14px}
+.record-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid rgba(0,0,0,.04)}
+.record-item:last-child{border-bottom:none;padding-bottom:0}
+.record-item:first-child{padding-top:0}
+.record-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.record-icon.diet{background:rgba(139,94,70,.1)}
+.record-icon.symptom{background:rgba(255,59,48,.1)}
+.record-content{flex:1;min-width:0}
+.record-name{font-size:14px;font-weight:500;color:var(--fg);margin-bottom:2px}
+.record-desc{font-size:12px;color:var(--muted);line-height:1.4}
+.record-time{font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;margin-top:2px}
+.record-del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0;opacity:.5}
+.record-del:active{opacity:1;color:#FF3B30}
+.weight-chart{height:120px;border-radius:16px;background:linear-gradient(135deg,rgba(139,94,70,.04),rgba(215,181,147,.08));display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.weight-value{position:absolute;top:8px;right:12px;font-size:20px;font-weight:600;color:var(--brown);font-family:var(--font-num)}
+.weight-chart-dots{display:flex;align-items:flex-end;gap:24px;height:80px;position:relative;z-index:1}
+.weight-dot{width:8px;height:8px;border-radius:50%;background:var(--brown);box-shadow:0 2px 8px rgba(139,94,70,.3)}
+.allergy-tags{display:flex;flex-wrap:wrap;gap:8px}
+.allergy-tag{padding:6px 14px;border-radius:var(--radius-btn);background:rgba(255,59,48,.06);border:1px solid rgba(255,59,48,.12);font-size:13px;color:#FF3B30;font-weight:500}
+.timeline{position:relative;padding-left:20px}
+.timeline::before{content:'';position:absolute;left:6px;top:8px;bottom:8px;width:2px;background:rgba(0,0,0,.06);border-radius:1px}
+.timeline-item{position:relative;padding:0 0 16px 16px}
+.timeline-item:last-child{padding-bottom:0}
+.timeline-dot{position:absolute;left:-17px;top:6px;width:10px;height:10px;border-radius:50%;border:2px solid var(--brown);background:var(--card)}
+.timeline-date{font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500}
+.timeline-text{font-size:13px;color:var(--fg);line-height:1.5}
+.fab{position:fixed;bottom:calc(100px + var(--safe-bottom));right:24px;width:56px;height:56px;border-radius:50%;background:var(--brown);box-shadow:var(--shadow-btn);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;transition:transform .15s}
+.fab:active{transform:scale(.9)}
+.fab svg{width:24px;height:24px;color:#fff}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.anim-fade-up{opacity:0;animation:fadeUp .6s cubic-bezier(.22,1,.36,1) forwards}
+.anim-delay-1{animation-delay:.1s}.anim-delay-2{animation-delay:.2s}.anim-delay-3{animation-delay:.3s}.anim-delay-4{animation-delay:.4s}.anim-delay-5{animation-delay:.5s}
+.anim-scale-in{opacity:0;animation:scaleIn .5s cubic-bezier(.22,1,.36,1) forwards}
+</style>
+</head>
+<body>
+<div class="records-shell">
+  <header class="records-header anim-fade-up">
+    <div class="records-header-row">
+      <button class="back-btn" onclick="history.back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    </div>
+    <h1 class="records-title">记录</h1>
+  </header>
+  <div class="pet-selector anim-fade-up anim-delay-1" id="petSelector"></div>
+  <div id="cards"></div>
+  <button class="fab anim-scale-in anim-delay-5" id="fab" aria-label="添加记录"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  <div id="tabbar"></div>
+</div>
+<script>
+(function () {
+  const sb = window.sb, D = window.NuzzlyData, A = window.NuzzlyApp
+  const SPECIES_EMOJI = { cat: '🐱', dog: '🐶' }
+  const FOOD_ICON = { dry_food: '🍖', wet_food: '🐟', water: '💧', treat: '🦴', default: '🍽️' }
+  const RECORD_ICON = { vaccination: '💉', symptom: '🩺', medication: '💊', diagnosis: '📋', checkup: '🩻', weight: '⚖️' }
+  const SEVERITY_LABEL = { mild: '轻度', moderate: '中度', severe: '重度' }
+  let pets = [], selectedPet = null, dietLogs = [], healthRecords = [], weightRecords = [], allergies = [], timeline = []
+  function esc (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])) }
+
+  async function loadAll (pid) {
+    if (!pid) return
+    const uid = await D.getUid()
+    const [dRes, hRes] = await Promise.all([
+      sb.from('diet_logs').select('*').order('created_at', { ascending: false }).limit(20).eq('profile_id', uid).eq('pet_id', pid),
+      sb.from('health_records').select('id,record_type,record_time,weight_kg,symptom_code,severity,diagnosis,medication_name,notes,metadata').order('record_time', { ascending: false }).limit(20).eq('profile_id', uid).eq('pet_id', pid)
+    ])
+    dietLogs = dRes.data || []
+    const records = hRes.data || []
+    healthRecords = records.filter(r => r.record_type !== 'weight')
+    weightRecords = records.filter(r => r.record_type === 'weight' && r.weight_kg)
+    timeline = records.map(r => ({ date: r.record_time?.slice(0, 10), text: r.notes || r.diagnosis || r.medication_name || '' })).filter(r => r.text)
+    const { data: a } = await sb.from('pet_allergies').select('*').eq('pet_id', pid)
+    allergies = a || []
+    render()
+  }
+  async function deleteDietLog (id) {
+    if (!confirm('确定要删除这条饮食记录吗？')) return
+    const { error } = await sb.from('diet_logs').delete().eq('id', id)
+    if (error) { console.warn('删除失败', error.message); return }
+    dietLogs = dietLogs.filter(l => l.id !== id); render()
+  }
+
+  function render () {
+    const petBox = document.getElementById('petSelector')
+    petBox.innerHTML = pets.map(p => '<div class="pet-chip' + (selectedPet === p.id ? ' active' : '') + '" data-pid="' + p.id + '"><div class="pet-chip-avatar">' + (SPECIES_EMOJI[p.species] || '🐾') + '</div><span class="pet-chip-name">' + esc(p.name) + '</span></div>').join('')
+    petBox.querySelectorAll('.pet-chip').forEach(el => el.onclick = () => { selectedPet = el.dataset.pid; loadAll(selectedPet) })
+
+    const dietItems = dietLogs.map(l => '<div class="record-item"><div class="record-icon diet">' + (FOOD_ICON[l.food_type] || FOOD_ICON.default) + '</div><div class="record-content"><div class="record-name">' + esc(l.food_name) + '</div><div class="record-desc">' + esc(l.notes || l.food_type) + '</div></div><span class="record-time">' + esc((l.created_at || l.logged_date || '').slice(11, 16) || '-') + '</span><button class="record-del" data-dl="' + l.id + '">×</button></div>').join('')
+    const healthItems = healthRecords.map(r => '<div class="record-item"><div class="record-icon ' + (r.record_type === 'symptom' ? 'symptom' : 'diet') + '">' + (RECORD_ICON[r.record_type] || '📋') + '</div><div class="record-content"><div class="record-name">' + esc(r.diagnosis || r.medication_name || r.record_type) + '</div><div class="record-desc">' + esc(r.notes || '') + '</div></div><span class="record-time">' + esc((r.record_time || '').slice(5, 10)) + '</span></div>').join('')
+    const latestW = weightRecords[0]?.weight_kg
+    const latestWeight = latestW ? Number(latestW).toFixed(1) + ' kg' : '-- kg'
+    const recs = weightRecords.slice(0, 7).reverse()
+    const weights = recs.map(r => Number(r.weight_kg))
+    const wMin = Math.min(...weights), wMax = Math.max(...weights)
+    const weightDots = weights.map(w => 10 + ((w - wMin) / (wMax - wMin || 1)) * 18)
+    const allergyTags = allergies.map(a => '<span class="allergy-tag">' + esc(a.allergen) + (a.severity ? ' · ' + (SEVERITY_LABEL[a.severity] || '') : '') + '</span>').join('') || '<span class="allergy-tag" style="color:var(--muted);background:rgba(0,0,0,.04);border-color:transparent">暂无过敏记录</span>'
+    const timelineHtml = timeline.map(e => '<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">' + esc(e.date) + '</div><div class="timeline-text">' + esc(e.text) + '</div></div>').join('') || '<div style="font-size:13px;color:var(--muted);text-align:center;padding:12px 0">暂无健康事件</div>'
+
+    document.getElementById('cards').innerHTML =
+      '<div class="glass-card anim-fade-up anim-delay-2"><div class="glass-card-header"><div class="glass-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>饮食日志</div></div>' + (dietItems || '<div style="font-size:13px;color:var(--muted);text-align:center;padding:12px 0">暂无饮食记录</div>') + '</div>' +
+      '<div class="glass-card anim-fade-up anim-delay-3"><div class="glass-card-header"><div class="glass-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>健康记录</div><span class="glass-card-badge">' + healthRecords.length + ' 条</span></div>' + (healthItems || '<div style="font-size:13px;color:var(--muted);text-align:center;padding:12px 0">暂无健康记录</div>') + '</div>' +
+      '<div class="glass-card anim-fade-up anim-delay-4"><div class="glass-card-header"><div class="glass-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 0-4 4c0 2 2 4 4 6 2-2 4-4 4-6a4 4 0 0 0-4-4z"/><path d="M20 21H4"/></svg>体重趋势</div></div><div class="weight-chart"><span class="weight-value">' + latestWeight + '</span><div class="weight-chart-dots">' + (weightDots.length ? weightDots.map(d => '<div class="weight-dot" style="margin-bottom:' + d + 'px"></div>').join('') : '<span style="font-size:13px;color:var(--muted)">暂无体重数据</span>') + '</div></div></div>' +
+      '<div class="glass-card anim-fade-up anim-delay-4"><div class="glass-card-header"><div class="glass-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>过敏信息</div><span class="glass-card-more" onclick="location.href=\'allergies.html?pet=\'+selectedPet">管理<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span></div><div class="allergy-tags">' + allergyTags + '</div></div>' +
+      '<div class="glass-card anim-fade-up anim-delay-5" style="margin-bottom:24px"><div class="glass-card-header"><div class="glass-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>健康事件</div></div><div class="timeline">' + timelineHtml + '</div></div>'
+    document.querySelectorAll('.record-del[data-dl]').forEach(el => el.onclick = () => deleteDietLog(Number(el.dataset.dl)))
+  }
+
+  document.getElementById('fab').onclick = () => { location.href = 'record-create.html' + (selectedPet ? '?petId=' + selectedPet : '') }
+
+  async function init () {
+    await A.requireAuth()
+    A.injectTabBar('records', document.getElementById('tabbar'))
+    const uid = await D.getUid(); pets = await D.getPets(uid) || []
+    if (pets.length) { selectedPet = pets[0].id; await loadAll(selectedPet) }
+    else render()
+  }
+  init()
+})()
+</script>
+</body>
+</html>

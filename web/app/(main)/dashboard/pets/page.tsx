@@ -17,7 +17,7 @@ const lifeStageLabels: Record<string, { label: string; variant: "default" | "sec
 }
 
 export const metadata = {
-  title: "我的宠物 — PetRWD",
+  title: "我的宠物 — Nuzzly毛球镇",
 }
 
 export default async function DashboardPetsPage() {

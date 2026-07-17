@@ -58,7 +58,10 @@ export function WeightTracker({ petId, currentWeight, weightLogs }: {
     }
 
     // 2. 同步更新宠物档案的当前体重
-    await updatePetWeight(petId, roundedWeight, user.id)
+    const { error: weightError } = await updatePetWeight(petId, roundedWeight, user.id)
+    if (weightError) {
+      toast.error("当前体重同步失败，但记录已保存")
+    }
 
     // Update local state to sync chart immediately
     setLogs((prev) => [...prev, { id: crypto.randomUUID(), weight_kg: roundedWeight, logged_date: recordTime }])

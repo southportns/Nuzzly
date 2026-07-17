@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { Users, PawPrint, Package, Star, AlertTriangle, MessageSquareWarning, ChevronRight } from "lucide-react"
 
 export const metadata = {
-  title: "管理员控制台 — PetRWD",
+  title: "管理员控制台 — Nuzzly毛球镇",
 }
 
 export default async function AdminOverviewPage() {

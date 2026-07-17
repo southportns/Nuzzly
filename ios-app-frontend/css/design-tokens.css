@@ -1,0 +1,194 @@
+/* 设计 Token 系统（与 web 端 design-system/tokens 呼应）
+ * 设计目标：
+ *   1. 统一颜色、间距、字体、阴影等设计变量
+ *   2. 支持主题切换（当前仅浅色主题，预留暗色主题）
+ *   3. 与 common.css 的 :root 变量保持一致，避免重复定义
+ *   4. 提供语义化命名，便于维护和扩展
+ */
+
+/* ===== 颜色系统 ===== */
+:root {
+  /* 主色调 - 品牌色 */
+  --color-primary: #8B5E46;        /* 棕色 - 主按钮、强调 */
+  --color-primary-light: #A67D65;  /* 浅棕 - hover 状态 */
+  --color-primary-dark: #6B4A36;   /* 深棕 - active 状态 */
+  --color-primary-bg: rgba(139, 94, 70, 0.04); /* 主色背景 */
+
+  /* 辅助色 */
+  --color-secondary: #D7B593;      /* 米色 - 次要元素 */
+  --color-accent: #6C8A69;         /* 绿色 - 成功、健康 */
+  --color-warning: #F5A623;        /* 橙色 - 警告 */
+  --color-danger: #FF3B30;         /* 红色 - 错误、危险 */
+  --color-info: #007AFF;           /* 蓝色 - 信息、链接 */
+
+  /* 中性色 */
+  --color-bg: #F5F3F1;             /* 页面背景 */
+  --color-card: #FFFFFF;           /* 卡片背景 */
+  --color-fg: #171717;             /* 主要文字 */
+  --color-muted: #7B7B7B;          /* 次要文字、提示 */
+  --color-border: rgba(0, 0, 0, 0.06); /* 边框 */
+  --color-sep: rgba(60, 60, 67, 0.12); /* 分隔线 */
+
+  /* 语义色 */
+  --color-success: #6C8A69;        /* 成功 */
+  --color-error: #FF3B30;          /* 错误 */
+  --color-warning-bg: rgba(245, 166, 35, 0.1); /* 警告背景 */
+  --color-error-bg: rgba(255, 59, 48, 0.1);    /* 错误背景 */
+}
+
+/* ===== 间距系统 ===== */
+:root {
+  /* 基础间距单位 */
+  --spacing-unit: 4px;
+
+  /* 语义化间距 */
+  --spacing-xs: 4px;    /* 极小间距 */
+  --spacing-sm: 8px;    /* 小间距 */
+  --spacing-md: 12px;   /* 中间距 */
+  --spacing-lg: 16px;   /* 大间距 */
+  --spacing-xl: 20px;   /* 超大间距 */
+  --spacing-2xl: 24px;  /* 特大间距 */
+  --spacing-3xl: 32px;  /* 巨大间距 */
+
+  /* 页面边距 */
+  --page-padding-x: 16px;  /* 页面水平边距 */
+  --page-padding-y: 20px;  /* 页面垂直边距 */
+
+  /* 卡片内边距 */
+  --card-padding: 16px;
+
+  /* 组件间距 */
+  --component-gap: 12px; /* 组件之间的间距 */
+}
+
+/* ===== 字体系统 ===== */
+:root {
+  /* 字体族 */
+  --font-display: -apple-system, 'SF Pro Display', 'PingFang SC', system-ui, sans-serif;
+  --font-body: -apple-system, 'SF Pro Text', 'PingFang SC', system-ui, sans-serif;
+  --font-num: 'Inter', -apple-system, system-ui, sans-serif;
+
+  /* 字号 */
+  --font-size-xs: 11px;    /* 极小 - 标签、辅助文字 */
+  --font-size-sm: 13px;    /* 小 - 次要文字 */
+  --font-size-base: 14px;  /* 基础 - 正文 */
+  --font-size-md: 15px;    /* 中 - 表单输入 */
+  --font-size-lg: 16px;    /* 大 - 标题 */
+  --font-size-xl: 18px;    /* 超大 - 页面标题 */
+  --font-size-2xl: 20px;   /* 特大 - 大标题 */
+  --font-size-3xl: 24px;   /* 巨大 - 数字展示 */
+
+  /* 字重 */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* 行高 */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-loose: 1.8;
+
+  /* 字间距 */
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-loose: 0.02em;
+}
+
+/* ===== 圆角系统 ===== */
+:root {
+  --radius-xs: 4px;      /* 极小 - 小标签 */
+  --radius-sm: 8px;      /* 小 - 按钮 */
+  --radius-md: 10px;     /* 中 - 输入框 */
+  --radius-lg: 12px;     /* 大 - 卡片 */
+  --radius-xl: 16px;     /* 超大 - 大卡片 */
+  --radius-2xl: 20px;    /* 特大 - 弹窗 */
+  --radius-3xl: 36px;    /* 巨大 - 特殊组件 */
+  --radius-pill: 999px;  /* 胶囊 - 按钮、标签 */
+  --radius-circle: 50%;  /* 圆形 - 头像 */
+}
+
+/* ===== 阴影系统 ===== */
+:root {
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);      /* 小阴影 - 按钮 */
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);     /* 中阴影 - 卡片 */
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.06);     /* 大阴影 - 浮层 */
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.08);    /* 超大阴影 - 弹窗 */
+
+  /* 语义化阴影 */
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.06);   /* 卡片阴影 */
+  --shadow-btn: 0 4px 16px rgba(139, 94, 70, 0.18); /* 按钮阴影 */
+  --shadow-tab: 0 -4px 24px rgba(0, 0, 0, 0.06);   /* TabBar 阴影 */
+  --shadow-focus: 0 0 0 3px rgba(139, 94, 70, 0.1); /* 焦点阴影 */
+}
+
+/* ===== 尺寸系统 ===== */
+:root {
+  /* 组件高度 */
+  --height-input: 44px;      /* 输入框高度 */
+  --height-button: 48px;     /* 按钮高度 */
+  --height-tab: 51px;        /* TabBar 高度 */
+
+  /* 图标尺寸 */
+  --icon-size-sm: 16px;      /* 小图标 */
+  --icon-size-md: 20px;      /* 中图标 */
+  --icon-size-lg: 24px;      /* 大图标 */
+  --icon-size-xl: 32px;      /* 超大图标 */
+
+  /* 头像尺寸 */
+  --avatar-size-sm: 40px;    /* 小头像 */
+  --avatar-size-md: 52px;    /* 中头像 */
+  --avatar-size-lg: 64px;    /* 大头像 */
+
+  /* 触摸目标 */
+  --touch-target-min: 44px;  /* 最小触摸目标（Apple HIG） */
+}
+
+/* ===== 动画系统 ===== */
+:root {
+  /* 动画时长 */
+  --duration-fast: 0.15s;    /* 快速 - 按钮反馈 */
+  --duration-normal: 0.2s;   /* 正常 - 过渡效果 */
+  --duration-slow: 0.3s;     /* 慢速 - 淡入淡出 */
+  --duration-slower: 0.6s;   /* 更慢 - 页面动画 */
+
+  /* 动画缓动 */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* 动画曲线（与 common.css 保持一致） */
+  --animation-curve: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ===== 层级系统 ===== */
+:root {
+  --z-index-base: 1;         /* 基础层 */
+  --z-index-dropdown: 10;    /* 下拉菜单 */
+  --z-index-sticky: 20;      /* 粘性定位 */
+  --z-index-modal-backdrop: 90; /* 弹窗背景 */
+  --z-index-modal: 100;      /* 弹窗 */
+  --z-index-toast: 1000;     /* Toast 提示 */
+}
+
+/* ===== 安全区域 ===== */
+:root {
+  --safe-top: env(safe-area-inset-top, 48px);      /* 顶部安全区 */
+  --safe-bottom: env(safe-area-inset-bottom, 34px); /* 底部安全区 */
+  --safe-left: env(safe-area-inset-left, 0px);      /* 左侧安全区 */
+  --safe-right: env(safe-area-inset-right, 0px);    /* 右侧安全区 */
+}
+
+/* ===== 暗色主题预留（当前未启用） ===== */
+/*
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1A1A1A;
+    --color-card: #2C2C2C;
+    --color-fg: #F5F5F5;
+    --color-muted: #A0A0A0;
+    --color-border: rgba(255, 255, 255, 0.1);
+  }
+}
+*/

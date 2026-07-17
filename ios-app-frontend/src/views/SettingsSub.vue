@@ -18,16 +18,49 @@
           <input v-model="pwForm.confirm" type="password" class="form-input" placeholder="再次输入" />
         </div>
         <button class="primary-btn" :disabled="saving" @click="handleChangePassword">{{ saving ? '更新中' : '更新密码' }}</button>
+
+        <!-- 账号注销 -->
+        <div class="delete-section">
+          <div class="delete-warning">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>注销账号后，所有数据将被永久删除且无法恢复</span>
+          </div>
+          <button class="delete-btn" @click="showDeleteConfirm = true">注销账号</button>
+        </div>
+
+        <!-- 注销确认弹窗 -->
+        <Teleport to="body">
+          <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="showDeleteConfirm = false">
+            <div class="modal-box">
+              <div class="modal-icon">⚠️</div>
+              <h3 class="modal-title">确认注销账号？</h3>
+              <p class="modal-desc">此操作将永久删除您的账号及所有关联数据，包括宠物档案、评价记录、健康数据等，且<strong>无法恢复</strong>。</p>
+              <div class="modal-input-group">
+                <label class="modal-label">请输入 <strong>注销</strong> 以确认</label>
+                <input v-model="deleteConfirmText" class="form-input" placeholder="输入「注销」" />
+              </div>
+              <div class="modal-actions">
+                <button class="modal-cancel" @click="showDeleteConfirm = false; deleteConfirmText = ''">取消</button>
+                <button class="modal-confirm" :disabled="deleteConfirmText !== '注销' || deleting" @click="handleDeleteAccount">
+                  {{ deleting ? '注销中…' : '确认注销' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Teleport>
       </template>
 
       <!-- 宠物档案：列表 + 添加 -->
       <template v-else-if="key === 'pets'">
         <div v-for="p in pets" :key="p.id" class="pet-row">
-          <div class="pet-emoji">{{ SPECIES_EMOJI[p.species] || '🐾' }}</div>
-          <div class="pet-info">
-            <div class="pet-name">{{ p.name }}</div>
-            <div class="pet-meta">{{ p.breed || p.species }} · {{ p.age_years || 0 }}岁{{ p.age_months || 0 }}月 · {{ p.weight_kg || '--' }}kg</div>
+          <div class="pet-row-main" @click="$router.push('/pets/' + p.id)">
+            <div class="pet-emoji">{{ SPECIES_EMOJI[p.species] || '🐾' }}</div>
+            <div class="pet-info">
+              <div class="pet-name">{{ p.name }}</div>
+              <div class="pet-meta">{{ p.breed || p.species }} · {{ p.age_years || 0 }}岁{{ p.age_months || 0 }}月 · {{ p.weight_kg ? Number(p.weight_kg).toFixed(1) : '--' }}kg</div>
+            </div>
           </div>
+          <button class="pet-del-btn" @click.stop="handleDeletePet(p)">删除</button>
         </div>
         <div v-if="!pets.length" class="empty-hint">还没有宠物档案</div>
         <button class="primary-btn" @click="$router.push('/pet/create')">+ 添加宠物</button>
@@ -228,10 +261,19 @@ const { user } = useAuth()
 const { pets, fetchPets } = usePets()
 const saving = ref(false)
 
-const SPECIES_EMOJI = { cat: '🐱', dog: '🐶', bird: '🐦', rabbit: '🐰' }
+// 账号注销
+const showDeleteConfirm = ref(false)
+const deleteConfirmText = ref('')
+const deleting = ref(false)
+
+const SPECIES_EMOJI = { cat: '🐱', dog: '🐶' }
 const FEEDBACK_TYPES = ['功能建议', '问题反馈', '体验问题', '其他']
-// 适配 ChipGroup 的 options 格式
 const feedbackTypeOptions = computed(() => FEEDBACK_TYPES.map(t => ({ value: t, label: t })))
+
+function loadJson(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) || fallback } catch { return fallback }
+}
+function saveJson(key, value) { localStorage.setItem(key, JSON.stringify(value)) }
 
 const key = computed(() => route.params.key)
 const TITLE_MAP = {
@@ -255,29 +297,14 @@ const privacy = reactive({ publicProfile: true, showReviews: true, allowRecommen
 const interaction = reactive({ allowComment: true, allowFollow: true, likeNotify: true, commentNotify: true })
 
 onMounted(() => {
-  if (key.value === 'pets') fetchPets()
-  if (key.value === 'notification') {
-    const saved = localStorage.getItem('nuzzly_notif')
-    if (saved) Object.assign(notif, JSON.parse(saved))
-  }
-  if (key.value === 'language') {
-    lang.value = localStorage.getItem('nuzzly_lang') || 'zh-CN'
-  }
-  if (key.value === 'fontsize') {
-    fontSize.value = Number(localStorage.getItem('nuzzly_fontsize')) || 14
-  }
-  if (key.value === 'general') {
-    const saved = localStorage.getItem('nuzzly_general')
-    if (saved) Object.assign(general, JSON.parse(saved))
-  }
-  if (key.value === 'privacy') {
-    const saved = localStorage.getItem('nuzzly_privacy')
-    if (saved) Object.assign(privacy, JSON.parse(saved))
-  }
-  if (key.value === 'interaction') {
-    const saved = localStorage.getItem('nuzzly_interaction')
-    if (saved) Object.assign(interaction, JSON.parse(saved))
-  }
+  const k = key.value
+  if (k === 'pets') fetchPets()
+  if (k === 'notification') Object.assign(notif, loadJson('nuzzly_notif', {}))
+  if (k === 'language') lang.value = localStorage.getItem('nuzzly_lang') || 'zh-CN'
+  if (k === 'fontsize') fontSize.value = Number(localStorage.getItem('nuzzly_fontsize')) || 14
+  if (k === 'general') Object.assign(general, loadJson('nuzzly_general', {}))
+  if (k === 'privacy') Object.assign(privacy, loadJson('nuzzly_privacy', {}))
+  if (k === 'interaction') Object.assign(interaction, loadJson('nuzzly_interaction', {}))
 })
 
 async function handleChangePassword() {
@@ -294,6 +321,40 @@ async function handleChangePassword() {
     Toast({ theme: 'error', message: e.message || '更新失败' })
   } finally {
     saving.value = false
+  }
+}
+
+async function handleDeleteAccount() {
+  if (deleting.value || deleteConfirmText.value !== '注销') return
+  deleting.value = true
+  try {
+    const { data: { user: currentUser } } = await supabase.auth.getUser()
+    if (!currentUser) throw new Error('未登录')
+
+    // 软删除 profile
+    await supabase.from('profiles').update({ is_deleted: true, deleted_at: new Date().toISOString() }).eq('id', currentUser.id)
+
+    // 注销登录
+    await supabase.auth.signOut()
+    Toast({ theme: 'success', message: '账号已注销' })
+    showDeleteConfirm.value = false
+    deleteConfirmText.value = ''
+    router.replace('/login')
+  } catch (e) {
+    Toast({ theme: 'error', message: e.message || '注销失败，请联系客服' })
+  } finally {
+    deleting.value = false
+  }
+}
+
+async function handleDeletePet(pet) {
+  if (!confirm(`确定要删除「${pet.name}」的档案吗？此操作不可恢复。`)) return
+  try {
+    await supabase.from('pets').update({ is_active: false }).eq('id', pet.id)
+    Toast({ theme: 'success', message: '已删除' })
+    fetchPets()
+  } catch (e) {
+    Toast({ theme: 'error', message: e.message || '删除失败' })
   }
 }
 
@@ -317,7 +378,7 @@ async function handleFeedback() {
 }
 
 function saveLocal(msg) {
-  localStorage.setItem('nuzzly_notif', JSON.stringify(notif))
+  saveJson('nuzzly_notif', notif)
   Toast({ theme: 'success', message: msg })
 }
 
@@ -327,23 +388,28 @@ function saveFontSize() {
 }
 
 function saveGeneral() {
-  localStorage.setItem('nuzzly_general', JSON.stringify(general))
+  saveJson('nuzzly_general', general)
   Toast({ theme: 'success', message: '通用设置已保存' })
 }
 
-function clearCache() {
-  localStorage.clear()
-  Toast({ theme: 'success', message: '缓存已清除' })
-}
-
 function savePrivacy() {
-  localStorage.setItem('nuzzly_privacy', JSON.stringify(privacy))
+  saveJson('nuzzly_privacy', privacy)
   Toast({ theme: 'success', message: '隐私设置已保存' })
 }
 
 function saveInteraction() {
-  localStorage.setItem('nuzzly_interaction', JSON.stringify(interaction))
+  saveJson('nuzzly_interaction', interaction)
   Toast({ theme: 'success', message: '互动设置已保存' })
+}
+
+function clearCache() {
+  const keys = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    if (k?.startsWith('nuzzly_')) keys.push(k)
+  }
+  keys.forEach(k => localStorage.removeItem(k))
+  Toast({ theme: 'success', message: '缓存已清除' })
 }
 </script>
 
@@ -371,11 +437,14 @@ function saveInteraction() {
 .chip-group{display:flex;flex-wrap:wrap;gap:8px}
 .chip{padding:8px 16px;border-radius:var(--radius-pill);background:var(--bg);border:1px solid var(--border);font-size:14px;color:var(--fg);cursor:pointer;transition:all .2s}
 .chip.active{background:var(--brown);color:#fff;border-color:var(--brown)}
-.pet-row{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.pet-row{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.pet-row-main{display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer}
 .pet-emoji{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--beige),var(--brown));display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
 .pet-info{flex:1;min-width:0}
 .pet-name{font-size:16px;font-weight:600;color:var(--fg)}
 .pet-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.pet-del-btn{flex-shrink:0;height:30px;padding:0 10px;border-radius:8px;background:transparent;color:#FF3B30;font-size:12px;font-weight:500;border:1px solid rgba(255,59,48,.2);cursor:pointer;transition:all .15s}
+.pet-del-btn:active{background:rgba(255,59,48,.08);transform:scale(.95)}
 .empty-hint{text-align:center;color:var(--muted);font-size:14px;padding:24px 0}
 .app-logo{font-size:48px}
 .app-name{font-size:18px;font-weight:600;color:var(--fg);margin-top:4px}
@@ -401,4 +470,29 @@ function saveInteraction() {
 .fontsize-value{text-align:center;font-size:13px;color:var(--muted);margin-bottom:16px}
 .danger-btn{width:100%;height:48px;border-radius:var(--radius-btn);background:transparent;color:#FF3B30;font-size:16px;font-weight:500;border:1px solid rgba(255,59,48,.2);cursor:pointer;margin-top:12px}
 .danger-btn:active{background:rgba(255,59,48,.05)}
+
+/* 账号注销 */
+.delete-section{margin-top:32px;padding-top:20px;border-top:1px solid var(--border)}
+.delete-warning{display:flex;align-items:flex-start;gap:8px;padding:12px 14px;background:rgba(255,59,48,.05);border-radius:10px;margin-bottom:12px}
+.delete-warning svg{width:18px;height:18px;color:#FF3B30;flex-shrink:0;margin-top:1px}
+.delete-warning span{font-size:13px;color:#FF3B30;line-height:1.5}
+.delete-btn{width:100%;height:48px;border-radius:var(--radius-btn);background:transparent;color:#FF3B30;font-size:16px;font-weight:500;border:1px solid rgba(255,59,48,.2);cursor:pointer;transition:all .15s}
+.delete-btn:active{background:rgba(255,59,48,.05);transform:scale(.98)}
+
+/* 弹窗 */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px}
+.modal-box{width:100%;max-width:320px;background:var(--card);border-radius:20px;padding:28px 24px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-icon{font-size:40px;margin-bottom:8px}
+.modal-title{font-size:18px;font-weight:700;color:var(--fg);margin:0 0 8px}
+.modal-desc{font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 16px}
+.modal-desc strong{color:#FF3B30}
+.modal-input-group{margin-bottom:16px;text-align:left}
+.modal-label{font-size:12px;color:var(--muted);margin-bottom:6px;display:block}
+.modal-label strong{color:var(--fg)}
+.modal-actions{display:flex;gap:10px}
+.modal-cancel{flex:1;height:44px;border-radius:var(--radius-btn);background:var(--bg);border:1px solid var(--border);font-size:15px;color:var(--fg);font-weight:500;cursor:pointer}
+.modal-cancel:active{background:rgba(0,0,0,.04)}
+.modal-confirm{flex:1;height:44px;border-radius:var(--radius-btn);background:#FF3B30;border:none;font-size:15px;color:#fff;font-weight:500;cursor:pointer;transition:opacity .15s}
+.modal-confirm:active{opacity:.85}
+.modal-confirm:disabled{opacity:.4;cursor:default}
 </style>

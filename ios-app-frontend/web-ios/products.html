@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>产品库 - Nuzzly 毛球镇</title>
+<link rel="stylesheet" href="css/common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<style>
+.products-shell{width:100%;min-height:100vh;min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(100px + var(--safe-bottom));overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;position:relative}
+.pull-refresh{position:absolute;top:-50px;left:50%;transform:translateX(-50%);width:40px;height:40px;display:flex;align-items:center;justify-content:center;transition:transform .3s ease;pointer-events:none}
+.pull-refresh.active{transform:translateX(-50%) translateY(50px)}
+.refresh-icon{width:24px;height:24px;color:var(--brown);transition:transform .2s}
+.refresh-icon.spinning{animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.products-header{padding:20px 24px 0}
+.products-header-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.products-title{font-family:var(--font-display);font-size:34px;font-weight:700;line-height:1.15;letter-spacing:-.02em;color:var(--fg)}
+.products-subtitle{margin-top:6px;font-size:14px;color:var(--muted);line-height:1.5}
+.action-circle{width:41.31px;height:41.31px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer;transition:transform .2s,box-shadow .2s;flex-shrink:0}
+.action-circle:active{transform:scale(.92)}
+.action-circle svg{width:20px;height:20px;color:var(--fg)}
+.search-bar{margin-top:18px;display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;border-radius:var(--radius-btn);background:var(--card);border:1px solid var(--border);box-shadow:0 2px 12px rgba(0,0,0,.03)}
+.search-bar svg{width:18px;height:18px;color:var(--muted);flex-shrink:0}
+.search-bar input{flex:1;border:none;background:transparent;font-size:15px;color:var(--fg);outline:none;font-family:var(--font-body)}
+.search-bar input::placeholder{color:var(--muted)}
+.category-bar{display:flex;gap:8px;padding:16px 24px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.category-bar::-webkit-scrollbar{display:none}
+.cat-chip{flex-shrink:0;padding:8px 16px;border-radius:var(--radius-btn);background:var(--card);border:1px solid var(--border);font-size:13px;font-weight:500;color:var(--fg);cursor:pointer;transition:all .2s;white-space:nowrap}
+.cat-chip.active{background:var(--brown);color:#fff;border-color:var(--brown);box-shadow:var(--shadow-btn)}
+.cat-chip:active{transform:scale(.96)}
+.filter-row{display:flex;align-items:center;justify-content:space-between;padding:14px 24px 0}
+.hot-toggle{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:var(--radius-btn);background:var(--card);border:1px solid var(--border);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s}
+.hot-toggle.active{color:var(--brown);border-color:var(--brown);background:rgba(139,94,70,.06)}
+.hot-toggle svg{width:14px;height:14px}
+.hot-toggle:active{transform:scale(.96)}
+.result-count{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(8px,2vw,14px);padding:16px 20px 0}
+.product-card{background:var(--card);border-radius:24px;overflow:hidden;box-shadow:var(--shadow-card);border:1px solid var(--border);cursor:pointer;transition:transform .2s,box-shadow .2s}
+.product-card:active{transform:scale(.97);box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.card-img-area{width:100%;aspect-ratio:1/1;background:linear-gradient(135deg,rgba(215,181,147,.18),rgba(215,181,147,.06));display:flex;align-items:center;justify-content:center;overflow:hidden}
+.card-img-area img{width:100%;height:100%;object-fit:cover}
+.img-placeholder{font-size:36px;color:var(--brown);opacity:.4;font-weight:700}
+.card-body{padding:12px 14px 14px}
+.card-brand{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:2px}
+.card-name{font-size:14px;font-weight:600;color:var(--fg);line-height:1.3;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px}
+.card-meta{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.card-price{font-size:14px;font-weight:700;color:var(--brown);font-family:var(--font-num)}
+.card-score{font-size:10px;color:var(--muted);background:rgba(0,0,0,.04);padding:3px 8px;border-radius:var(--radius-btn);font-weight:500}
+.shimmer{background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 37%,rgba(0,0,0,.04) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+.shimmer-line{height:12px;border-radius:6px;margin-bottom:8px;background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 37%,rgba(0,0,0,.04) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite}
+.shimmer-line.w70{width:70%}.shimmer-line.w90{width:90%}.shimmer-line.w40{width:40%}
+.empty-state{display:flex;flex-direction:column;align-items:center;padding:60px 20px;gap:8px}
+.empty-icon{font-size:48px}
+.empty-text{font-size:14px;color:var(--muted)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.anim-fade-up{opacity:0;animation:fadeUp .6s cubic-bezier(.22,1,.36,1) forwards}
+.anim-delay-1{animation-delay:.1s}.anim-delay-2{animation-delay:.2s}.anim-delay-3{animation-delay:.3s}
+</style>
+</head>
+<body>
+<div class="products-shell" id="shell">
+  <div class="pull-refresh" id="pullRefresh">
+    <svg class="refresh-icon" id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+  </div>
+  <header class="products-header anim-fade-up">
+    <div class="products-header-top">
+      <div>
+        <h1 class="products-title">产品库</h1>
+        <p class="products-subtitle">专注猫咪消费领域，查看真实长期反馈数据</p>
+      </div>
+      <button class="action-circle" aria-label="通知" onclick="location.href='notifications.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.134 11C18.715 16.375 21 18 21 18H3s3-2.133 3-9.6c0-1.697.632-3.325 1.757-4.525S10.41 2 12 2q.507 0 1 .09M19 8a3 3 0 1 0 0-6a3 3 0 0 0 0 6m-5.27 13a2 2 0 0 1-3.46 0"/></svg>
+      </button>
+    </div>
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input id="searchInput" type="text" placeholder="搜索猫粮、品牌、成分…">
+    </div>
+  </header>
+  <div class="category-bar anim-fade-up anim-delay-1" id="categoryBar"></div>
+  <div class="filter-row anim-fade-up anim-delay-2">
+    <div class="hot-toggle" id="hotToggle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+      热门产品
+    </div>
+    <span class="result-count" id="resultCount">0 款产品</span>
+  </div>
+  <div class="grid anim-fade-up anim-delay-3" id="grid"></div>
+</div>
+<div id="tabbar"></div>
+<script>
+(function () {
+  const sb = window.sb
+  const A = window.NuzzlyApp
+  const CAT_SLUGS = ['cat-food', 'cat-litter', 'cat-canned', 'cat-snack', 'cat-health']
+  const isCat = p => p.applicable_species === 'cats' || p.applicable_species === 'both'
+  const state = { keyword: '', activeCategory: '', hotOnly: false, loading: false, products: [], categories: [], reqId: 0 }
+  let searchTimer = null
+
+  function esc (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])) }
+
+  async function init () {
+    await A.requireAuth()
+    await loadCategories()
+    await reload()
+  }
+
+  async function loadCategories () {
+    const { data } = await sb.from('product_categories').select('id,name,slug,icon,display_order').order('display_order')
+    state.categories = (data || []).filter(c => CAT_SLUGS.includes(c.slug) || c.name.includes('猫'))
+    renderCategories()
+  }
+
+  function renderCategories () {
+    const bar = document.getElementById('categoryBar')
+    const list = [{ name: '全部', slug: '' }].concat(state.categories)
+    bar.innerHTML = list.map(c => '<div class="cat-chip' + (state.activeCategory === (c.slug || '') ? ' active' : '') + '" data-slug="' + esc(c.slug || '') + '">' + esc(c.name) + '</div>').join('')
+    bar.querySelectorAll('.cat-chip').forEach(el => {
+      el.onclick = () => { state.activeCategory = el.dataset.slug; renderCategories(); reload() }
+    })
+  }
+
+  async function reload () {
+    const myId = ++state.reqId
+    state.loading = true; renderGrid()
+    let q = sb.from('products').select('id,name,brand,image_url,price_min,price_max,transparency_score,applicable_species,product_categories!inner(id,name,slug)').eq('is_active', true)
+    if (state.activeCategory) q = q.eq('product_categories.slug', state.activeCategory)
+    const { data } = await q.order('created_at', { ascending: false })
+    if (myId !== state.reqId) return
+    let filtered = data || []
+    if (!state.activeCategory) filtered = filtered.filter(isCat)
+    if (state.hotOnly) filtered = filtered.filter(p => p.transparency_score != null).sort((a, b) => (b.transparency_score || 0) - (a.transparency_score || 0)).slice(0, 20)
+    if (state.keyword) { const k = state.keyword.trim().toLowerCase(); filtered = filtered.filter(p => (p.name || '').toLowerCase().includes(k) || (p.brand || '').toLowerCase().includes(k)) }
+    state.products = filtered; state.loading = false; renderGrid()
+  }
+
+  function renderGrid () {
+    const grid = document.getElementById('grid')
+    document.getElementById('resultCount').textContent = state.products.length + ' 款产品'
+    if (state.loading) { grid.innerHTML = Array(6).fill('<div class="product-card skeleton-card"><div class="card-img-area shimmer"></div><div class="card-body"><div class="shimmer-line w70"></div><div class="shimmer-line w90"></div><div class="shimmer-line w40"></div></div></div>').join(''); return }
+    if (!state.products.length) { grid.innerHTML = '<div style="grid-column:1/-1" class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">暂无匹配的产品</div><div class="empty-text" style="font-size:12px">试试其他关键词或分类</div></div>'; return }
+    grid.innerHTML = state.products.map(p => {
+      const img = p.image_url ? '<img src="' + esc(p.image_url) + '" alt="' + esc(p.name) + '" loading="lazy">' : '<span class="img-placeholder">' + esc((p.brand || '🐾').slice(0, 1)) + '</span>'
+      const price = p.price_min ? '<span class="card-price">¥' + Number(p.price_min) + (p.price_max && p.price_max !== p.price_min ? '-' + Number(p.price_max) : '') + '</span>' : ''
+      const score = p.transparency_score != null ? '<span class="card-score">透明度 ' + p.transparency_score + '</span>' : ''
+      return '<div class="product-card" onclick="location.href=\'product-detail.html?id=' + p.id + '\'"><div class="card-img-area">' + img + '</div><div class="card-body"><div class="card-brand">' + esc(p.brand || '') + '</div><div class="card-name">' + esc(p.name) + '</div><div class="card-meta">' + price + score + '</div></div></div>'
+    }).join('')
+  }
+
+  document.getElementById('searchInput').addEventListener('input', e => { state.keyword = e.target.value; clearTimeout(searchTimer); searchTimer = setTimeout(reload, 350) })
+  document.getElementById('hotToggle').addEventListener('click', function () { state.hotOnly = !state.hotOnly; this.classList.toggle('active'); reload() })
+
+  // 下拉刷新（触摸）
+  const shell = document.getElementById('shell')
+  const pull = document.getElementById('pullRefresh')
+  const icon = document.getElementById('refreshIcon')
+  let startY = 0, pulling = false, dist = 0, refreshing = false
+  const THRESH = 60
+  shell.addEventListener('touchstart', e => { if (refreshing) return; if (shell.scrollTop === 0) { startY = e.touches[0].clientY; pulling = true } }, { passive: true })
+  shell.addEventListener('touchmove', e => { if (!pulling || refreshing) return; const d = e.touches[0].clientY - startY; if (d > 0) { dist = Math.min(d * 0.5, 100); pull.style.transform = 'translateX(-50%) translateY(' + (dist - 0) + 'px)'; icon.style.transform = 'rotate(' + (dist * 2) + 'deg)' } }, { passive: true })
+  shell.addEventListener('touchend', async () => {
+    if (!pulling || refreshing) { pulling = false; return }
+    pulling = false
+    if (dist >= THRESH) { refreshing = true; pull.classList.add('active'); icon.classList.add('spinning'); await reload(); refreshing = false; icon.classList.remove('spinning') }
+    pull.classList.remove('active'); pull.style.transform = ''; icon.style.transform = ''; dist = 0
+  })
+
+  A.injectTabBar('products')
+  init()
+})()
+</script>
+</body>
+</html>

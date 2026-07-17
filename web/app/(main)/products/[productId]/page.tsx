@@ -14,7 +14,7 @@ import { ProductViewTracker } from "@/components/products/product-view-tracker"
 export async function generateMetadata({ params }: { params: Promise<{ productId: string }> }) {
   const { productId } = await params
   const { data: product } = await queryProduct(productId)
-  return { title: `${product?.name ?? "产品详情"} — PetRWD` }
+  return { title: `${product?.name ?? "产品详情"} — Nuzzly毛球镇` }
 }
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ productId: string }> }) {

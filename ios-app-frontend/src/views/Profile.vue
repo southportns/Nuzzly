@@ -1,14 +1,16 @@
 <template>
   <div class="app-shell">
-    <div class="hero-pet">
-      <img src="/cat.png" alt="宠物形象" style="height:140px;margin-bottom:-15px;margin-left:10px;width:80px">
-      <img src="/cat2.png" alt="宠物形象 2" style="height:140px;margin:0 0 -15px;width:80px">
+    <div class="hero-bg">
+      <button class="hero-notif" aria-label="通知" @click="$router.push('/notifications')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.134 11C18.715 16.375 21 18 21 18H3s3-2.133 3-9.6c0-1.697.632-3.325 1.757-4.525S10.41 2 12 2q.507 0 1 .09M19 8a3 3 0 1 0 0-6a3 3 0 0 0 0 6m-5.27 13a2 2 0 0 1-3.46 0"/></svg>
+      </button>
     </div>
     <div class="profile-card anim-fade-up">
       <div class="profile-avatar"><img :src="avatarUrl" alt="头像" loading="lazy"></div>
       <div class="profile-info">
         <div class="profile-username">{{ userName }}</div>
         <div class="profile-id">ID: {{ userIdShort }}</div>
+        <div v-if="regionText" class="profile-region">📍 {{ regionText }}</div>
       </div>
       <div class="stats-row anim-fade-up anim-delay-1">
         <div class="stat-item"><div class="stat-num">{{ reviewCount }}</div><div class="stat-label">评测</div></div>
@@ -28,7 +30,7 @@
       </div>
       <div class="divider"></div>
       <div class="pet-selector">
-        <div v-for="pet in pets" :key="pet.id" class="pet-chip" :class="{ active: selectedPet === pet.id }" @click="selectedPet = pet.id">
+        <div v-for="pet in pets" :key="pet.id" class="pet-chip" :class="{ active: selectedPet === pet.id }" @click="selectedPet = pet.id" @dblclick="$router.push('/pets/' + pet.id)">
           <div class="pet-chip-avatar">{{ pet.emoji }}</div>
           <span class="pet-chip-name">{{ pet.name }}</span>
         </div>
@@ -49,8 +51,26 @@
           <div v-if="!healthRecords.length" class="record-item"><div class="record-content"><div class="record-name" style="color:var(--muted)">暂无健康记录</div></div></div>
         </div>
         <div class="glass-card">
-          <div class="glass-card-header"><div class="glass-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 0-4 4c0 2 2 4 4 6 2-2 4-4 4-6a4 4 0 0 0-4-4z"/><path d="M20 21H4"/></svg>体重趋势</div><span class="glass-card-more">详情 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span></div>
-          <div class="weight-mini"><div><div class="weight-mini-value">{{ latestWeight }} <span style="font-size:14px;font-weight:400;color:var(--muted)">kg</span></div><div class="weight-mini-label">最新体重</div></div><div class="weight-mini-chart"><div v-for="i in 7" :key="i" class="weight-mini-dot" :style="{ marginBottom: (2 + i * 1.2) + 'px' }"></div></div></div>
+          <div class="glass-card-header"><div class="glass-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 0-4 4c0 2 2 4 4 6 2-2 4-4 4-6a4 4 0 0 0-4-4z"/><path d="M20 21H4"/></svg>体重趋势</div>
+            <button class="add-btn" @click="showWeightForm = !showWeightForm">{{ showWeightForm ? '收起' : '+ 记录' }}</button>
+          </div>
+          <div v-if="showWeightForm" class="weight-form">
+            <input v-model="newWeight" type="number" step="0.1" min="0" class="weight-input" placeholder="输入体重（kg）" />
+            <button class="weight-submit" :disabled="!newWeight || weightSaving" @click="handleAddWeight">{{ weightSaving ? '记录中' : '记录' }}</button>
+          </div>
+          <div class="weight-mini">
+            <div>
+              <div class="weight-mini-value">{{ latestWeight }} <span style="font-size:14px;font-weight:400;color:var(--muted)">kg</span></div>
+              <div class="weight-mini-label">最新体重</div>
+            </div>
+            <div class="weight-bar-chart">
+              <div v-for="(item, idx) in weightChartData" :key="idx" class="weight-bar-item" @click="handleDeleteWeight(item.id, item.value, item.label)">
+                <div class="weight-bar-value">{{ item.value }}</div>
+                <div class="weight-bar" :style="{ height: item.height + 'px' }"></div>
+                <div class="weight-bar-label">{{ item.label }}</div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="glass-card">
           <div class="glass-card-header">
@@ -103,20 +123,32 @@ import { useDietLogs } from '../composables/useDietLogs'
 import { useHealthRecords } from '../composables/useHealthRecords'
 
 const { profile, user } = useAuth()
-const { pets: rawPets, fetchPets } = usePets()
+const { pets: rawPets, fetchPets, updatePet } = usePets()
 const { dietLogs: rawDietLogs, fetchDietLogs } = useDietLogs()
-const { healthRecords: rawHealth, weightRecords, allergies, timeline, fetchHealthRecords, fetchAllergies, addAllergy, deleteAllergy } = useHealthRecords()
+const { healthRecords: rawHealth, weightRecords, allergies, timeline, fetchHealthRecords, fetchAllergies, addAllergy, deleteAllergy, addHealthRecord, deleteHealthRecord } = useHealthRecords()
 
 const selectedPet = ref(null)
+const showWeightForm = ref(false)
+const newWeight = ref('')
+const weightSaving = ref(false)
 
-const SPECIES_EMOJI = { cat: '🐱', dog: '🐶', bird: '🐦', rabbit: '🐰' }
+const SPECIES_EMOJI = { cat: '🐱', dog: '🐶' }
 const FOOD_ICON = { dry_food: '🍖', wet_food: '🐟', water: '💧', treat: '🦴', default: '🍽️' }
 const RECORD_ICON = { vaccination: '💉', symptom: '🩺', medication: '💊', diagnosis: '📋', checkup: '🩻', weight: '⚖️' }
 const SEVERITY_LABEL = { mild: '轻度', moderate: '中度', severe: '重度' }
 
 const userName = computed(() => profile.value?.display_name || profile.value?.username || '铲屎官')
-const userIdShort = computed(() => (user.value?.id || profile.value?.id || 'nuzzly_000').slice(0, 8))
+const userIdShort = computed(() => {
+  const num = profile.value?.user_number
+  if (num) return `nuzzmily${String(num).padStart(3, '0')}`
+  return 'nuzzmily000'
+})
 const avatarUrl = computed(() => profile.value?.avatar_url || '/mqpyqgao-logo.png')
+const regionText = computed(() => {
+  const r = profile.value?.region || ''
+  if (!r) return ''
+  return r.replace('·', ' ')
+})
 const reviewCount = computed(() => profile.value?.review_count || 0)
 
 const pets = computed(() => rawPets.value.map(p => ({
@@ -140,6 +172,23 @@ const latestWeight = computed(() => {
   return w ? Number(w).toFixed(1) : '--'
 })
 
+const weightChartData = computed(() => {
+  const records = weightRecords.value.slice(0, 7).reverse()
+  const weights = records.map(r => Number(r.weight_kg))
+  const maxWeight = Math.max(...weights)
+  const minWeight = Math.min(...weights)
+  const range = maxWeight - minWeight || 1
+
+  return records.map((record, idx) => {
+    const weight = Number(record.weight_kg)
+    const normalized = (weight - minWeight) / range
+    const height = 15 + normalized * 25
+    const date = new Date(record.record_time)
+    const label = `${date.getMonth() + 1}/${date.getDate()}`
+    return { id: record.id, value: weight.toFixed(1), height, label }
+  })
+})
+
 const allergyTags = computed(() => allergies.value.map(a => ({
   id: a.id, allergen: a.allergen, severityLabel: SEVERITY_LABEL[a.severity] || '', confirmed: a.confirmed
 })))
@@ -148,6 +197,40 @@ const showAllergyForm = ref(false)
 const newAllergen = ref('')
 const newSeverity = ref('mild')
 const newConfirmed = ref(false)
+
+async function handleAddWeight() {
+  if (!newWeight.value || !selectedPet.value) return
+  weightSaving.value = true
+  try {
+    const kg = Math.round(Number(newWeight.value) * 100) / 100
+    await addHealthRecord({
+      pet_id: selectedPet.value,
+      record_type: 'weight',
+      weight_kg: kg,
+      record_time: new Date().toISOString()
+    })
+    await updatePet(selectedPet.value, { weight_kg: kg })
+    Toast({ theme: 'success', message: '体重已记录' })
+    newWeight.value = ''
+    showWeightForm.value = false
+    fetchHealthRecords(selectedPet.value)
+  } catch (e) {
+    Toast({ theme: 'error', message: e.message || '记录失败' })
+  } finally {
+    weightSaving.value = false
+  }
+}
+
+async function handleDeleteWeight(id, value, label) {
+  if (!confirm(`确定要删除 ${label} 的体重记录（${value} kg）吗？`)) return
+  try {
+    await deleteHealthRecord(id)
+    Toast({ theme: 'success', message: '已删除' })
+    fetchHealthRecords(selectedPet.value)
+  } catch (e) {
+    Toast({ theme: 'error', message: e.message || '删除失败' })
+  }
+}
 
 async function onAddAllergy() {
   if (!newAllergen.value.trim() || !selectedPet.value) return
@@ -194,16 +277,18 @@ watch(selectedPet, (id) => { if (id) loadAll(id) })
 </script>
 
 <style scoped>
-.app-shell{width:100%;min-height:100vh;min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(88px + var(--safe-bottom));overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
-.hero-pet{width:100%;height:180px;overflow-x:auto;overflow-y:hidden;position:relative;display:flex;align-items:flex-end;justify-content:flex-start;gap:16px;padding:0 16px 36px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scrollbar-width:none}
-.hero-pet::-webkit-scrollbar{display:none}
-.hero-pet img{height:260px;width:auto;display:block;flex-shrink:0;scroll-snap-align:center}
-.profile-card{background:var(--card);border-radius:var(--radius-card) var(--radius-card) 0 0;margin-top:-36px;position:relative;z-index:1;padding-top:36px;padding-bottom:12px}
-.profile-avatar{position:absolute;top:-36px;right:28px;width:80px;height:80px;border-radius:50%;border:3px solid var(--card);box-shadow:0 4px 16px rgba(0,0,0,.1);overflow:hidden;background:linear-gradient(135deg,var(--beige),var(--brown));display:flex;align-items:center;justify-content:center;z-index:2}
+.app-shell{width:100%;min-height:100vh;min-height:100dvh;padding-top:0;padding-bottom:calc(88px + var(--safe-bottom));overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.hero-bg{width:100%;height:calc(clamp(180px,45vh,220px) + var(--safe-top));background:url('/scene graph.png') center bottom/cover no-repeat;position:fixed;top:0;left:0;right:0;z-index:0}
+.hero-notif{position:absolute;top:calc(var(--safe-top) + 16px);right:16px;width:41.31px;height:41.31px;border-radius:50%;background:rgba(255,255,255,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 2px 12px rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.6);cursor:pointer;transition:transform .2s}
+.hero-notif:active{transform:scale(.9)}
+.hero-notif svg{width:20px;height:20px;color:var(--fg)}
+.profile-card{background:var(--card);border-radius:var(--radius-card) var(--radius-card) 0 0;margin-top:calc(clamp(180px,45vh,220px) + var(--safe-top) - 36px);position:relative;z-index:1;padding-top:36px;padding-bottom:12px}
+.profile-avatar{position:absolute;top:-36px;right:28px;width:clamp(60px,18vw,80px);aspect-ratio:1;border-radius:50%;border:3px solid var(--card);box-shadow:0 4px 16px rgba(0,0,0,.1);overflow:hidden;background:linear-gradient(135deg,var(--beige),var(--brown));display:flex;align-items:center;justify-content:center;z-index:2}
 .profile-avatar img{width:100%;height:100%;object-fit:cover}
-.profile-info{padding:0 28px;padding-right:144px;display:flex;flex-direction:column;gap:4px}
+.profile-info{padding:0 28px;padding-right:clamp(100px,25vw,144px);display:flex;flex-direction:column;gap:4px}
 .profile-username{font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--fg);line-height:1.2}
 .profile-id{font-size:13px;color:var(--muted);letter-spacing:.01em}
+.profile-region{font-size:12px;color:var(--muted);margin-top:2px}
 .stats-row{display:flex;justify-content:space-around;padding:16px 28px 0}
 .stat-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
 .stat-item:active{opacity:.7}
@@ -246,8 +331,18 @@ watch(selectedPet, (id) => { if (id) loadAll(id) })
 .weight-mini{display:flex;align-items:center;justify-content:space-between}
 .weight-mini-value{font-size:24px;font-weight:600;color:var(--brown);font-family:var(--font-num)}
 .weight-mini-label{font-size:11px;color:var(--muted)}
-.weight-mini-chart{display:flex;align-items:flex-end;gap:6px;height:40px}
-.weight-mini-dot{width:6px;height:6px;border-radius:50%;background:var(--brown);opacity:.6}
+.weight-form{display:flex;gap:8px;margin-bottom:12px}
+.weight-input{flex:1;height:36px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;font-family:var(--font-body);color:var(--fg);background:var(--card);outline:none}
+.weight-input:focus{border-color:var(--brown)}
+.weight-submit{flex-shrink:0;height:36px;padding:0 14px;border-radius:8px;background:var(--brown);color:#fff;font-size:13px;font-weight:500;border:none;cursor:pointer}
+.weight-submit:disabled{opacity:.4;cursor:default}
+.weight-submit:active{transform:scale(.96)}
+.weight-bar-chart{display:flex;align-items:flex-end;gap:4px;height:50px;padding:0 2px}
+.weight-bar-item{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;cursor:pointer;transition:transform .15s}
+.weight-bar-item:active{transform:scale(.9)}
+.weight-bar-value{font-size:9px;color:var(--muted);font-family:var(--font-num)}
+.weight-bar{width:100%;max-width:12px;background:linear-gradient(180deg,var(--brown),rgba(139,94,70,.6));border-radius:4px 4px 0 0;min-height:4px}
+.weight-bar-label{font-size:8px;color:var(--muted);margin-top:1px}
 .allergy-tags{display:flex;flex-wrap:wrap;gap:6px}
 .allergy-tag{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:var(--radius-btn);background:rgba(255,59,48,.06);border:1px solid rgba(255,59,48,.12);font-size:12px;color:#FF3B30;font-weight:500}
 .allergy-del{background:none;border:none;color:#FF3B30;font-size:14px;cursor:pointer;padding:0 2px;opacity:.6;line-height:1}

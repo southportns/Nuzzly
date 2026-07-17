@@ -20,8 +20,8 @@ export function ProductCarousel({ products }: { products: ProductData[] }) {
   const [pauseOnHover, setPauseOnHover] = useState(false)
 
   useEffect(() => {
-    // Duplicate products for seamless loop
-    setDuplicated([...products, ...products, ...products])
+    // Duplicate products once for seamless loop (2x is enough for x: 0 → -totalWidth)
+    setDuplicated([...products, ...products])
   }, [products])
 
   const cardWidth = 280

@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 export const metadata = {
-  title: "关于我们 — PetRWD",
+  title: "关于我们 — Nuzzly毛球镇",
 }
 
 const values = [
@@ -42,13 +42,13 @@ export default function AboutPage() {
         {/* ========== Hero ========== */}
         <div className="text-center">
           <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#FF7A59]">
-            About PetRWD · PET REAL WORLD DATA
+            About Nuzzly毛球镇 · 毛球镇消费信任平台
           </span>
           <h1 className="mt-2 text-[32px] font-bold leading-[1.05] tracking-[-0.04em] text-[#111111] md:text-[40px]">
             让每一次选择&nbsp;都值得信赖
           </h1>
           <p className="mx-auto mt-2 max-w-[640px] text-[14px] leading-[1.7] text-[#6B6B6B] md:text-[15px]">
-            PetRWD（Pet Real World Data）是一个基于真实长期反馈数据的猫咪消费信任平台，
+            Nuzzly毛球镇是一个基于真实长期反馈数据的猫咪消费信任平台，
             通过数据驱动、社区共建和 AI 分析帮助铲屎官做出更理性的消费决策。
           </p>
         </div>

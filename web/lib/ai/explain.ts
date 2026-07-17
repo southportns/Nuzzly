@@ -43,3 +43,8 @@ export async function getRiskIntelligence(_productId: string): Promise<RiskData 
   // P0 stub: 返回 null,RiskIntelPanel 内部已处理 null 情况(不渲染该卡片)
   return null
 }
+
+export async function getVersionImpact(_productId: string): Promise<null> {
+  // P0 stub: 版本影响分析功能暂未实现
+  return null
+}
