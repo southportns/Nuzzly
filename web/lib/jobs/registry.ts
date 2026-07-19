@@ -6,6 +6,13 @@
 import { JobRuntime, type JobRecord } from "@/lib/jobs/runtime"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { projectionEngine } from "@/lib/projections/projection-engine"
+import { buildFlywheelInput } from "@/lib/timeline/flywheel-input-builder"
+import { runFlywheelCycle } from "@/lib/timeline/data-flywheel"
+import {
+  computeOutcomeAttributionJob,
+  computeLongitudinalStabilityJob,
+  computeDelayedRewardProxyJob,
+} from "@/lib/jobs/handlers/flywheel-enrichment"
 
 const jobRuntime = new JobRuntime()
 
@@ -18,13 +25,13 @@ const admin = createAdminClient()
 jobRuntime.register({
   jobType: "create_pet_event_from_review",
   handler: async (job: JobRecord) => {
-    const { productId, authorId, reviewText, usageDuration, overallRating, stoolRating, wouldRepurchase } = job.payload
+    const { productId, authorId, reviewText, usageDuration, overallRating, stoolRating, wouldRepurchase } = job.payload as Record<string, string | number | boolean>
 
     // Get pet info from review author
     const { data: profile } = await admin
       .from("profiles")
       .select("id")
-      .eq("id", authorId)
+      .eq("id", authorId as string)
       .single()
 
     if (!profile) return
@@ -40,13 +47,14 @@ jobRuntime.register({
     if (!pet) return
 
     // Create pet event
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await admin.from("pet_events").insert({
       pet_id: pet.id,
       profile_id: profile.id,
-      event_type: "review_submitted",
+      event_type: "review_submitted" as any,
       event_time: new Date().toISOString(),
-      product_id: productId,
-      source_type: "review",
+      product_id: productId as string,
+      source_type: "review" as any,
       notes: JSON.stringify({
         usage_duration: usageDuration,
         overall_rating: overallRating,
@@ -70,7 +78,7 @@ jobRuntime.register({
 jobRuntime.register({
   jobType: "create_followup_schedules",
   handler: async (job: JobRecord) => {
-    const { reviewId, profileId } = job.payload
+    const { reviewId, profileId } = job.payload as Record<string, string>
 
     const now = new Date()
     const days = [7, 14, 30, 60, 90, 180]
@@ -82,7 +90,8 @@ jobRuntime.register({
       scheduled_date: new Date(now.getTime() + day * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     }))
 
-    const { error } = await admin.from("review_followup_schedules").insert(schedules)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await admin.from("review_followup_schedules").insert(schedules as any)
 
     if (error) {
       console.error("[create_followup_schedules] Failed to insert schedules:", error.message)
@@ -99,7 +108,7 @@ jobRuntime.register({
 jobRuntime.register({
   jobType: "enqueue_reputation_job",
   handler: async (job: JobRecord) => {
-    const { authorId } = job.payload
+    const { authorId } = job.payload as Record<string, string>
 
     // Enqueue a nested job for reputation computation
     await admin.rpc("job_enqueue", {
@@ -120,7 +129,7 @@ jobRuntime.register({
 jobRuntime.register({
   jobType: "enqueue_metrics_refresh_job",
   handler: async (job: JobRecord) => {
-    const { scheduleId } = job.payload
+    const { scheduleId } = job.payload as Record<string, string>
 
     // Get product_id from the schedule
     const { data: schedule } = await admin
@@ -158,10 +167,11 @@ jobRuntime.register({
 jobRuntime.register({
   jobType: "recalc_timeline_trust",
   handler: async (job: JobRecord) => {
-    const { timelineGroupId } = job.payload
+    const { timelineGroupId } = job.payload as Record<string, string>
 
     // Call the existing trust recalculation function
-    await admin.rpc("pflid.recalc_timeline_group_trust", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (admin.rpc as any)("pflid.recalc_timeline_group_trust", {
       p_timeline_group_id: timelineGroupId,
     })
   },
@@ -176,10 +186,11 @@ jobRuntime.register({
 jobRuntime.register({
   jobType: "generate_timeline_metrics",
   handler: async (job: JobRecord) => {
-    const { productId } = job.payload
+    const { productId } = job.payload as Record<string, string>
 
     // Call the existing metrics generation function
-    await admin.rpc("pflid.generate_timeline_metrics", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (admin.rpc as any)("pflid.generate_timeline_metrics", {
       p_product_id: productId,
       p_date: new Date().toISOString().split("T")[0],
     })
@@ -195,10 +206,11 @@ jobRuntime.register({
 jobRuntime.register({
   jobType: "trigger_score_comparison",
   handler: async (job: JobRecord) => {
-    const { productId } = job.payload
+    const { productId } = job.payload as Record<string, string>
 
     // Call the existing score comparison function
-    await admin.rpc("pflid.trigger_score_comparison", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (admin.rpc as any)("pflid.trigger_score_comparison", {
       p_product_id: productId,
     })
   },
@@ -212,8 +224,9 @@ jobRuntime.register({
 jobRuntime.register({
   jobType: "recompute_reputation",
   handler: async (job: JobRecord) => {
-    const { targetProfileId } = job.payload
-    await admin.rpc("pflid.recompute_reputation", {
+    const { targetProfileId } = job.payload as Record<string, string>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (admin.rpc as any)("pflid.recompute_reputation", {
       p_profile_id: targetProfileId,
     })
   },
@@ -238,8 +251,9 @@ jobRuntime.register({
 jobRuntime.register({
   jobType: "recalc_timeline_trust",
   handler: async (job: JobRecord) => {
-    const { targetId } = job.payload
-    await admin.rpc("pflid.recalc_timeline_group_trust", {
+    const { targetId } = job.payload as Record<string, string>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (admin.rpc as any)("pflid.recalc_timeline_group_trust", {
       p_timeline_group_id: targetId,
     })
   },
@@ -254,7 +268,7 @@ jobRuntime.register({
 jobRuntime.register({
   jobType: "PROJECTION_UPDATE",
   handler: async (job: JobRecord) => {
-    const { eventType, eventId } = job.payload
+    const { eventType, eventId } = job.payload as Record<string, string>
 
     if (!eventType || !eventId) {
       console.warn("[ProjectionJob] Missing eventType or eventId in payload")
@@ -295,6 +309,113 @@ jobRuntime.register({
   concurrency: 3,
   retryPolicy: { maxRetries: 3, backoffMs: 2000, backoffMultiplier: 2 },
   timeoutMs: 30_000,
+})
+
+// ── Handler: RUN_FLYWHEEL_CYCLE ──
+// Purpose: ETL-build FlywheelInput from production tables and run a flywheel cycle
+jobRuntime.register({
+  jobType: "RUN_FLYWHEEL_CYCLE",
+  handler: async (_job: JobRecord) => {
+    try {
+      const input = await buildFlywheelInput()
+      if (input.recommendations.length === 0) {
+        console.log("[RUN_FLYWHEEL_CYCLE] No recommendations to process, skipping cycle")
+        return
+      }
+      const result = await runFlywheelCycle(input)
+      console.log(
+        `[RUN_FLYWHEEL_CYCLE] iteration=${result.iteration?.iterationNumber ?? "-"} ` +
+        `attributions=${result.attributions} benchmarks=${result.benchmarksUpdated} ` +
+        `effectiveness=${result.effectivenessRecalculated} cohorts=${result.cohortsUpdated}`
+      )
+      if (result.iteration?.status === "failed") {
+        throw new Error(
+          `[RUN_FLYWHEEL_CYCLE] iteration ${result.iteration.iterationNumber} failed: ${result.iteration.errorMessage ?? "unknown error"}`
+        )
+      }
+    } catch (err) {
+      console.error("[RUN_FLYWHEEL_CYCLE] Flywheel cycle failed:", (err as Error).message)
+      throw err
+    }
+  },
+  concurrency: 1,
+  retryPolicy: { maxRetries: 2, backoffMs: 10_000, backoffMultiplier: 2 },
+  timeoutMs: 300_000,
+})
+
+// ── Handler: COMPUTE_OUTCOME_ATTRIBUTION ──
+// Purpose: 异步补全飞轮字段 attributionConfidence，并写入 pflid.outcome_attribution
+jobRuntime.register({
+  jobType: "COMPUTE_OUTCOME_ATTRIBUTION",
+  handler: async (job: JobRecord) => {
+    const recommendationId = job.payload.recommendationId as string
+    if (!recommendationId) {
+      console.warn("[COMPUTE_OUTCOME_ATTRIBUTION] Missing recommendationId in payload")
+      return
+    }
+    try {
+      await computeOutcomeAttributionJob(recommendationId)
+    } catch (err) {
+      console.error(
+        `[COMPUTE_OUTCOME_ATTRIBUTION] Failed for ${recommendationId}:`,
+        (err as Error).message
+      )
+      throw err
+    }
+  },
+  concurrency: 3,
+  retryPolicy: { maxRetries: 3, backoffMs: 2000, backoffMultiplier: 2 },
+  timeoutMs: 60_000,
+})
+
+// ── Handler: COMPUTE_LONGITUDINAL_STABILITY ──
+// Purpose: 异步补全飞轮字段 outcomeStability + horizonAgreement
+jobRuntime.register({
+  jobType: "COMPUTE_LONGITUDINAL_STABILITY",
+  handler: async (job: JobRecord) => {
+    const recommendationId = job.payload.recommendationId as string
+    if (!recommendationId) {
+      console.warn("[COMPUTE_LONGITUDINAL_STABILITY] Missing recommendationId in payload")
+      return
+    }
+    try {
+      await computeLongitudinalStabilityJob(recommendationId)
+    } catch (err) {
+      console.error(
+        `[COMPUTE_LONGITUDINAL_STABILITY] Failed for ${recommendationId}:`,
+        (err as Error).message
+      )
+      throw err
+    }
+  },
+  concurrency: 3,
+  retryPolicy: { maxRetries: 3, backoffMs: 2000, backoffMultiplier: 2 },
+  timeoutMs: 60_000,
+})
+
+// ── Handler: COMPUTE_DELAYED_REWARD_PROXY ──
+// Purpose: 异步补全飞轮字段 outcomeClarity (基于 delayed_rewards 聚合的 proxyReward)
+jobRuntime.register({
+  jobType: "COMPUTE_DELAYED_REWARD_PROXY",
+  handler: async (job: JobRecord) => {
+    const recommendationId = job.payload.recommendationId as string
+    if (!recommendationId) {
+      console.warn("[COMPUTE_DELAYED_REWARD_PROXY] Missing recommendationId in payload")
+      return
+    }
+    try {
+      await computeDelayedRewardProxyJob(recommendationId)
+    } catch (err) {
+      console.error(
+        `[COMPUTE_DELAYED_REWARD_PROXY] Failed for ${recommendationId}:`,
+        (err as Error).message
+      )
+      throw err
+    }
+  },
+  concurrency: 3,
+  retryPolicy: { maxRetries: 3, backoffMs: 2000, backoffMultiplier: 2 },
+  timeoutMs: 60_000,
 })
 
 export { jobRuntime }

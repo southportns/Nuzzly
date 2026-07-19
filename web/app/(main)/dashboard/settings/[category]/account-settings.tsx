@@ -57,11 +57,12 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
       if (!currentUser) throw new Error("未登录")
 
       // 软删除 profile
-      await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
         .from("profiles")
-        .update({ 
-          is_deleted: true, 
-          deleted_at: new Date().toISOString() 
+        .update({
+          is_deleted: true,
+          deleted_at: new Date().toISOString()
         })
         .eq("id", currentUser.id)
 

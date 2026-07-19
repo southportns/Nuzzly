@@ -1,7 +1,9 @@
 // =============================================
-// Notification client-side mutations
+// Notification mutations (Server Action)
 // Phase 1.2.2 (P1): Migrated to Write Gateway
 // =============================================
+
+"use server"
 
 import { getWriteGateway, generateIdempotencyKey } from "@/lib/gateway/write-gateway"
 

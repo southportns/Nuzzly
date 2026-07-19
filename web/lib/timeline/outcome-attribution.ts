@@ -147,8 +147,10 @@ export async function saveAttribution(input: AttributionInput & {
 }): Promise<AttributionResult | null> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from("pflid.outcome_attribution")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .schema("pflid")
+    .from("outcome_attribution")
     .insert({
       recommendation_id: input.recommendationId,
       pet_id: input.petId,
@@ -195,8 +197,10 @@ export async function getAttributionForRecommendation(
 ): Promise<AttributionResult[]> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from("pflid.outcome_attribution")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .schema("pflid")
+    .from("outcome_attribution")
     .select("*")
     .eq("recommendation_id", recommendationId)
     .order("outcome_window_days", { ascending: true })
@@ -217,8 +221,10 @@ export async function getAttributionStats(params: {
 }> {
   const supabase = await createClient()
 
-  let query = supabase
-    .from("pflid.outcome_attribution")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase as any)
+    .schema("pflid")
+    .from("outcome_attribution")
     .select("outcome_success, outcome_confidence, contribution_timeline, contribution_strategy, contribution_bandit, contribution_segment, contribution_random")
 
   if (params.productId) {
@@ -240,19 +246,19 @@ export async function getAttributionStats(params: {
   }
 
   const total = data.length
-  const successCount = data.filter((d) => d.outcome_success).length
-  const avgConfidence = data.reduce((s, d) => s + (d.outcome_confidence ?? 0), 0) / total
+  const successCount = data.filter((d: { outcome_success: boolean }) => d.outcome_success).length
+  const avgConfidence = data.reduce((s: number, d: { outcome_confidence: number | null }) => s + (d.outcome_confidence ?? 0), 0) / total
 
   return {
     totalAttributions: total,
     successRate: round4(successCount / total),
     avgConfidence: round4(avgConfidence),
     avgContribution: {
-      timeline: round4(data.reduce((s, d) => s + (d.contribution_timeline ?? 0), 0) / total),
-      strategy: round4(data.reduce((s, d) => s + (d.contribution_strategy ?? 0), 0) / total),
-      bandit: round4(data.reduce((s, d) => s + (d.contribution_bandit ?? 0), 0) / total),
-      segment: round4(data.reduce((s, d) => s + (d.contribution_segment ?? 0), 0) / total),
-      random: round4(data.reduce((s, d) => s + (d.contribution_random ?? 0), 0) / total),
+      timeline: round4(data.reduce((s: number, d: { contribution_timeline: number | null }) => s + (d.contribution_timeline ?? 0), 0) / total),
+      strategy: round4(data.reduce((s: number, d: { contribution_strategy: number | null }) => s + (d.contribution_strategy ?? 0), 0) / total),
+      bandit: round4(data.reduce((s: number, d: { contribution_bandit: number | null }) => s + (d.contribution_bandit ?? 0), 0) / total),
+      segment: round4(data.reduce((s: number, d: { contribution_segment: number | null }) => s + (d.contribution_segment ?? 0), 0) / total),
+      random: round4(data.reduce((s: number, d: { contribution_random: number | null }) => s + (d.contribution_random ?? 0), 0) / total),
     },
   }
 }

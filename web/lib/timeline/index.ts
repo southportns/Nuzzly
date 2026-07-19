@@ -389,7 +389,7 @@ export {
 export type {
   SimulationInput,
   SegmentSimulationResult,
-  SystemUlift,
+  SystemUplift,
   SimulationResult,
 } from "./policy-simulator"
 

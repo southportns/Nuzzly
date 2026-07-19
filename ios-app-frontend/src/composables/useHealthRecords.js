@@ -1,6 +1,7 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
+import { writeGateway } from '../lib/gateway'
 
 const healthRecords = shallowRef([])
 const weightRecords = shallowRef([])
@@ -76,12 +77,8 @@ async function addHealthRecord(record) {
   const uid = await getUid()
   if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'addHealthRecord')
 
-  const { data, error } = await supabase
-    .from('health_records')
-    .insert({ ...record, profile_id: uid })
-    .select()
-    .single()
-  if (error) throw normalizeError(error, 'addHealthRecord')
+  const { data, error } = await writeGateway('CREATE_HEALTH_RECORD', { ...record })
+  if (error) throw normalizeError({ message: error }, 'addHealthRecord')
   return data
 }
 

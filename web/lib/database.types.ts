@@ -4703,6 +4703,410 @@ export type Database = {
       [_ in never]: never
     }
   }
+  // ===== PFLID Schema (Phase 3.95 Data Flywheel) =====
+  pflid: {
+    Tables: {
+      cohort_intelligence: {
+        Row: {
+          avg_effectiveness_score: number | null
+          avg_health_score: number | null
+          avg_improvement_rate: number | null
+          baseline_comparison: Json | null
+          cohort_definition: Json
+          cohort_key: string
+          computed_at: string
+          id: string
+          member_count: number
+          metadata: Json | null
+          top_products: Json | null
+          version: number
+        }
+        Insert: {
+          avg_effectiveness_score?: number | null
+          avg_health_score?: number | null
+          avg_improvement_rate?: number | null
+          baseline_comparison?: Json | null
+          cohort_definition?: Json
+          cohort_key: string
+          computed_at?: string
+          id?: string
+          member_count?: number
+          metadata?: Json | null
+          top_products?: Json | null
+          version?: number
+        }
+        Update: {
+          avg_effectiveness_score?: number | null
+          avg_health_score?: number | null
+          avg_improvement_rate?: number | null
+          baseline_comparison?: Json | null
+          cohort_definition?: Json
+          cohort_key?: string
+          computed_at?: string
+          id?: string
+          member_count?: number
+          metadata?: Json | null
+          top_products?: Json | null
+          version?: number
+        }
+        Relationships: []
+      }
+      effectiveness_scores: {
+        Row: {
+          accuracy_score: number | null
+          avg_confidence: number | null
+          computed_at: string
+          consistency_score: number | null
+          effectiveness_score: number
+          entity_id: string
+          entity_type: "product" | "strategy" | "policy" | "category"
+          id: string
+          metadata: Json | null
+          outcome_success_rate: number | null
+          quality_score: number | null
+          sample_count: number | null
+          safety_score: number | null
+          version: number
+        }
+        Insert: {
+          accuracy_score?: number | null
+          avg_confidence?: number | null
+          computed_at?: string
+          consistency_score?: number | null
+          effectiveness_score?: number
+          entity_id: string
+          entity_type: "product" | "strategy" | "policy" | "category"
+          id?: string
+          metadata?: Json | null
+          outcome_success_rate?: number | null
+          quality_score?: number | null
+          sample_count?: number | null
+          safety_score?: number | null
+          version?: number
+        }
+        Update: {
+          accuracy_score?: number | null
+          avg_confidence?: number | null
+          computed_at?: string
+          consistency_score?: number | null
+          effectiveness_score?: number
+          entity_id?: string
+          entity_type?: "product" | "strategy" | "policy" | "category"
+          id?: string
+          metadata?: Json | null
+          outcome_success_rate?: number | null
+          quality_score?: number | null
+          sample_count?: number | null
+          safety_score?: number | null
+          version?: number
+        }
+        Relationships: []
+      }
+      explainability_records: {
+        Row: {
+          confidence_level: "low" | "medium" | "high" | "very_high"
+          confidence_score: number | null
+          created_at: string
+          evidence_list: Json
+          explanation_summary: string
+          id: string
+          metadata: Json | null
+          pet_id: string
+          policy_version: string | null
+          product_id: string
+          recommendation_id: string
+          similar_cases: Json | null
+          strategy_id: string | null
+          timeline_signals: Json
+        }
+        Insert: {
+          confidence_level?: "low" | "medium" | "high" | "very_high"
+          confidence_score?: number | null
+          created_at?: string
+          evidence_list?: Json
+          explanation_summary: string
+          id?: string
+          metadata?: Json | null
+          pet_id: string
+          policy_version?: string | null
+          product_id: string
+          recommendation_id: string
+          similar_cases?: Json | null
+          strategy_id?: string | null
+          timeline_signals?: Json
+        }
+        Update: {
+          confidence_level?: "low" | "medium" | "high" | "very_high"
+          confidence_score?: number | null
+          created_at?: string
+          evidence_list?: Json
+          explanation_summary?: string
+          id?: string
+          metadata?: Json | null
+          pet_id?: string
+          policy_version?: string | null
+          product_id?: string
+          recommendation_id?: string
+          similar_cases?: Json | null
+          strategy_id?: string | null
+          timeline_signals?: Json
+        }
+        Relationships: []
+      }
+      flywheel_iterations: {
+        Row: {
+          attributions_computed: number | null
+          benchmarks_updated: number | null
+          completed_at: string | null
+          data_completeness: number | null
+          effectiveness_recalculated: number | null
+          error_message: string | null
+          evidence_quality_score: number | null
+          id: string
+          iteration_number: number
+          metadata: Json | null
+          outcomes_analyzed: number | null
+          recommendations_processed: number | null
+          started_at: string
+          status: "running" | "completed" | "failed"
+          strategy_evaluations: number | null
+        }
+        Insert: {
+          attributions_computed?: number | null
+          benchmarks_updated?: number | null
+          completed_at?: string | null
+          data_completeness?: number | null
+          effectiveness_recalculated?: number | null
+          error_message?: string | null
+          evidence_quality_score?: number | null
+          id?: string
+          iteration_number: number
+          metadata?: Json | null
+          outcomes_analyzed?: number | null
+          recommendations_processed?: number | null
+          started_at?: string
+          status?: "running" | "completed" | "failed"
+          strategy_evaluations?: number | null
+        }
+        Update: {
+          attributions_computed?: number | null
+          benchmarks_updated?: number | null
+          completed_at?: string | null
+          data_completeness?: number | null
+          effectiveness_recalculated?: number | null
+          error_message?: string | null
+          evidence_quality_score?: number | null
+          id?: string
+          iteration_number?: number
+          metadata?: Json | null
+          outcomes_analyzed?: number | null
+          recommendations_processed?: number | null
+          started_at?: string
+          status?: "running" | "completed" | "failed"
+          strategy_evaluations?: number | null
+        }
+        Relationships: []
+      }
+      health_benchmarks: {
+        Row: {
+          category: string
+          computed_at: string
+          confidence_interval_lower: number | null
+          confidence_interval_upper: number | null
+          confidence_level: number | null
+          id: string
+          mean_improvement: number | null
+          median_days_to_improvement: number | null
+          median_improvement: number | null
+          metadata: Json | null
+          p75_days_to_improvement: number | null
+          sample_size: number
+          std_deviation: number | null
+          subcategory: string | null
+          valid_from: string
+          valid_to: string | null
+          version: number
+        }
+        Insert: {
+          category: string
+          computed_at?: string
+          confidence_interval_lower?: number | null
+          confidence_interval_upper?: number | null
+          confidence_level?: number | null
+          id?: string
+          mean_improvement?: number | null
+          median_days_to_improvement?: number | null
+          median_improvement?: number | null
+          metadata?: Json | null
+          p75_days_to_improvement?: number | null
+          sample_size?: number
+          std_deviation?: number | null
+          subcategory?: string | null
+          valid_from?: string
+          valid_to?: string | null
+          version?: number
+        }
+        Update: {
+          category?: string
+          computed_at?: string
+          confidence_interval_lower?: number | null
+          confidence_interval_upper?: number | null
+          confidence_level?: number | null
+          id?: string
+          mean_improvement?: number | null
+          median_days_to_improvement?: number | null
+          median_improvement?: number | null
+          metadata?: Json | null
+          p75_days_to_improvement?: number | null
+          sample_size?: number
+          std_deviation?: number | null
+          subcategory?: string | null
+          valid_from?: string
+          valid_to?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
+      longitudinal_outcomes: {
+        Row: {
+          created_at: string
+          diet_stability: boolean | null
+          health_score: number | null
+          health_score_baseline: number | null
+          health_score_delta: number | null
+          horizon_days: number
+          id: string
+          measured_at: string
+          metadata: Json | null
+          outcome_class: "improved" | "stable" | "worsened" | "unknown"
+          owner_adherence: number | null
+          pet_id: string
+          product_id: string
+          symptom_count: number | null
+          symptom_recurrence: number | null
+        }
+        Insert: {
+          created_at?: string
+          diet_stability?: boolean | null
+          health_score?: number | null
+          health_score_baseline?: number | null
+          health_score_delta?: number | null
+          horizon_days: number
+          id?: string
+          measured_at?: string
+          metadata?: Json | null
+          outcome_class?: "improved" | "stable" | "worsened" | "unknown"
+          owner_adherence?: number | null
+          pet_id: string
+          product_id: string
+          symptom_count?: number | null
+          symptom_recurrence?: number | null
+        }
+        Update: {
+          created_at?: string
+          diet_stability?: boolean | null
+          health_score?: number | null
+          health_score_baseline?: number | null
+          health_score_delta?: number | null
+          horizon_days?: number
+          id?: string
+          measured_at?: string
+          metadata?: Json | null
+          outcome_class?: "improved" | "stable" | "worsened" | "unknown"
+          owner_adherence?: number | null
+          pet_id?: string
+          product_id?: string
+          symptom_count?: number | null
+          symptom_recurrence?: number | null
+        }
+        Relationships: []
+      }
+      outcome_attribution: {
+        Row: {
+          contribution_bandit: number | null
+          contribution_random: number | null
+          contribution_segment: number | null
+          contribution_strategy: number | null
+          contribution_timeline: number | null
+          created_at: string
+          health_score_delta: number | null
+          id: string
+          metadata: Json | null
+          outcome_confidence: number
+          outcome_success: boolean
+          outcome_window_days: number
+          owner_adherence: number | null
+          pet_id: string
+          policy_version: string | null
+          product_id: string
+          recommendation_id: string
+          segment_key: string | null
+          strategy_id: string | null
+          success_probability: number
+          symptom_improvement: Json | null
+        }
+        Insert: {
+          contribution_bandit?: number | null
+          contribution_random?: number | null
+          contribution_segment?: number | null
+          contribution_strategy?: number | null
+          contribution_timeline?: number | null
+          created_at?: string
+          health_score_delta?: number | null
+          id?: string
+          metadata?: Json | null
+          outcome_confidence: number
+          outcome_success: boolean
+          outcome_window_days: number
+          owner_adherence?: number | null
+          pet_id: string
+          policy_version?: string | null
+          product_id: string
+          recommendation_id: string
+          segment_key?: string | null
+          strategy_id?: string | null
+          success_probability: number
+          symptom_improvement?: Json | null
+        }
+        Update: {
+          contribution_bandit?: number | null
+          contribution_random?: number | null
+          contribution_segment?: number | null
+          contribution_strategy?: number | null
+          contribution_timeline?: number | null
+          created_at?: string
+          health_score_delta?: number | null
+          id?: string
+          metadata?: Json | null
+          outcome_confidence?: number
+          outcome_success?: boolean
+          outcome_window_days?: number
+          owner_adherence?: number | null
+          pet_id?: string
+          policy_version?: string | null
+          product_id?: string
+          recommendation_id?: string
+          segment_key?: string | null
+          strategy_id?: string | null
+          success_probability?: number
+          symptom_improvement?: Json | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">

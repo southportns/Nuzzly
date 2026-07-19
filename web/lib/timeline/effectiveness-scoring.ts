@@ -137,8 +137,10 @@ export async function saveEffectivenessScore(input: EffectivenessInput): Promise
   })
 
   // Get next version
-  const { data: existing } = await supabase
-    .from("pflid.effectiveness_scores")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existing } = await (supabase as any)
+    .schema("pflid")
+    .from("effectiveness_scores")
     .select("version")
     .eq("entity_type", input.entityType)
     .eq("entity_id", input.entityId)
@@ -147,8 +149,10 @@ export async function saveEffectivenessScore(input: EffectivenessInput): Promise
 
   const nextVersion = (existing?.[0]?.version ?? 0) + 1
 
-  const { data, error } = await supabase
-    .from("pflid.effectiveness_scores")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .schema("pflid")
+    .from("effectiveness_scores")
     .insert({
       entity_type: input.entityType,
       entity_id: input.entityId,
@@ -190,8 +194,10 @@ export async function getEffectivenessScores(params: {
 }): Promise<EffectivenessScore[]> {
   const supabase = await createClient()
 
-  let query = supabase
-    .from("pflid.effectiveness_scores")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase as any)
+    .schema("pflid")
+    .from("effectiveness_scores")
     .select("*")
     .order("effectiveness_score", { ascending: false })
 

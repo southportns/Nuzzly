@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
 
 // 长期追踪 composable：查询追踪计划 + 提交追踪条目 + 标记完成
@@ -95,9 +96,8 @@ async function submitFollowupEntry(payload) {
   if (!uid) throw new Error('未登录')
 
   submitting.value = true
-  const record = {
+  const entryPayload = {
     schedule_id: payload.schedule_id,
-    profile_id: uid,
     stool_status: payload.stool_status || null,
     coat_status: payload.coat_status || null,
     energy_status: payload.energy_status || null,
@@ -108,29 +108,28 @@ async function submitFollowupEntry(payload) {
     health_notes: payload.health_notes || null
   }
 
-  const { data, error } = await supabase
-    .from('review_followup_entries')
-    .insert(record)
-    .select()
-    .single()
-
-  if (error) {
+  try {
+    await writeGateway('CREATE_FOLLOWUP_ENTRY', entryPayload)
+  } catch (e) {
     submitting.value = false
-    throw normalizeError(error, 'submitFollowupEntry')
+    throw normalizeError(e, 'submitFollowupEntry')
   }
 
   // 标记追踪计划为已完成
-  const { error: updateError } = await supabase
-    .from('review_followup_schedules')
-    .update({ status: 'completed', completed_at: new Date().toISOString() })
-    .eq('id', payload.schedule_id)
-
-  submitting.value = false
-  if (updateError) {
-    console.warn('[useFollowups] 标记完成失败', updateError.message)
+  try {
+    await writeGateway('UPDATE_FOLLOWUP_SCHEDULE', {
+      id: payload.schedule_id,
+      status: 'completed',
+      completed_at: new Date().toISOString()
+    })
+  } catch (e) {
+    console.warn('[useFollowups] 标记完成失败', e.message)
     // 条目已插入，标记失败不阻断流程
   }
-  return data
+
+  submitting.value = false
+  // gateway event 类型不返回行数据，返回 payload 作为乐观结果
+  return { ...entryPayload, profile_id: uid, created_at: new Date().toISOString() }
 }
 
 export function useFollowups() {

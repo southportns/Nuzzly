@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/admin/outcomes/run-cycle?trigger=cron",
+      "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/admin/outcomes/enrich-recommendations?trigger=cron",
+      "schedule": "30 19 * * *"
+    }
+  ]
+}

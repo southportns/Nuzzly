@@ -1,6 +1,7 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
+import { writeGateway } from '../lib/gateway'
 
 const allergies = shallowRef([])
 const loading = ref(false)
@@ -31,13 +32,9 @@ async function addAllergy({ pet_id, allergen, severity = 'mild', confirmed = fal
   const uid = await getUid()
   if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'addAllergy')
 
-  const { data, error } = await supabase
-    .from('pet_allergies')
-    .insert({ pet_id, allergen, severity, confirmed })
-    .select()
-    .single()
+  const { data, error } = await writeGateway('CREATE_PET_ALLERGY', { pet_id, allergen, severity, confirmed })
 
-  if (error) throw normalizeError(error, 'addAllergy')
+  if (error) throw normalizeError({ message: error }, 'addAllergy')
   allergies.value = [...allergies.value, data]
   return data
 }
@@ -60,8 +57,11 @@ async function deleteAllergy(id, isConfirmed = false) {
     // 已确认的过敏原需要二次确认（由UI层处理）
   }
 
-  const { error } = await supabase.from('pet_allergies').delete().eq('id', id)
-  if (error) throw normalizeError(error, 'deleteAllergy')
+  // DELETE_PET_ALLERGY handler 需要 pet_id，从本地 state 解析
+  const existing = allergies.value.find(a => a.id === id)
+  const pet_id = existing?.pet_id
+  const { error } = await writeGateway('DELETE_PET_ALLERGY', { id, pet_id })
+  if (error) throw normalizeError({ message: error }, 'deleteAllergy')
   allergies.value = allergies.value.filter(a => a.id !== id)
 }
 

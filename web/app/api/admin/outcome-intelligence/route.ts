@@ -21,48 +21,50 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get("limit") ?? "20")
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any
     // 1. Top Stable Foods (by day90_stability_rate)
-    const { data: stableFoods } = await supabase
+    const { data: stableFoods } = await db
       .from("timeline_metrics_daily")
       .select("product_id, day90_stability_rate, day30_stability_rate, day180_stability_rate, timeline_count, stat_date")
       .order("day90_stability_rate", { ascending: false })
       .limit(limit)
 
     // 2. Highest Soft Stool Risk
-    const { data: softStoolRisk } = await supabase
+    const { data: softStoolRisk } = await db
       .from("timeline_metrics_daily")
       .select("product_id, soft_stool_rate, timeline_count, stat_date")
       .order("soft_stool_rate", { ascending: false })
       .limit(limit)
 
     // 3. Highest Black Chin Risk
-    const { data: blackChinRisk } = await supabase
+    const { data: blackChinRisk } = await db
       .from("timeline_metrics_daily")
       .select("product_id, black_chin_rate, timeline_count, stat_date")
       .order("black_chin_rate", { ascending: false })
       .limit(limit)
 
     // 4. Highest Repurchase Foods
-    const { data: repurchaseRank } = await supabase
+    const { data: repurchaseRank } = await db
       .from("timeline_metrics_daily")
       .select("product_id, repurchase_rate, timeline_count, stat_date")
       .order("repurchase_rate", { ascending: false })
       .limit(limit)
 
     // 5. Timeline Growth (aggregate counts over time)
-    const { data: timelineGrowth } = await supabase
+    const { data: timelineGrowth } = await db
       .from("review_timeline_groups")
       .select("first_review_date, review_count")
       .order("first_review_date", { ascending: true })
 
-    const { data: eventGrowth } = await supabase
+    const { data: eventGrowth } = await db
       .from("review_timeline_events")
       .select("created_at")
       .order("created_at", { ascending: true })
       .limit(10000)
 
     // 6. Product Lifecycle (decay curve sample)
-    const { data: lifecycleSample } = await supabase
+    const { data: lifecycleSample } = await db
       .from("timeline_metrics_daily")
       .select("product_id, day30_stability_rate, day90_stability_rate, day180_stability_rate, timeline_count")
       .order("timeline_count", { ascending: false })
@@ -70,14 +72,14 @@ export async function GET(request: Request) {
 
     // Enrich with product names
     const productIds = new Set<string>()
-    ;[stableFoods, softStoolRisk, blackChinRisk, repurchaseRank, lifecycleSample].forEach((arr) => {
+    ;[stableFoods, softStoolRisk, blackChinRisk, repurchaseRank, lifecycleSample].forEach((arr: Array<Record<string, unknown>> | null) => {
       arr?.forEach((item: Record<string, unknown>) => {
         if (item.product_id) productIds.add(item.product_id as string)
       })
     })
 
     const { data: products } = productIds.size > 0
-      ? await supabase.from("products").select("id, name, brand").in("id", Array.from(productIds))
+      ? await db.from("products").select("id, name, brand").in("id", Array.from(productIds))
       : { data: null }
 
     const productMap = new Map<string, { name: string; brand: string }>()
@@ -95,15 +97,15 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       data: {
-        stable_foods: enrich(stableFoods),
-        soft_stool_risk: enrich(softStoolRisk),
-        black_chin_risk: enrich(blackChinRisk),
-        repurchase_rank: enrich(repurchaseRank),
+        stable_foods: enrich(stableFoods as Array<{ product_id: string }> | null),
+        soft_stool_risk: enrich(softStoolRisk as Array<{ product_id: string }> | null),
+        black_chin_risk: enrich(blackChinRisk as Array<{ product_id: string }> | null),
+        repurchase_rank: enrich(repurchaseRank as Array<{ product_id: string }> | null),
         timeline_growth: {
           groups_over_time: timelineGrowth ?? [],
           events_count: eventGrowth?.length ?? 0,
         },
-        lifecycle_sample: enrich(lifecycleSample),
+        lifecycle_sample: enrich(lifecycleSample as Array<{ product_id: string }> | null),
       },
     })
   } catch (error) {

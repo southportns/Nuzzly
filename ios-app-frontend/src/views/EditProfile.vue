@@ -40,6 +40,7 @@ import { useRouter } from 'vue-router'
 import { Toast } from 'tdesign-mobile-vue'
 import { useAuth } from '../composables/useAuth'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import { validateForm, required, username, maxLength } from '../lib/validation'
 import { toastError } from '../lib/error-handling'
 import { getProvinces, getCities } from '../lib/china-regions'
@@ -156,21 +157,13 @@ async function handleSave() {
     return
   }
   saving.value = true
-  const region = selectedProvince.value && selectedCity.value
-    ? `${selectedProvince.value}·${selectedCity.value}`
-    : selectedProvince.value || ''
   try {
-    const { error } = await supabase.from('profiles')
-      .update({
-        username: form.username,
-        display_name: form.username,
-        bio: form.bio,
-        gender: form.gender,
-        region,
-        avatar_url: form.avatar_url
-      })
-      .eq('id', uid)
-    if (error) throw error
+    await writeGateway('UPDATE_PROFILE', {
+      username: form.username,
+      display_name: form.username,
+      bio: form.bio,
+      avatar_url: form.avatar_url
+    })
     reloadProfile()
     Toast({ theme: 'success', message: '保存成功' })
     router.back()

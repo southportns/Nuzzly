@@ -1,6 +1,7 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
+import { writeGateway } from '../lib/gateway'
 
 // 评价 composable：提交产品使用反馈 + 查询评价列表
 // 与 web 端 review-wizard 字段对齐：usage_duration 时长分桶 + 9 项结构化评分
@@ -105,18 +106,17 @@ async function submitReview(payload) {
     verified_purchase: payload.verified_purchase ?? false
   }
 
-  const { data, error } = await supabase
-    .from('product_reviews')
-    .insert(record)
-    .select()
-    .single()
+  const { data, error } = await writeGateway('CREATE_REVIEW', record)
 
   submitting.value = false
-  if (error) throw normalizeError(error, 'submitReview')
+  if (error) throw normalizeError({ message: error }, 'submitReview')
 
   // 触发时间线处理（web 端是 /api/reviews/[id]/process-timeline，iOS 复用同一 API）
   // 失败静默忽略——时间线处理是非关键的后台任务
-  fetch(`/api/reviews/${data.id}/process-timeline`, { method: 'POST' }).catch(() => {})
+  // CREATE_REVIEW 走 event type，gateway 可能不返回 data；若有 data.id 则触发，否则由服务端事件处理
+  if (data?.id) {
+    fetch(`/api/reviews/${data.id}/process-timeline`, { method: 'POST' }).catch(() => {})
+  }
 
   return data
 }

@@ -38,7 +38,7 @@ class ProjectionRegistry {
   private eventTypeIndex: Map<string, string[]> = new Map() // eventType → projection names
 
   register<T>(def: ProjectionDefinition<T>): void {
-    this.projections.set(def.name, def)
+    this.projections.set(def.name, def as unknown as ProjectionDefinition)
 
     // Index by event type for fast lookup
     for (const eventType of def.eventTypes) {

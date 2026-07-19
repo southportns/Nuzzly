@@ -109,8 +109,10 @@ export async function saveCohortIntelligence(input: {
   const supabase = await createClient()
 
   // Get next version
-  const { data: existing } = await supabase
-    .from("pflid.cohort_intelligence")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existing } = await (supabase as any)
+    .schema("pflid")
+    .from("cohort_intelligence")
     .select("version")
     .eq("cohort_key", input.cohortKey)
     .order("version", { ascending: false })
@@ -118,8 +120,10 @@ export async function saveCohortIntelligence(input: {
 
   const nextVersion = (existing?.[0]?.version ?? 0) + 1
 
-  const { data, error } = await supabase
-    .from("pflid.cohort_intelligence")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .schema("pflid")
+    .from("cohort_intelligence")
     .insert({
       cohort_key: input.cohortKey,
       cohort_definition: input.cohortDefinition,
@@ -156,8 +160,10 @@ export async function getCohortIntelligence(params?: {
 }): Promise<CohortIntelligence[]> {
   const supabase = await createClient()
 
-  let query = supabase
-    .from("pflid.cohort_intelligence")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase as any)
+    .schema("pflid")
+    .from("cohort_intelligence")
     .select("*")
     .order("cohort_key")
 

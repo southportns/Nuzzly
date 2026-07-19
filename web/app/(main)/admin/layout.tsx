@@ -9,6 +9,7 @@ import {
   MessageSquareWarning,
   Shield,
   ChevronLeft,
+  BarChart3,
 } from "lucide-react"
 
 const adminNavItems = [
@@ -16,6 +17,7 @@ const adminNavItems = [
   { href: "/admin/users", label: "用户管理", icon: Users },
   { href: "/admin/products", label: "产品管理", icon: Package },
   { href: "/admin/reviews", label: "评价审核", icon: MessageSquareWarning },
+  { href: "/admin/outcomes-dashboard", label: "Outcomes Dashboard", icon: BarChart3 },
 ]
 
 export default async function AdminLayout({

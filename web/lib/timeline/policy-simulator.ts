@@ -41,7 +41,7 @@ export interface SegmentSimulationResult {
   constraintViolations: number
 }
 
-export interface SystemUlift {
+export interface SystemUplift {
   overallUlift: number
   overallUliftPct: number
   totalSampleSize: number
@@ -55,7 +55,7 @@ export interface SimulationResult {
   policyVersion: string
   baselinePolicyVersion: string | null
   segmentResults: Record<string, SegmentSimulationResult>
-  systemUplift: SystemUlift
+  systemUplift: SystemUplift
   paretoFrontier: Array<{ armId: string; isParetoOptimal: boolean; rank: number }>
   constraintViolations: Array<{ type: string; count: number }>
   recommendation: "approve" | "reject" | "neutral" | "needs_tuning"

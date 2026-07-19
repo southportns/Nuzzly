@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
 
 const traceLogs = shallowRef([])
@@ -40,25 +41,39 @@ async function createTraceLog({ pet_id, session_id, model_version, data_sources,
   const uid = await getUid()
   if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'createTraceLog')
 
-  const { data, error } = await supabase
-    .from('recommendation_trace_log')
-    .insert({
+  const finalModelVersion = model_version || 'v1.0'
+  const finalDataSources = data_sources || []
+  const finalFeatureSnapshot = feature_snapshot || {}
+  const finalDecisionGraph = decision_graph || {}
+  try {
+    await writeGateway('CREATE_RECOMMENDATION_TRACE_LOG', {
       pet_id,
-      profile_id: uid,
       session_id,
-      model_version: model_version || 'v1.0',
-      data_sources: data_sources || [],
-      feature_snapshot: feature_snapshot || {},
-      decision_graph: decision_graph || {},
+      model_version: finalModelVersion,
+      data_sources: finalDataSources,
+      feature_snapshot: finalFeatureSnapshot,
+      decision_graph: finalDecisionGraph,
       input_features,
       user_segment
     })
-    .select()
-    .single()
-
-  if (error) throw normalizeError(error, 'createTraceLog')
-  traceLogs.value = [data, ...traceLogs.value]
-  return data
+  } catch (e) {
+    throw normalizeError(e, 'createTraceLog')
+  }
+  // gateway event 类型不返回行数据，本地构造一条乐观条目
+  const optimistic = {
+    pet_id,
+    profile_id: uid,
+    session_id,
+    model_version: finalModelVersion,
+    data_sources: finalDataSources,
+    feature_snapshot: finalFeatureSnapshot,
+    decision_graph: finalDecisionGraph,
+    input_features,
+    user_segment,
+    created_at: new Date().toISOString()
+  }
+  traceLogs.value = [optimistic, ...traceLogs.value]
+  return optimistic
 }
 
 async function fetchTraceLogById(id) {

@@ -42,6 +42,9 @@ export async function GET(request: Request) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     if (!data) return NextResponse.json({ error: "宠物不存在" }, { status: 404 })
+    if (!data.is_active) {
+      return NextResponse.json({ error: "宠物已删除" }, { status: 404 })
+    }
     if (data.profile_id !== user.id) {
       return NextResponse.json({ error: "无权限" }, { status: 403 })
     }

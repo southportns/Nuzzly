@@ -153,7 +153,7 @@ export class ProjectionEngine {
         .from("event_store")
         .select("*")
         .in("event_type", def.eventTypes)
-        .gt("created_at", checkpoint.created_at)
+        .gt("created_at", checkpoint.createdAt)
         .order("created_at", { ascending: true })
 
       if (error) {

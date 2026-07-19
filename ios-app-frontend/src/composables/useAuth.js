@@ -30,7 +30,8 @@ function init() {
 async function loadProfile(uid) {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, username, display_name, avatar_url, bio, gender, region, trust_score, review_count, is_admin, user_number')
+    // 注意：profiles 表当前不含 gender / region 字段，已移除避免返回 undefined
+    .select('id, username, display_name, avatar_url, bio, trust_score, review_count, is_admin, user_number')
     .eq('id', uid)
     .maybeSingle()
   if (error) {

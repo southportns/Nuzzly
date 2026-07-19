@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 
 const pets = shallowRef([])
 const loading = ref(false)
@@ -38,19 +39,15 @@ async function createPet(pet) {
   const uid = await getUid()
   if (!uid) throw new Error('未登录')
 
-  const { data, error } = await supabase
-    .from('pets')
-    .insert({ ...pet, profile_id: uid })
-    .select()
-    .single()
-  if (error) throw error
+  const { data, error } = await writeGateway('CREATE_PET', { ...pet })
+  if (error) throw new Error(error)
   pets.value = [...pets.value, data]
   return data
 }
 
 async function updatePet(id, updates) {
-  const { data, error } = await supabase.from('pets').update(updates).eq('id', id).select().single()
-  if (error) throw error
+  const { data, error } = await writeGateway('UPDATE_PET', { id, ...updates })
+  if (error) throw new Error(error)
   pets.value = pets.value.map(p => p.id === id ? data : p)
   return data
 }

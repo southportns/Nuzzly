@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
 
 const petEvents = shallowRef([])
@@ -60,13 +61,12 @@ async function createPetEvent({ pet_id, event_type, event_time, notes, severity,
   const uid = await getUid()
   if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'createPetEvent')
 
-  const { data, error } = await supabase
-    .from('pet_events')
-    .insert({
+  const finalEventTime = event_time || new Date().toISOString()
+  try {
+    await writeGateway('CREATE_PET_EVENT', {
       pet_id,
-      profile_id: uid,
       event_type,
-      event_time: event_time || new Date().toISOString(),
+      event_time: finalEventTime,
       notes,
       severity,
       product_id,
@@ -74,12 +74,25 @@ async function createPetEvent({ pet_id, event_type, event_time, notes, severity,
       metadata,
       source_type
     })
-    .select('*, products(name, brand)')
-    .single()
-
-  if (error) throw normalizeError(error, 'createPetEvent')
-  petEvents.value = [data, ...petEvents.value]
-  return data
+  } catch (e) {
+    throw normalizeError(e, 'createPetEvent')
+  }
+  // gateway event 类型不返回行数据，本地构造一条乐观条目
+  const optimistic = {
+    pet_id,
+    profile_id: uid,
+    event_type,
+    event_time: finalEventTime,
+    notes,
+    severity,
+    product_id,
+    symptom_code,
+    metadata,
+    source_type,
+    created_at: new Date().toISOString()
+  }
+  petEvents.value = [optimistic, ...petEvents.value]
+  return optimistic
 }
 
 async function updatePetEvent(id, updates) {

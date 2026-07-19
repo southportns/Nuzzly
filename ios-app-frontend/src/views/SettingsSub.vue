@@ -251,6 +251,7 @@ import { Toast } from 'tdesign-mobile-vue'
 import { useAuth } from '../composables/useAuth'
 import { usePets } from '../composables/usePets'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import PageHeader from '../components/PageHeader.vue'
 import FormField from '../components/FormField.vue'
 import ChipGroup from '../components/ChipGroup.vue'
@@ -332,7 +333,8 @@ async function handleDeleteAccount() {
     if (!currentUser) throw new Error('未登录')
 
     // 软删除 profile
-    await supabase.from('profiles').update({ is_deleted: true, deleted_at: new Date().toISOString() }).eq('id', currentUser.id)
+    const { error: profileErr } = await writeGateway('SOFT_DELETE_PROFILE', { id: currentUser.id })
+    if (profileErr) throw new Error(profileErr)
 
     // 注销登录
     await supabase.auth.signOut()

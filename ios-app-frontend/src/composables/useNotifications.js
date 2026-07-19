@@ -1,5 +1,6 @@
 import { ref, readonly } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 
 const notifications = ref([])
 const loading = ref(false)
@@ -36,23 +37,27 @@ export function useNotifications() {
     if (idx !== -1 && !notifications.value[idx].is_read) {
       notifications.value[idx] = { ...notifications.value[idx], is_read: true }
       unreadCount.value = notifications.value.filter(n => !n.is_read).length
-      await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('id', id)
+      try {
+        await writeGateway('MARK_NOTIFICATION_READ', { id })
+      } catch (e) {
+        console.error('[useNotifications.markAsRead]', e.message)
+      }
     }
   }
 
   async function markAllRead() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('profile_id', user.id)
-      .eq('is_read', false)
+    const unreadIds = notifications.value.filter(n => !n.is_read).map(n => n.id)
     notifications.value = notifications.value.map(n => ({ ...n, is_read: true }))
     unreadCount.value = 0
+    for (const nid of unreadIds) {
+      try {
+        await writeGateway('MARK_NOTIFICATION_READ', { id: nid })
+      } catch (e) {
+        console.error('[useNotifications.markAllRead]', e.message)
+      }
+    }
   }
 
   return {

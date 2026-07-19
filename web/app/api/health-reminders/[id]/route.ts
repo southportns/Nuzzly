@@ -59,7 +59,8 @@ export async function PATCH(
       return NextResponse.json({ error: "无更新字段" }, { status: 400 })
     }
 
-    const { data, error } = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (db as any)
       .from("health_reminders")
       .update(allowed)
       .eq("id", id)

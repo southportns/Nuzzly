@@ -1,6 +1,7 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
+import { writeGateway } from '../lib/gateway'
 
 const dietLogs = shallowRef([])
 const loading = ref(false)
@@ -32,12 +33,8 @@ async function addDietLog(log) {
   const uid = await getUid()
   if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'addDietLog')
 
-  const { data, error } = await supabase
-    .from('diet_logs')
-    .insert({ ...log, profile_id: uid })
-    .select()
-    .single()
-  if (error) throw normalizeError(error, 'addDietLog')
+  const { data, error } = await writeGateway('CREATE_DIET_LOG', { ...log })
+  if (error) throw normalizeError({ message: error }, 'addDietLog')
   dietLogs.value = [data, ...dietLogs.value]
   return data
 }

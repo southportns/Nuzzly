@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
 
 const diseaseRecords = shallowRef([])
@@ -29,40 +30,52 @@ async function fetchDiseaseRecords(petId) {
 }
 
 async function createDiseaseRecord({ pet_id, name, severity = 'mild', status = 'active', diagnosed_on, notes }) {
-  const { data, error } = await supabase
-    .from('pet_disease_records')
-    .insert({
+  const finalDiagnosedOn = diagnosed_on || new Date().toISOString().split('T')[0]
+  try {
+    await writeGateway('CREATE_DISEASE_RECORD', {
       pet_id,
       name,
       severity,
       status,
-      diagnosed_on: diagnosed_on || new Date().toISOString().split('T')[0],
+      diagnosed_on: finalDiagnosedOn,
       notes
     })
-    .select()
-    .single()
-
-  if (error) throw normalizeError(error, 'createDiseaseRecord')
-  diseaseRecords.value = [data, ...diseaseRecords.value]
-  return data
+  } catch (e) {
+    throw normalizeError(e, 'createDiseaseRecord')
+  }
+  // gateway event 类型不返回行数据，本地构造一条乐观条目
+  const optimistic = {
+    pet_id,
+    name,
+    severity,
+    status,
+    diagnosed_on: finalDiagnosedOn,
+    notes,
+    created_at: new Date().toISOString()
+  }
+  diseaseRecords.value = [optimistic, ...diseaseRecords.value]
+  return optimistic
 }
 
 async function updateDiseaseRecord(id, updates) {
-  const { data, error } = await supabase
-    .from('pet_disease_records')
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) throw normalizeError(error, 'updateDiseaseRecord')
-  diseaseRecords.value = diseaseRecords.value.map(r => r.id === id ? data : r)
-  return data
+  try {
+    await writeGateway('UPDATE_DISEASE_RECORD', { id, ...updates })
+  } catch (e) {
+    throw normalizeError(e, 'updateDiseaseRecord')
+  }
+  // gateway event 类型不返回行数据，本地用已有记录合并 updates
+  diseaseRecords.value = diseaseRecords.value.map(r =>
+    r.id === id ? { ...r, ...updates, updated_at: new Date().toISOString() } : r
+  )
+  return diseaseRecords.value.find(r => r.id === id) || null
 }
 
 async function deleteDiseaseRecord(id) {
-  const { error } = await supabase.from('pet_disease_records').delete().eq('id', id)
-  if (error) throw normalizeError(error, 'deleteDiseaseRecord')
+  try {
+    await writeGateway('DELETE_DISEASE_RECORD', { id })
+  } catch (e) {
+    throw normalizeError(e, 'deleteDiseaseRecord')
+  }
   diseaseRecords.value = diseaseRecords.value.filter(r => r.id !== id)
 }
 

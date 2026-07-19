@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 
 const reminders = ref([])
 const loading = ref(false)
@@ -33,11 +34,10 @@ async function addReminder({ pet_id, reminder_type, title, description, due_date
   const uid = await getUid()
   if (!uid) throw new Error('未登录')
 
-  const { data, error } = await supabase
-    .from('health_reminders')
-    .insert({
+  let result
+  try {
+    result = await writeGateway('CREATE_HEALTH_REMINDER', {
       pet_id,
-      profile_id: uid,
       reminder_type,
       title,
       description: description || null,
@@ -45,9 +45,21 @@ async function addReminder({ pet_id, reminder_type, title, description, due_date
       repeat_interval: repeat_interval || 'none',
       repeat_end_date: repeat_end_date || null,
     })
-    .select()
-    .single()
-  if (error) throw error
+  } catch (e) {
+    throw e
+  }
+  // direct write 类型返回 data 字段
+  const data = result?.data || {
+    pet_id,
+    profile_id: uid,
+    reminder_type,
+    title,
+    description: description || null,
+    due_date,
+    repeat_interval: repeat_interval || 'none',
+    repeat_end_date: repeat_end_date || null,
+    created_at: new Date().toISOString()
+  }
   reminders.value = [...reminders.value, data]
   return data
 }
@@ -61,6 +73,7 @@ async function completeReminder(id) {
   if (fetchErr || !existing) throw new Error('提醒不存在')
 
   const now = new Date().toISOString()
+  // TODO: migrate to gateway when type supported (UPDATE_HEALTH_REMINDER 未在 gateway 支持列表)
   const { error } = await supabase
     .from('health_reminders')
     .update({ is_completed: true, completed_at: now })
@@ -75,11 +88,9 @@ async function completeReminder(id) {
   if (existing.repeat_interval && existing.repeat_interval !== 'none') {
     const nextDate = getNextDueDate(existing.due_date, existing.repeat_interval)
     if (!existing.repeat_end_date || nextDate <= existing.repeat_end_date) {
-      const { data: created, error: createErr } = await supabase
-        .from('health_reminders')
-        .insert({
+      try {
+        const result = await writeGateway('CREATE_HEALTH_REMINDER', {
           pet_id: existing.pet_id,
-          profile_id: existing.profile_id,
           reminder_type: existing.reminder_type,
           title: existing.title,
           description: existing.description,
@@ -87,11 +98,13 @@ async function completeReminder(id) {
           repeat_interval: existing.repeat_interval,
           repeat_end_date: existing.repeat_end_date,
         })
-        .select()
-        .single()
-      if (!createErr && created) {
-        nextReminder = created
-        reminders.value = [...reminders.value, created]
+        const created = result?.data || null
+        if (created) {
+          nextReminder = created
+          reminders.value = [...reminders.value, created]
+        }
+      } catch (e) {
+        console.error('[useHealthReminders.completeReminder] create next:', e.message)
       }
     }
   }
@@ -99,6 +112,7 @@ async function completeReminder(id) {
   return nextReminder
 }
 
+// TODO: migrate to gateway when type supported (DELETE_HEALTH_REMINDER 未在 gateway 支持列表)
 async function deleteReminder(id) {
   const { error } = await supabase.from('health_reminders').delete().eq('id', id)
   if (error) throw error

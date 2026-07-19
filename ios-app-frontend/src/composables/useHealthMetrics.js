@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
 
 const healthMetrics = shallowRef([])
@@ -44,11 +45,12 @@ async function fetchHealthMetrics(petId, days = 30) {
 }
 
 async function addHealthMetric({ pet_id, date, appetite_score, activity_score, stool_score, symptom_severity_score, weight_delta }) {
-  const { data, error } = await supabase
-    .from('health_metrics')
-    .insert({
+  const finalDate = date || new Date().toISOString().split('T')[0]
+  let result
+  try {
+    result = await writeGateway('CREATE_HEALTH_METRIC', {
       pet_id,
-      date: date || new Date().toISOString().split('T')[0],
+      date: finalDate,
       appetite_score,
       activity_score,
       stool_score,
@@ -56,10 +58,21 @@ async function addHealthMetric({ pet_id, date, appetite_score, activity_score, s
       weight_delta,
       calculation_method: 'manual'
     })
-    .select()
-    .single()
-
-  if (error) throw normalizeError(error, 'addHealthMetric')
+  } catch (e) {
+    throw normalizeError(e, 'addHealthMetric')
+  }
+  // direct write 类型返回 data 字段
+  const data = result?.data || {
+    pet_id,
+    date: finalDate,
+    appetite_score,
+    activity_score,
+    stool_score,
+    symptom_severity_score,
+    weight_delta,
+    calculation_method: 'manual',
+    created_at: new Date().toISOString()
+  }
   healthMetrics.value = [data, ...healthMetrics.value]
   latestMetrics.value = data
   return data

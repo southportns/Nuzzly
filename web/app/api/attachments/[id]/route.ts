@@ -31,7 +31,7 @@ export async function DELETE(
     const { data: pet } = await supabase
       .from("pets")
       .select("id")
-      .eq("id", attachment.pet_id)
+      .eq("id", attachment.pet_id as string)
       .eq("profile_id", user.id)
       .single()
 

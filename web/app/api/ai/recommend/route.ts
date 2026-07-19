@@ -2,11 +2,26 @@
 // 流程: 鉴权 → 读取宠物档案 → 候选产品评分(数据库函数+规则fallback) → DeepSeek生成解释 → 记录追踪 → 返回结构化推荐
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { selectBanditArm, type ArmSelection, type SegmentKey } from "@/lib/timeline/bandit-policy"
+import { computeSegmentAdjustment } from "@/lib/timeline/cross-segment-policy"
+import { rolloutController } from "@/lib/timeline/rollout-controller"
+import { DEFAULT_OBJECTIVE_WEIGHTS } from "@/lib/timeline/multi-objective"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 const DEEPSEEK_BASE = "https://api.deepseek.com"
+
+// rollbackRate 10 秒内存缓存，避免每次推荐都查 pflid.rollout_event_log
+let rollbackRateCache: { value: number; expiresAt: number } | null = null
+const ROLLBACK_CACHE_TTL_MS = 10_000
+
+// SegmentKey 合法值集合（topProduct.segmentKey 可能是 "default" 等非法值，需要归一化）
+const VALID_SEGMENT_KEYS: SegmentKey[] = ["global", "new_user", "returning_user", "high_intent", "low_intent"]
+function normalizeSegmentKey(sk: string | undefined): SegmentKey {
+  return (VALID_SEGMENT_KEYS as string[]).includes(sk ?? "") ? (sk as SegmentKey) : "global"
+}
 
 // PII 脱敏正则：发送给第三方 LLM 前剔除用户敏感信息
 // 手机号（11位）/身份证（15或18位，含末位X）/邮箱/URL/UUID
@@ -42,6 +57,7 @@ interface Product {
 }
 
 interface Ingredient {
+  product_id: string
   ingredient_name: string
   ingredient_type: string
   is_grain_free: boolean
@@ -86,10 +102,15 @@ interface DbScoreResult {
 
 interface ScoredProduct {
   product: Product
-  score: number
+  score: number // originalScore，原始评分（保留）
+  finalScore: number // 加权融合后用于排序的最终分
   dimensions: DbScoreResult["dimensions"]
   risks: RiskEvent[]
   dbScore: number | null
+  effectivenessScore: number | null // 飞轮有效性评分 0-100
+  effectivenessSampleCount: number | null // 飞轮样本数
+  strategyId?: string // 飞轮 ETL 用：产生此推荐的策略 ID（默认 "default"）
+  segmentKey?: string // 飞轮 ETL 用：用户分群 key（默认 "default"）
 }
 
 interface RecommendRequest {
@@ -272,14 +293,19 @@ async function generateExplanations(
     name: item.product.name,
     brand: item.product.brand,
     score: item.score,
+    final_score: item.finalScore,
     dimensions: item.dimensions,
     risks: item.risks.map((r) => ({ title: r.title, severity: r.severity })),
+    effectiveness_score: item.effectivenessScore,
+    effectiveness_sample_count: item.effectivenessSampleCount,
   }))
 
   const prompt = `你是一位宠物营养顾问。请基于以下宠物档案和候选产品，生成一段中文推荐总结，并为每个产品写一句推荐理由（30字以内），最后给出每个推荐的置信度（0-100整数）。
 
 宠物档案：${JSON.stringify(petContext)}
 候选产品：${JSON.stringify(productList)}
+
+飞轮可信度提示：若产品包含 effectiveness_score（0-100）与 effectiveness_sample_count 字段，表示该产品有历史推荐有效性追踪数据。在推荐理由中可适当体现"基于 N 次追踪数据"的可信度信号（如"经 X 次追踪验证效果稳定"）；若无该字段则按常规推荐话术。
 
 请严格按以下 JSON 格式返回，不要加 markdown 代码块：
 {
@@ -420,14 +446,80 @@ export async function POST(request: Request) {
       scored.push({
         product,
         score,
+        finalScore: score, // 默认等于 originalScore，飞轮融合后会覆盖
         dimensions,
         risks: productRisks,
         dbScore: dbResult?.score ?? null,
+        effectivenessScore: null,
+        effectivenessSampleCount: null,
       })
     }
 
+    // 4.5 Load flywheel effectiveness scores (best-effort, gracefully degrade on RLS/empty)
+    // pflid.effectiveness_scores 仅对 service_role 开 SELECT 策略，普通 anon 会被 RLS 拦截
+    // 优先用 createClient() 读，若被拦截则降级到 createAdminClient()
+    // 表名 schema-qualified（pflid.effectiveness_scores）不在 database.types.ts 中，
+    // 用 as any 绕过 supabase 严格表名重载（项目既有模式，见 effectiveness-scoring.ts 等）
+    const effectivenessByProduct = new Map<string, { score: number; sampleCount: number }>()
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let effResult = await (supabase as any)
+        .from("pflid.effectiveness_scores")
+        .select("entity_id,effectiveness_score,sample_count,version")
+        .eq("entity_type", "product")
+        .order("version", { ascending: false })
+
+      if (effResult.error) {
+        // RLS 拦截或其它错误 -> 降级到 admin client
+        const admin = createAdminClient()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        effResult = await (admin as any)
+          .from("pflid.effectiveness_scores")
+          .select("entity_id,effectiveness_score,sample_count,version")
+          .eq("entity_type", "product")
+          .order("version", { ascending: false })
+      }
+
+      if (effResult.error) {
+        console.error("[recommend] effectiveness_scores load failed:", effResult.error)
+      } else if (effResult.data) {
+        // 已按 version desc 排序，每个 entity_id 取首条（最新版本）
+        for (const row of effResult.data as Array<{
+          entity_id: string
+          effectiveness_score: number | string
+          sample_count: number | string
+        }>) {
+          const eid = row.entity_id
+          if (!eid || effectivenessByProduct.has(eid)) continue
+          effectivenessByProduct.set(eid, {
+            score: Number(row.effectiveness_score) || 0,
+            sampleCount: Number(row.sample_count) || 0,
+          })
+        }
+      }
+    } catch (err) {
+      console.error("[recommend] effectiveness_scores load exception:", err)
+    }
+
+    // 4.6 加权融合：originalScore 与 effectiveness_score 同为 0-100 量纲
+    // finalScore = originalScore * 0.7 + effectiveness_score * 0.3
+    // （任务原文公式 effectiveness_score/100 * 0.3 存在量纲不一致：左边 0-100，右边 0-0.3，
+    //  会使 finalScore 严重缩水破坏排序语义，故修正为同量纲加权）
+    // 飞轮无记录 -> finalScore = originalScore（优雅降级）
+    for (const item of scored) {
+      const eff = effectivenessByProduct.get(item.product.id)
+      if (eff) {
+        const fused = item.score * 0.7 + eff.score * 0.3
+        item.finalScore = Math.max(0, Math.min(100, fused))
+        item.effectivenessScore = eff.score
+        item.effectivenessSampleCount = eff.sampleCount
+      } else {
+        item.finalScore = item.score
+      }
+    }
+
     // 5. Sort and take top 5
-    scored.sort((a, b) => b.score - a.score)
+    scored.sort((a, b) => b.finalScore - a.finalScore)
     const topProducts = scored.slice(0, 5)
 
     // 6. Generate explanations
@@ -443,10 +535,14 @@ export async function POST(request: Request) {
         price_max: item.product.price_max,
         image_url: item.product.image_url,
       },
-      score: item.score,
+      score: item.finalScore, // 返回飞轮融合后的最终分（保持 iOS 推荐契约 0-100 量纲）
+      original_score: item.score, // 原始评分，便于前端展示飞轮加权影响
       dimensions: item.dimensions,
       explanation: explanations[i] ?? generateFallbackExplanation(item),
       confidence: confidence[i] ?? Math.max(60, 95 - i * 8),
+      // 飞轮可信度信号（如有），让前端可展示"基于 X 次长期追踪数据"
+      effectiveness_score: item.effectivenessScore,
+      effectiveness_sample_count: item.effectivenessSampleCount,
     }))
 
     const warnings = topProducts
@@ -526,6 +622,123 @@ export async function POST(request: Request) {
       duration_ms: Date.now() - startTime,
     }
 
+    // feature_snapshot 必须包含 product_id / strategy_id / segment_key 等飞轮 ETL 必需字段
+    // 同时写入 input_features 列便于后续 batch job 反查
+    const topProduct = topProducts[0]
+
+    // 7.5 飞轮 enrich 字段：banditConfidence / segmentAlignment / rollbackRate / adverseEventRate
+    // 所有外部调用 try/catch 降级，绝不让推荐主流程崩溃
+
+    // (1) banditConfidence: Thompson Sampling Beta 后验均值 alpha/(alpha+beta)
+    // 调用 selectBanditArm 需要 RolloutDecision，通过 rolloutController.decideEngine 获取
+    let banditSelection: ArmSelection | null = null
+    try {
+      const decision = await rolloutController.decideEngine({ requestId: traceId })
+      banditSelection = await selectBanditArm({
+        decision,
+        requestId: traceId,
+        segment: normalizeSegmentKey(topProduct?.segmentKey),
+      })
+      // 把 bandit arm_id 和 segment 落到 ScoredProduct（覆盖 "default"）
+      if (topProduct && banditSelection) {
+        topProduct.strategyId = banditSelection.armId
+        topProduct.segmentKey = banditSelection.segment
+      }
+    } catch (e) {
+      console.warn("[recommend] bandit selection failed, fallback to default:", (e as Error).message)
+    }
+    const banditConfidence = banditSelection
+      ? banditSelection.alpha / (banditSelection.alpha + banditSelection.beta)
+      : 0.5
+
+    // (2) segmentAlignment: 简化版 = explorationCapPct/100（该 segment 的探索配额占比）
+    let segmentAlignment = 0.5
+    try {
+      const adjustment = await computeSegmentAdjustment(
+        normalizeSegmentKey(topProduct?.segmentKey),
+        DEFAULT_OBJECTIVE_WEIGHTS,
+      )
+      segmentAlignment = adjustment?.explorationCapPct
+        ? Math.max(0, Math.min(1, adjustment.explorationCapPct / 100))
+        : 0.5
+    } catch (e) {
+      console.warn("[recommend] segment adjustment failed:", (e as Error).message)
+    }
+
+    // (3) rollbackRate: 近 30 天 pflid.rollout_event_log 中 rollback/auto_rollback 占比
+    // 使用 createAdminClient 绕过 RLS，加 10s 内存缓存
+    let rollbackRate = 0
+    try {
+      const now = Date.now()
+      if (!rollbackRateCache || rollbackRateCache.expiresAt < now) {
+        const admin = createAdminClient()
+        const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: rolloutEvents } = await (admin as any)
+          .from("pflid.rollout_event_log")
+          .select("event_type")
+          .gte("created_at", thirtyDaysAgo)
+        if (rolloutEvents && rolloutEvents.length > 0) {
+          const rollbackCount = rolloutEvents.filter(
+            (e: { event_type: string }) =>
+              e.event_type === "rollback" || e.event_type === "auto_rollback",
+          ).length
+          rollbackRate = rollbackCount / rolloutEvents.length
+        }
+        rollbackRateCache = { value: rollbackRate, expiresAt: now + ROLLBACK_CACHE_TTL_MS }
+      } else {
+        rollbackRate = rollbackRateCache.value
+      }
+    } catch (e) {
+      console.warn("[recommend] rollback rate fetch failed:", (e as Error).message)
+    }
+
+    // (4) adverseEventRate: 近 30 天该 pet 的 health_records 中 severity>=4 的 symptom 占比
+    let adverseEventRate = 0
+    try {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      const { data: healthRecs } = await supabase
+        .from("health_records")
+        .select("record_type,severity")
+        .eq("pet_id", petId)
+        .gte("created_at", thirtyDaysAgo)
+      if (healthRecs && healthRecs.length > 0) {
+        const adverseCount = healthRecs.filter(
+          (r: { record_type: string; severity?: number | null }) =>
+            r.record_type === "symptom" && (r.severity ?? 0) >= 4,
+        ).length
+        adverseEventRate = adverseCount / healthRecs.length
+      }
+    } catch (e) {
+      console.warn("[recommend] adverse event rate fetch failed:", (e as Error).message)
+    }
+
+    const featureSnapshot = {
+      pet: { species: pet.species, breed: pet.breed, stomach_health: pet.stomach_health },
+      query: query ?? null,
+      // 飞轮 ETL 必需字段（见 flywheel-input-builder.ts:98）
+      product_id: topProduct?.product.id ?? null,
+      productId: topProduct?.product.id ?? null,
+      strategy_id: topProduct?.strategyId ?? "default",
+      strategyId: topProduct?.strategyId ?? "default",
+      segment_key: topProduct?.segmentKey ?? "default",
+      // 飞轮加权融合信息（如已读取到 effectiveness_scores）
+      effectiveness_score: topProduct?.effectivenessScore ?? null,
+      effectiveness_sample_count: topProduct?.effectivenessSampleCount ?? null,
+      final_score: topProduct?.finalScore ?? topProduct?.score ?? null,
+      original_score: topProduct?.score ?? null,
+      // 决策元数据
+      model_version: "pettrust-v4.5",
+      request_source: "ai_recommend",
+      duration_ms: Date.now() - startTime,
+      // 飞轮 enrich 字段（来自 bandit/segment/rollback/adverseEvent 真实数据源）
+      banditConfidence,
+      bandit_arm_id: banditSelection?.armId ?? null,
+      segmentAlignment,
+      rollbackRate,
+      adverseEventRate,
+    }
+
     supabase
       .from("recommendation_trace_log")
       .insert({
@@ -533,10 +746,14 @@ export async function POST(request: Request) {
         profile_id: profileId,
         pet_id: petId,
         model_version: "pettrust-v4.5",
-        feature_snapshot: {
-          pet: { species: pet.species, breed: pet.breed, stomach_health: pet.stomach_health },
+        feature_snapshot: featureSnapshot,
+        input_features: {
+          pet: { species: pet.species, breed: pet.breed, stomach_health: pet.stomach_health, age_years: pet.age_years },
           query: query ?? null,
+          top_product_ids: topProducts.map((p) => p.product.id),
+          top_scores: topProducts.map((p) => p.score),
         },
+        user_segment: topProduct?.segmentKey ?? "default",
         decision_graph: decisionGraph,
       })
       .then(({ error }) => {
@@ -556,10 +773,11 @@ export async function POST(request: Request) {
       metadata: { confidence: r.confidence, trace_id: traceId },
     }))
 
-    supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    void (supabase as any)
       .from("recommendation_events")
       .insert(impressionRows)
-      .then(({ error }) => {
+      .then(({ error }: { error: unknown }) => {
         if (error) console.error("[recommend] recommendation_events insert failed:", error)
       })
 

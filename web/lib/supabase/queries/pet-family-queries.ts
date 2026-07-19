@@ -16,7 +16,8 @@ export interface PetFamilyMember {
 
 export async function queryPetFamilies(petId: string) {
   const supabase = await createServerClient()
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("pet_families")
     .select("*")
     .eq("pet_id", petId)

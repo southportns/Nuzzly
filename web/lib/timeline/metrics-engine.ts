@@ -55,7 +55,8 @@ export async function getLatestTimelineMetrics(
   productId: string
 ): Promise<TimelineMetricsDaily | null> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("timeline_metrics_daily")
     .select("*")
     .eq("product_id", productId)
@@ -73,7 +74,8 @@ export async function getTimelineMetricsSeries(
   days = 30
 ): Promise<TimelineMetricsDaily[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("timeline_metrics_daily")
     .select("*")
     .eq("product_id", productId)

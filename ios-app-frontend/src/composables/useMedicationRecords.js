@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
 
 const medicationRecords = shallowRef([])
@@ -29,42 +30,56 @@ async function fetchMedicationRecords(petId) {
 }
 
 async function createMedicationRecord({ pet_id, name, dosage, frequency, started_on, ended_on, is_ongoing = true, notes }) {
-  const { data, error } = await supabase
-    .from('pet_medication_records')
-    .insert({
+  const finalStartedOn = started_on || new Date().toISOString().split('T')[0]
+  try {
+    await writeGateway('CREATE_MEDICATION_RECORD', {
       pet_id,
       name,
       dosage,
       frequency,
-      started_on: started_on || new Date().toISOString().split('T')[0],
+      started_on: finalStartedOn,
       ended_on,
       is_ongoing,
       notes
     })
-    .select()
-    .single()
-
-  if (error) throw normalizeError(error, 'createMedicationRecord')
-  medicationRecords.value = [data, ...medicationRecords.value]
-  return data
+  } catch (e) {
+    throw normalizeError(e, 'createMedicationRecord')
+  }
+  // gateway event 类型不返回行数据，本地构造一条乐观条目
+  const optimistic = {
+    pet_id,
+    name,
+    dosage,
+    frequency,
+    started_on: finalStartedOn,
+    ended_on,
+    is_ongoing,
+    notes,
+    created_at: new Date().toISOString()
+  }
+  medicationRecords.value = [optimistic, ...medicationRecords.value]
+  return optimistic
 }
 
 async function updateMedicationRecord(id, updates) {
-  const { data, error } = await supabase
-    .from('pet_medication_records')
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) throw normalizeError(error, 'updateMedicationRecord')
-  medicationRecords.value = medicationRecords.value.map(r => r.id === id ? data : r)
-  return data
+  try {
+    await writeGateway('UPDATE_MEDICATION_RECORD', { id, ...updates })
+  } catch (e) {
+    throw normalizeError(e, 'updateMedicationRecord')
+  }
+  // gateway event 类型不返回行数据，本地用已有记录合并 updates
+  medicationRecords.value = medicationRecords.value.map(r =>
+    r.id === id ? { ...r, ...updates, updated_at: new Date().toISOString() } : r
+  )
+  return medicationRecords.value.find(r => r.id === id) || null
 }
 
 async function deleteMedicationRecord(id) {
-  const { error } = await supabase.from('pet_medication_records').delete().eq('id', id)
-  if (error) throw normalizeError(error, 'deleteMedicationRecord')
+  try {
+    await writeGateway('DELETE_MEDICATION_RECORD', { id })
+  } catch (e) {
+    throw normalizeError(e, 'deleteMedicationRecord')
+  }
   medicationRecords.value = medicationRecords.value.filter(r => r.id !== id)
 }
 

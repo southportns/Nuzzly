@@ -10,6 +10,7 @@ import { RecommendationCard } from "@/components/dashboard/recommendation-card"
 import ResidentBookSection from "@/components/resident-book/resident-book-section"
 import { buildResidentBookData } from "@/components/resident-book/utils"
 import { getMedicationRecords } from "@/lib/supabase/queries/medication-queries"
+import { formatFeedbackDate, getFeedbackEventLabel, normalizeFeedbackEventType } from "@/lib/dashboard/feedback"
 
 export default async function DashboardPage() {
   const { data: { user } } = await getUser()
@@ -36,9 +37,9 @@ export default async function DashboardPage() {
     supabase.from("feedback_events").select("*").eq("profile_id", user.id).order("created_at", { ascending: false }).limit(20),
     supabase
       .from("recommendation_contexts")
-      .select("*, products(id, name, brand, image_url, price, score, score_breakdown)")
+      .select("*, products(id, name, brand, image_url, price_min, price_max, transparency_score)")
       .eq("profile_id", user.id)
-      .order("score", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(5),
   ])
   const feedbackEvents = (feedbackResult.data ?? []) as Array<{ id: string; event_type: string; product_id: string | null; created_at: string; metadata: Record<string, unknown> | null }>
@@ -88,7 +89,7 @@ export default async function DashboardPage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {recommendations.slice(0, 3).map((rec) => (
-              <RecommendationCard key={rec.id} recommendation={rec} />
+              <RecommendationCard key={rec.id} recommendation={rec as never} />
             ))}
           </div>
         </section>
@@ -316,19 +317,21 @@ export default async function DashboardPage() {
         <div className="mt-4">
           {feedbackEvents.length > 0 ? (
             <div className="space-y-2">
-              {feedbackEvents.slice(0, 10).map((e) => (
-                <div key={e.id} className="flex items-center justify-between rounded-[12px] bg-[#F7F6F3] px-3 py-2.5">
-                  <span className="flex items-center gap-2">
-                    {e.event_type === "accept" ? <ThumbsUp className="size-3 text-[#FF7A59]" />
-                      : e.event_type === "reject" ? <ThumbsDown className="size-3 text-[#ff3b30]" />
-                      : <Eye className="size-3 text-[#6B6B6B]" />}
-                    <span className="text-[14px] text-[#6B6B6B]">
-                      {e.event_type === "accept" ? "采纳推荐" : e.event_type === "reject" ? "拒绝推荐" : e.event_type === "click" ? "点击查看" : "浏览"}
+              {feedbackEvents.slice(0, 10).map((e) => {
+                const feedbackTone = normalizeFeedbackEventType(e.event_type)
+
+                return (
+                  <div key={e.id} className="flex items-center justify-between rounded-[12px] bg-[#F7F6F3] px-3 py-2.5">
+                    <span className="flex items-center gap-2">
+                      {feedbackTone === "accept" ? <ThumbsUp className="size-3 text-[#FF7A59]" />
+                        : feedbackTone === "reject" ? <ThumbsDown className="size-3 text-[#ff3b30]" />
+                        : <Eye className="size-3 text-[#6B6B6B]" />}
+                      <span className="text-[14px] text-[#6B6B6B]">{getFeedbackEventLabel(e.event_type)}</span>
                     </span>
-                  </span>
-                  <span className="text-[12px] text-[#6B6B6B]">{new Date(e.created_at).toLocaleDateString("zh-CN")}</span>
-                </div>
-              ))}
+                    <span className="text-[12px] text-[#6B6B6B]">{formatFeedbackDate(e.created_at)}</span>
+                  </div>
+                )
+              })}
             </div>
           ) : (
             <p className="text-[14px] text-[#6B6B6B]">暂无推荐反馈记录</p>

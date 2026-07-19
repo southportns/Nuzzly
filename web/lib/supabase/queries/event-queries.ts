@@ -20,7 +20,8 @@ export async function getPetEvents(petId: string, limit: number = 50) {
 export async function getEventsByType(petId: string, eventType: string, limit: number = 20) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from('pet_events')
     .select('*')
     .eq('pet_id', petId)
@@ -88,7 +89,7 @@ export async function getEventTimeline(petId: string, days: number = 30) {
 
   // 按日期分组
   const grouped: Record<string, PetEvent[]> = {}
-  for (const event of data || []) {
+  for (const event of (data as PetEvent[]) || []) {
     const date = event.event_time?.split('T')[0] || 'unknown'
     if (!grouped[date]) grouped[date] = []
     grouped[date].push(event)

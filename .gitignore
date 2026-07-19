@@ -48,6 +48,7 @@ coverage/
 .claude/
 AGENTS.md
 CLAUDE.md
+.mimocode/
 
 # Project planning docs (not part of platform build)
 PROJECT_LOG.md
@@ -58,6 +59,23 @@ petmind-funding.pptx
 charts/
 export_charts.py
 generate_word.py
+
+# Assets & 3D models (not needed for deployment)
+qiuqiu/
+
+# Database backups
+database-backup/
+
+# Documentation
+docs/
+DESIGN.md
+DESIGN_SYSTEM.md
+TEST_REPORT*.md
+BACKLOG.md
+code-graph.md
+
+# TSC debug output
+tsc_*.txt
 
 # Temp files
 *.tmp

@@ -142,20 +142,21 @@ export async function getTaskCompletionStats(profileId: string, petId: string, d
 
   const { data: logs, error } = await supabase
     .from('daily_task_logs')
-    .select('task_id, completed, task_date')
+    .select('task_id, completed, task_date, skipped')
     .eq('profile_id', profileId)
     .eq('pet_id', petId)
     .gte('task_date', startDateStr)
 
   if (error) throw error
 
+  type TaskLog = { task_id: string; completed: boolean; task_date: string; skipped?: boolean | null }
   const totalTasks = tasks?.length || 0
-  const completedLogs = logs?.filter(l => l.completed) || []
-  const skippedLogs = logs?.filter(l => l.skipped) || []
+  const completedLogs = (logs as TaskLog[] | null)?.filter(l => l.completed) || []
+  const skippedLogs = (logs as TaskLog[] | null)?.filter(l => l.skipped) || []
 
   // 按日期分组
   const byDate: Record<string, { completed: number; skipped: number; total: number }> = {}
-  for (const log of logs || []) {
+  for (const log of (logs as TaskLog[] | null) || []) {
     if (!byDate[log.task_date]) {
       byDate[log.task_date] = { completed: 0, skipped: 0, total: totalTasks }
     }

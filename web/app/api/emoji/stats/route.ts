@@ -15,14 +15,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "未登录" }, { status: 401 })
     }
 
-    // 简单权限校验：查询 public_profiles 确认是否为管理员
-    const { data: profile } = await supabase
-      .from("public_profiles")
-      .select("role")
+    // 简单权限校验：查询 profiles.is_admin 确认是否为管理员
+    // 注意：必须使用 admin client 才能读取 profiles 表的 is_admin 字段（敏感字段未在 public_profiles 视图中暴露）
+    const { data: profile, error: profileErr } = await supabase
+      .from("profiles")
+      .select("is_admin")
       .eq("id", userData.user.id)
       .single()
 
-    if ((profile as { role?: string } | null)?.role !== "admin") {
+    if (profileErr || !profile?.is_admin) {
       return NextResponse.json({ error: "无权限" }, { status: 403 })
     }
 

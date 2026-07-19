@@ -119,7 +119,7 @@ function getFallback(text) {
 
 async function getAIResponse(text) {
   try {
-    const data = await api('/api/ai', {
+    const data = await api('/api/ai/chat', {
       method: 'POST',
       body: JSON.stringify({ message: text, pets: pets.value })
     })

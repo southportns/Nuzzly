@@ -37,7 +37,8 @@ export function SymptomTracker({ petId }: SymptomTrackerProps) {
   useEffect(() => {
     const fetchSymptoms = async () => {
       const supabase = createClient()
-      const { data } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any)
         .from("pet_events")
         .select("id, event_time, symptom_code, severity, notes")
         .eq("pet_id", petId)

@@ -4,6 +4,7 @@
 // Tracks user interactions with products for conversion funnel analysis
 
 import { createClient } from "@/lib/supabase/client"
+import type { Json } from "@/lib/database.types"
 
 export type IntentEventType =
   | "product_view"
@@ -32,7 +33,7 @@ export async function trackIntentEvent(params: {
       product_id: params.productId ?? null,
       pet_id: params.petId ?? null,
       recommendation_id: params.recommendationId ?? null,
-      metadata: params.metadata ?? {},
+      metadata: (params.metadata ?? {}) as unknown as Json,
     })
   } catch {
     // Silently fail - tracking should not block user experience

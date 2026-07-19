@@ -31,22 +31,24 @@ const lifeStageLabels: Record<string, { label: string; variant: "default" | "sec
 export default async function DashboardPetDetailPage({ params }: { params: Promise<{ petId: string }> }) {
   const { petId } = await params
 
-  const [{ data: pet }, { data: dietLogs }, { data: weightLogs }, { data: allergies }, { data: { user } }, profile] = await Promise.all([
+  const { data: { user } } = await getUser()
+  if (!user) notFound()
+
+  const [{ data: pet }, { data: dietLogs }, { data: weightLogs }, { data: allergies }, profile] = await Promise.all([
     queryPet(petId),
     queryDietLogs(petId),
     queryWeightLogs(petId),
     queryAllergies(petId),
-    getUser(),
-    queryProfile(user!.id),
+    queryProfile(user.id),
   ])
 
   if (!pet) notFound()
 
   const lifeStage = (pet as { life_stage?: string }).life_stage
   const lifeStageInfo = lifeStage ? lifeStageLabels[lifeStage] : null
-  
+
   // 生成深圳地标 DB4403/T 467-2024 格式的宠物唯一标识编码
-  const petCode = generatePetCode(pet.species, pet.breed, profile?.user_number, 0)
+  const petCode = generatePetCode(pet.species, pet.breed, (profile as { user_number?: number } | null)?.user_number, 0)
 
   return (
     <div className="space-y-6">

@@ -57,7 +57,7 @@ class IdempotencyStore {
       .single()
 
     if (data) {
-      const result = data.result as WriteResult
+      const result = data.result as unknown as WriteResult
       this.cache.set(key, result)
       return result
     }
@@ -264,6 +264,11 @@ export class WriteGateway {
       UPSERT_ENVIRONMENT_PROFILE: "EnvironmentProfile",
       UPDATE_FOLLOWUP_SCHEDULE: "FollowupSchedule",
       CREATE_INTENT_EVENT: "IntentEvent",
+      // 扩展: 推荐反馈 / 删除饮食记录 / 更新过敏 / 删除健康记录
+      CREATE_RECOMMENDATION_FEEDBACK: "RecommendationFeedback",
+      DELETE_DIET_LOG: "DietLog",
+      UPDATE_PET_ALLERGY: "PetAllergy",
+      DELETE_HEALTH_RECORD: "HealthRecord",
     }
     return map[type] ?? "Unknown"
   }

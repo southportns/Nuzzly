@@ -79,7 +79,7 @@ export function DietaryPreferenceForm({ petId, petName, onComplete, onSkip }: Di
       // Update pet stomach health
       const { error: petErr } = await supabase
         .from("pets")
-        .update({ stomach_health: stomachHealth })
+        .update({ stomach_health: stomachHealth as "normal" | "sensitive" | "very_sensitive" })
         .eq("id", petId)
       if (petErr) throw petErr
 

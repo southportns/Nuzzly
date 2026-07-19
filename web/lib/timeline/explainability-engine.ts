@@ -247,8 +247,10 @@ export async function saveExplainabilityRecord(input: {
 }): Promise<ExplainabilityRecord | null> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from("pflid.explainability_records")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .schema("pflid")
+    .from("explainability_records")
     .insert({
       recommendation_id: input.recommendationId,
       pet_id: input.petId,
@@ -287,8 +289,10 @@ export async function getExplainabilityForRecommendation(
 ): Promise<ExplainabilityRecord | null> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from("pflid.explainability_records")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .schema("pflid")
+    .from("explainability_records")
     .select("*")
     .eq("recommendation_id", recommendationId)
     .order("created_at", { ascending: false })

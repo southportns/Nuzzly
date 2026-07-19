@@ -95,8 +95,10 @@ export async function runFlywheelCycle(input: FlywheelInput): Promise<{
   const startedAt = new Date().toISOString()
 
   // 1. Create iteration record
-  const { data: iterationData, error: iterError } = await supabase
-    .from("pflid.flywheel_iterations")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: iterationData, error: iterError } = await (supabase as any)
+    .schema("pflid")
+    .from("flywheel_iterations")
     .insert({
       iteration_number: await getNextIterationNumber(),
       recommendations_processed: input.recommendations.length,
@@ -295,8 +297,10 @@ export async function runFlywheelCycle(input: FlywheelInput): Promise<{
       : 0
 
     // 7. Mark iteration as completed
-    await supabase
-      .from("pflid.flywheel_iterations")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .schema("pflid")
+      .from("flywheel_iterations")
       .update({
         outcomes_analyzed: input.recommendations.length,
         attributions_computed: attributions,
@@ -331,8 +335,10 @@ export async function runFlywheelCycle(input: FlywheelInput): Promise<{
   } catch (err) {
     errorMessage = (err as Error).message
 
-    await supabase
-      .from("pflid.flywheel_iterations")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .schema("pflid")
+      .from("flywheel_iterations")
       .update({
         completed_at: new Date().toISOString(),
         status: "failed",
@@ -351,8 +357,10 @@ export async function runFlywheelCycle(input: FlywheelInput): Promise<{
 async function getNextIterationNumber(): Promise<number> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from("pflid.flywheel_iterations")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .schema("pflid")
+    .from("flywheel_iterations")
     .select("iteration_number")
     .order("iteration_number", { ascending: false })
     .limit(1)
@@ -364,8 +372,10 @@ async function getNextIterationNumber(): Promise<number> {
 async function getFlywheelIteration(id: string): Promise<FlywheelIteration | null> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from("pflid.flywheel_iterations")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .schema("pflid")
+    .from("flywheel_iterations")
     .select("*")
     .eq("id", id)
     .single()

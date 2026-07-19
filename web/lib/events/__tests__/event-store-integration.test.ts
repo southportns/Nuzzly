@@ -9,7 +9,7 @@ import dotenv from "dotenv"
 // Load environment variables from .env.local
 dotenv.config({ path: ".env.local" })
 
-import { EventStore, type DomainEvent, EventBus } from "@/lib/events/event-bus"
+import { EventStore, type DomainEvent, type DomainEventType, EventBus } from "@/lib/events/event-bus"
 import { JobRuntime, type JobRecord } from "@/lib/jobs/runtime"
 import { createAdminClient } from "@/lib/supabase/admin"
 
@@ -163,19 +163,19 @@ describe("Phase 1.2.1: Event Store + Job Runtime", () => {
 
       expect(handlerCalled).toBe(true)
       expect(receivedEvent).not.toBeNull()
-      expect(receivedEvent?.event_id).toBe(eventId)
-      expect(receivedEvent?.event_type).toBe("ReviewCreated")
+      expect((receivedEvent as DomainEvent | null)?.event_id).toBe(eventId)
+      expect((receivedEvent as DomainEvent | null)?.event_type).toBe("ReviewCreated")
     })
 
     it("should enqueue async handler as job", async () => {
       eventBus.register({
-        eventType: "TestAsyncEvent",
+        eventType: "TestAsyncEvent" as DomainEventType,
         mode: "async",
         handler: async () => {},
       })
 
       const eventId = await eventBus.publish({
-        event_type: "TestAsyncEvent",
+        event_type: "TestAsyncEvent" as DomainEventType,
         aggregate_id: "99999999-9999-9999-9999-999999999999",
         aggregate_type: "Test",
         payload: {},
@@ -328,7 +328,7 @@ describe("Phase 1.2.1: Event Store + Job Runtime", () => {
 
       // Register sync handler
       eventBus.register({
-        eventType: "IntegrationTestEvent",
+        eventType: "IntegrationTestEvent" as DomainEventType,
         mode: "sync",
         handler: async () => {
           syncHandlerCalled = true
@@ -349,7 +349,7 @@ describe("Phase 1.2.1: Event Store + Job Runtime", () => {
 
       // Publish event
       const eventId = await eventBus.publish({
-        event_type: "IntegrationTestEvent",
+        event_type: "IntegrationTestEvent" as DomainEventType,
         aggregate_id: "dddddddd-dddd-dddd-dddd-dddddddddddd",
         aggregate_type: "IntegrationTest",
         payload: { testData: "integration_test" },

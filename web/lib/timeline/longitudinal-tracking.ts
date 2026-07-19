@@ -74,8 +74,10 @@ export async function saveLongitudinalRecord(input: LongitudinalInput): Promise<
     dietStability: input.dietStability ?? null,
   })
 
-  const { data, error } = await supabase
-    .from("pflid.longitudinal_outcomes")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .schema("pflid")
+    .from("longitudinal_outcomes")
     .insert({
       pet_id: input.petId,
       product_id: input.productId,
@@ -119,8 +121,10 @@ export async function getLongitudinalRecords(params: {
 }): Promise<LongitudinalRecord[]> {
   const supabase = await createClient()
 
-  let query = supabase
-    .from("pflid.longitudinal_outcomes")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase as any)
+    .schema("pflid")
+    .from("longitudinal_outcomes")
     .select("*")
     .order("measured_at", { ascending: false })
 
@@ -147,8 +151,10 @@ export async function getLongitudinalStats(params: {
 }> {
   const supabase = await createClient()
 
-  let query = supabase
-    .from("pflid.longitudinal_outcomes")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase as any)
+    .schema("pflid")
+    .from("longitudinal_outcomes")
     .select("outcome_class, health_score_delta")
 
   if (params.productId) query = query.eq("product_id", params.productId)
@@ -161,10 +167,10 @@ export async function getLongitudinalStats(params: {
   }
 
   const total = data.length
-  const improved = data.filter((d) => d.outcome_class === "improved").length
-  const stable = data.filter((d) => d.outcome_class === "stable").length
-  const worsened = data.filter((d) => d.outcome_class === "worsened").length
-  const avgDelta = data.reduce((s, d) => s + (d.health_score_delta ?? 0), 0) / total
+  const improved = data.filter((d: { outcome_class: string }) => d.outcome_class === "improved").length
+  const stable = data.filter((d: { outcome_class: string }) => d.outcome_class === "stable").length
+  const worsened = data.filter((d: { outcome_class: string }) => d.outcome_class === "worsened").length
+  const avgDelta = data.reduce((s: number, d: { health_score_delta: number | null }) => s + (d.health_score_delta ?? 0), 0) / total
 
   return {
     totalRecords: total,

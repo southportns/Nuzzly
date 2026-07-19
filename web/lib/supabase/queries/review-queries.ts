@@ -11,7 +11,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server"
 export async function queryReviews(productId: string) {
   const supabase = await createServerClient()
   const { data, error } = await supabase
-    .from("reviews")
+    .from("product_reviews")
     .select("*, profiles(display_name), pets(name, breed, stomach_health)")
     .eq("product_id", productId)
     .order("created_at", { ascending: false })
@@ -21,8 +21,8 @@ export async function queryReviews(productId: string) {
 export async function queryUserReviews(profileId: string) {
   const supabase = await createServerClient()
   const { data, error } = await supabase
-    .from("reviews")
-    .select("*")
+    .from("product_reviews")
+    .select("*, products(name)")
     .eq("profile_id", profileId)
     .order("created_at", { ascending: false })
   return { data, error }

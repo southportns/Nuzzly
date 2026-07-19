@@ -189,6 +189,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Toast } from 'tdesign-mobile-vue'
 import { usePets } from '../composables/usePets'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import { validateForm, required, petName, custom } from '../lib/validation'
 import { toastError } from '../lib/error-handling'
 import FormField from '../components/FormField.vue'
@@ -515,7 +516,7 @@ async function handleSave() {
   if (avatarFile.value) {
     tasks.push(
       uploadAvatar(pet.id).then(url => {
-        if (url) return supabase.from('pets').update({ photo_url: url }).eq('id', pet.id)
+        if (url) return writeGateway('UPDATE_PET', { id: pet.id, photo_url: url })
       })
     )
   }

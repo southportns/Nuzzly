@@ -79,7 +79,8 @@ export async function getLatestScoreComparison(
   productId: string
 ): Promise<ScoreComparison | null> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("product_score_comparison")
     .select("*")
     .eq("product_id", productId)
@@ -97,7 +98,8 @@ export async function getTopDeltaProducts(
   direction: "positive" | "negative" = "positive"
 ): Promise<ScoreComparison[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("product_score_comparison")
     .select("*")
     .order("score_delta", { ascending: direction === "negative" })
@@ -112,7 +114,8 @@ export async function getInflatedReviewProducts(
   threshold = 10
 ): Promise<ScoreComparison[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("product_score_comparison")
     .select("*")
     .lt("score_delta", -threshold)
@@ -128,7 +131,8 @@ export async function getUnderratedProducts(
   threshold = 10
 ): Promise<ScoreComparison[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("product_score_comparison")
     .select("*")
     .gt("score_delta", threshold)

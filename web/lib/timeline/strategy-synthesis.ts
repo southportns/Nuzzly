@@ -24,7 +24,7 @@ export interface SynthesisCandidate {
   synthesisId: string
   method: SynthesisMethod
   parentStrategyIds: string[]
-  proposedWeightConfig: { timeline: number; review: number; [k: string]: number }
+  proposedWeightConfig: Record<string, number>
   expectedUplift: number | null
 }
 

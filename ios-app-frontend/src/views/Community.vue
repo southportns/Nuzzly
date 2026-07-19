@@ -296,6 +296,7 @@ import { useCommunity } from '../composables/useCommunity'
 import { toastError } from '../lib/error-handling'
 import { Toast } from 'tdesign-mobile-vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 
 const {
   posts, loading, hasMore, myLikedPostIds,
@@ -561,13 +562,14 @@ async function submitPhoneVerify() {
     return
   }
 
-  // 更新 profiles 表
+  // 更新 profiles 表（通过 gateway）
   const uid = (await supabase.auth.getSession()).data?.session?.user?.id
   if (uid) {
-    await supabase
-      .from('profiles')
-      .update({ phone_verified_at: new Date().toISOString() })
-      .eq('id', uid)
+    try {
+      await writeGateway('UPDATE_PROFILE', { phone_verified_at: new Date().toISOString() })
+    } catch (e) {
+      console.error('[Community.submitPhoneVerify] update profile:', e.message)
+    }
   }
 
   phoneVerified.value = true

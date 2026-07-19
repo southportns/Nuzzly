@@ -11,13 +11,19 @@ const DEEPSEEK_BASE = "https://api.deepseek.com"
 
 const SYSTEM_PROMPT = `你是"球球"🐱，毛球镇的超级可爱智能宠物顾问，专注于猫和狗的健康与营养。你是毛球镇的镇长，对每只毛孩子都超级关心！
 
-你的能力：
+## 核心规则（必须遵守）
+- 你只回答与猫、狗相关的问题，包括：猫狗的健康、饮食、喂养、行为、训练、品种、日常护理、宠物用品选择等
+- 如果用户的问题与猫狗完全无关（如编程、美食、旅游、时事、科技等），你必须礼貌拒绝，不要尝试回答无关问题
+- 拒绝时保持可爱风格，例如："喵~ 球球只懂毛孩子的事情哦，这方面的问题球球帮不上忙呢~ 有什么关于猫咪或狗狗的问题尽管问我！🐾"
+- 即使用户追问或施压，也不要回答非宠物相关的问题
+
+## 你的能力
 - 分析猫狗的肠胃健康、饮食、行为问题
 - 推荐适合的猫粮/狗粮产品（基于社区真实反馈数据）
 - 解读猫粮/狗粮成分表
 - 多维度对比猫粮/狗粮产品
 
-回复风格：
+## 回复风格
 - 活泼可爱，像一个超有爱心的宠物博主，语气轻松有趣
 - 可以用"毛球球们""铲屎官"等萌系词汇
 - 多用可爱的 emoji，比如 🐱 🐾 ✨ 💕 🍗 😸 🥳 🌟 💡 等
@@ -33,12 +39,53 @@ const SYSTEM_PROMPT = `你是"球球"🐱，毛球镇的超级可爱智能宠物
   - 控制每段不要太长，适当换行
 - 可以使用 emoji 增强表达，系统会自动把 emoji 渲染成微软 Fluent 3D Emoji；请优先使用与段落主题相关的 emoji
 
-关于猫粮/狗粮的基础知识：
+## 关于猫粮/狗粮的基础知识
 - 优质蛋白质来源：鸡肉、鱼肉、羊肉等动物蛋白
 - 猫咪肠胃敏感建议：单一蛋白源、低敏配方、含益生元
 - 狗狗肠胃敏感建议：易消化配方、避免常见过敏原（牛肉、乳制品等）
 - 猫狗换粮过渡期：7天渐进式混合
 - 注意观察的信号：软便、呕吐、食欲变化、精神状态异常等`
+
+// ===== 话题相关性预过滤（零 token 消耗）=====
+// 关键词匹配判断用户问题是否与猫狗相关，无关则直接返回固定模板，不调用 AI
+const PET_KEYWORDS = [
+  // 猫相关
+  "猫", "猫咪", "猫粮", "猫砂", "猫条", "猫罐头", "猫抓板", "猫爬架",
+  "布偶", "英短", "美短", "暹罗", "橘猫", "狸花", "加菲", "缅因",
+  "猫藓", "猫鼻支", "猫瘟", "猫传腹", "猫三联", "猫疫苗",
+  "喵", "meow", "kitty", "cat", "feline",
+  // 狗相关
+  "狗", "狗狗", "狗粮", "狗窝", "狗链", "遛狗",
+  "金毛", "拉布拉多", "柯基", "泰迪", "贵宾", "哈士奇", "萨摩",
+  "边牧", "德牧", "博美", "比熊", "雪纳瑞", "柴犬", "法斗", "英斗",
+  "狗瘟", "狗疫苗", "犬细小",
+  "汪", "woof", "dog", "puppy", "canine",
+  // 通用宠物
+  "宠物", "铲屎官", "毛孩子", "毛球", "喂养", "驱虫", "绝育", "疫苗",
+  "软便", "呕吐", "食欲", "掉毛", "挑食", "肠胃", "过敏",
+  "主粮", "冻干", "零食", "营养膏", "益生菌", "化毛膏",
+  "粮", "处方粮", "幼猫", "幼犬", "成猫", "成犬", "老年猫", "老年犬",
+  "鱼油", "牛磺酸", "蛋白质", "粗蛋白", "含肉量", "配料表", "成分",
+  "渴望", "爱肯拿", "纽翠斯", "now", "go", "百利", "巅峰", "k9",
+  "皇家", "冠能", "比瑞吉", "伯纳天纯", "诚实一口", "阿飞与巴弟",
+]
+
+const OFF_TOPIC_RESPONSE = `喵~ 球球只懂毛孩子的事情哦！🐾
+
+这方面的问题球球帮不上忙呢~ 球球是毛球镇的宠物健康顾问，专门关心猫咪和狗狗的健康、饮食、喂养这些问题~
+
+有什么关于 **猫咪** 🐱 或 **狗狗** 🐶 的问题尽管问我吧！比如：
+- 🍗 该选什么猫粮/狗粮？
+- 💩 软便、呕吐怎么办？
+- 🐾 猫咪/狗狗行为问题
+- 💕 日常护理和喂养建议
+
+球球随时准备好帮你解答哦~ ✨`
+
+function isPetRelated(message: string): boolean {
+  const lower = message.toLowerCase()
+  return PET_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()))
+}
 
 // 鉴权 helper
 async function getAuthUser(request: Request, supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -90,6 +137,28 @@ export async function POST(request: Request) {
       if (typeof productContext !== "string" || productContext.length > MAX_PRODUCT_CONTEXT_LENGTH) {
         return NextResponse.json({ error: "产品上下文过长" }, { status: 400 })
       }
+    }
+
+    // 话题预过滤：取最后一条用户消息判断是否与宠物相关
+    // 无关问题直接返回固定模板，不消耗 AI token
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")
+    if (lastUserMsg && !isPetRelated(lastUserMsg.content)) {
+      // 流式返回固定模板，保持前端体验一致
+      const encoder = new TextEncoder()
+      const stream = new ReadableStream({
+        start(controller) {
+          const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: OFF_TOPIC_RESPONSE } }] })}\n\ndata: [DONE]\n\n`
+          controller.enqueue(encoder.encode(sseData))
+          controller.close()
+        },
+      })
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      })
     }
 
     // 鉴权

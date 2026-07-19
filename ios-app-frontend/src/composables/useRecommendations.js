@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
 
 const recommendations = shallowRef([])
@@ -39,7 +40,7 @@ async function generateRecommendations(petId, petProfile) {
 
   try {
     // 调用推荐API
-    const response = await fetch('/api/recommend', {
+    const response = await fetch('/api/ai/recommend', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -81,10 +82,8 @@ async function submitRecommendationFeedback({ recommendationId, productId, petId
   const uid = await getUid()
   if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'submitRecommendationFeedback')
 
-  const { data, error } = await supabase
-    .from('recommendation_feedback')
-    .insert({
-      profile_id: uid,
+  try {
+    await writeGateway('CREATE_RECOMMENDATION_FEEDBACK', {
       product_id: productId,
       pet_id: petId,
       recommendation_id: recommendationId,
@@ -92,11 +91,20 @@ async function submitRecommendationFeedback({ recommendationId, productId, petId
       rating,
       notes
     })
-    .select()
-    .single()
-
-  if (error) throw normalizeError(error, 'submitRecommendationFeedback')
-  return data
+  } catch (e) {
+    throw normalizeError(e, 'submitRecommendationFeedback')
+  }
+  // gateway event 类型不返回行数据，本地构造一条乐观条目
+  return {
+    profile_id: uid,
+    product_id: productId,
+    pet_id: petId,
+    recommendation_id: recommendationId,
+    action,
+    rating,
+    notes,
+    created_at: new Date().toISOString()
+  }
 }
 
 async function fetchUserFeedback(productId) {

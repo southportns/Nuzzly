@@ -35,11 +35,10 @@ async function generateDailySummary(petId, date) {
   const targetDate = date || new Date().toISOString().split('T')[0]
 
   try {
-    // 调用后端API生成每日摘要
-    const response = await fetch('/api/analytics/daily-summary', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pet_id: petId, date: targetDate })
+    // 调用后端API生成每日摘要（实际路由为 /api/analytics/[petId]/summary）
+    const response = await fetch(`/api/analytics/${petId}/summary?date=${encodeURIComponent(targetDate)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
     })
 
     if (!response.ok) {

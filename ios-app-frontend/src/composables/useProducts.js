@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 
 // 产品库查询 composable（直查 supabase，与 web 端逻辑呼应）
 // 不售卖，只做市场产品库导入 + 用户长期反馈数据展示
@@ -202,20 +203,17 @@ async function toggleBookmark(productId) {
   const uid = session?.session?.user?.id
   if (!uid) throw new Error('未登录')
   const bookmarked = await isBookmarked(productId)
-  if (bookmarked) {
-    const { error } = await supabase
-      .from('product_bookmarks')
-      .delete()
-      .eq('profile_id', uid)
-      .eq('product_id', productId)
-    if (error) throw new Error(error.message)
-    return false
-  } else {
-    const { error } = await supabase
-      .from('product_bookmarks')
-      .insert({ profile_id: uid, product_id: productId })
-    if (error) throw new Error(error.message)
-    return true
+  try {
+    if (bookmarked) {
+      await writeGateway('DELETE_BOOKMARK', { product_id: productId })
+      return false
+    } else {
+      await writeGateway('CREATE_BOOKMARK', { product_id: productId })
+      return true
+    }
+  } catch (e) {
+    console.error('[useProducts.toggleBookmark]', e.message)
+    throw e
   }
 }
 

@@ -221,6 +221,7 @@ import { useRouter } from 'vue-router'
 import { Toast } from 'tdesign-mobile-vue'
 import { useAuth } from '../composables/useAuth'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 
 const router = useRouter()
 const { signIn, signUp } = useAuth()
@@ -350,11 +351,12 @@ async function handlePhoneLogin() {
         .single()
 
       if (!existingProfile) {
-        await supabase.from('profiles').insert({
+        const { error: profileErr } = await writeGateway('CREATE_PROFILE', {
           id: data.user.id,
           username: phone.value.slice(-4),
           display_name: `用户${phone.value.slice(-4)}`
         })
+        if (profileErr) console.error('[Login] create profile failed:', profileErr)
       }
     }
 
@@ -397,11 +399,12 @@ async function handleEmailLogin() {
           if (signInAgainError) throw signInAgainError
 
           // 创建 profile
-          await supabase.from('profiles').insert({
+          const { error: profileErr } = await writeGateway('CREATE_PROFILE', {
             id: signUpData.user.id,
             username: email.value.split('@')[0],
             display_name: email.value.split('@')[0]
           })
+          if (profileErr) console.error('[Login] create profile failed:', profileErr)
         }
       } else {
         throw signInError

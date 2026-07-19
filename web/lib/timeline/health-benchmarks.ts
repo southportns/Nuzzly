@@ -108,16 +108,20 @@ export async function updateBenchmark(input: BenchmarkUpdate): Promise<HealthBen
   const stats = computeBenchmarkStats(input)
 
   // Archive previous version
-  await supabase
-    .from("pflid.health_benchmarks")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any)
+    .schema("pflid")
+    .from("health_benchmarks")
     .update({ valid_to: new Date().toISOString() })
     .eq("category", input.category)
     .eq("subcategory", input.subcategory ?? "")
     .is("valid_to", null)
 
   // Get next version
-  const { data: existing } = await supabase
-    .from("pflid.health_benchmarks")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existing } = await (supabase as any)
+    .schema("pflid")
+    .from("health_benchmarks")
     .select("version")
     .eq("category", input.category)
     .eq("subcategory", input.subcategory ?? "")
@@ -126,8 +130,10 @@ export async function updateBenchmark(input: BenchmarkUpdate): Promise<HealthBen
 
   const nextVersion = (existing?.[0]?.version ?? 0) + 1
 
-  const { data, error } = await supabase
-    .from("pflid.health_benchmarks")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .schema("pflid")
+    .from("health_benchmarks")
     .insert({
       category: input.category,
       subcategory: input.subcategory ?? "",
@@ -167,8 +173,10 @@ export async function getBenchmarks(params?: {
 }): Promise<HealthBenchmark[]> {
   const supabase = await createClient()
 
-  let query = supabase
-    .from("pflid.health_benchmarks")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase as any)
+    .schema("pflid")
+    .from("health_benchmarks")
     .select("*")
     .is("valid_to", null)  // Only current versions
     .order("category")

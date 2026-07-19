@@ -59,6 +59,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Toast } from 'tdesign-mobile-vue'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../composables/useAuth'
+import { writeGateway } from '../lib/gateway'
 import PageHeader from '../components/PageHeader.vue'
 import FormField from '../components/FormField.vue'
 import ChipGroup from '../components/ChipGroup.vue'
@@ -115,22 +116,19 @@ async function handleSubmit() {
   saving.value = true
   try {
     // 更新肠胃状况
-    const { error: petErr } = await supabase
-      .from('pets')
-      .update({ stomach_health: stomachHealth.value })
-      .eq('id', petId.value)
+    const { error: petErr } = await writeGateway('UPDATE_PET', { id: petId.value, stomach_health: stomachHealth.value })
     if (petErr) throw petErr
 
     // 保存过敏原（逐条检查错误）
     const allergyErrors = []
     for (const a of allergies.value) {
-      const { error } = await supabase.from('pet_allergies').insert({
+      const { error } = await writeGateway('CREATE_PET_ALLERGY', {
         pet_id: petId.value,
         allergen: a.allergen,
         severity: a.severity,
         confirmed: false
       })
-      if (error) allergyErrors.push(`${a.allergen}: ${error.message}`)
+      if (error) allergyErrors.push(`${a.allergen}: ${error}`)
     }
     if (allergyErrors.length > 0) {
       Toast({ theme: 'warning', message: `部分过敏原保存失败: ${allergyErrors.join(', ')}` })
@@ -138,7 +136,7 @@ async function handleSubmit() {
 
     // 保存当前饮食记录
     if (currentFood.value.trim()) {
-      await supabase.from('diet_logs').insert({
+      const { error: dietErr } = await writeGateway('CREATE_DIET_LOG', {
         pet_id: petId.value,
         profile_id: user.value.id,
         food_name: currentFood.value.trim(),
@@ -146,6 +144,7 @@ async function handleSubmit() {
         notes: notes.value.trim() || '建档时记录',
         logged_date: new Date().toISOString().slice(0, 10)
       })
+      if (dietErr) console.error('[DietaryPreference] create diet log failed:', dietErr)
     }
 
     completed.value = true

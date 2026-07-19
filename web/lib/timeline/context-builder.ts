@@ -6,7 +6,17 @@
 // New: review_text → extractTimeline() → timeline_events → timeline_context → LLM
 
 import { createClient } from "@/lib/supabase/server"
-import { extractTimeline, type ExtractedTimelineEvent } from "@/lib/ai/timeline-extractor"
+import { extractTimeline } from "@/lib/ai/timeline-extractor"
+
+// Local type: unifies AI-extracted events and DB-stored timeline events
+interface ExtractedTimelineEvent {
+  event_day: number
+  event_type: string
+  status: string | null
+  symptom: string | null
+  sentiment_score: number | null
+  extracted_text: string | null
+}
 
 export interface TimelineContext {
   timeline_events: ExtractedTimelineEvent[]
@@ -44,7 +54,11 @@ export async function buildTimelineContext(
   petId?: string
 ): Promise<TimelineContext | null> {
   // Step 1: Extract timeline events from review text
-  const events = await extractTimeline(reviewText)
+  const extraction = await extractTimeline({
+    review_text: reviewText,
+    review_date: new Date().toISOString(),
+  })
+  const events = (extraction?.events ?? []) as unknown as ExtractedTimelineEvent[]
   if (!events || events.length === 0) return null
 
   // Step 2: Compute symptom progression
@@ -74,7 +88,9 @@ export async function buildTimelineContextFromDB(
   const supabase = await createClient()
 
   // Get timeline groups for this product
-  const { data: groups } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: groups } = await (supabase as any)
+    .schema("pflid")
     .from("review_timeline_groups")
     .select("id, timeline_score, review_count")
     .eq("product_id", productId)
@@ -84,8 +100,10 @@ export async function buildTimelineContextFromDB(
   if (!groups || groups.length === 0) return null
 
   // Get events from these groups
-  const groupIds = groups.map((g) => g.id)
-  const { data: events } = await supabase
+  const groupIds = groups.map((g: { id: string }) => g.id)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: events } = await (supabase as any)
+    .schema("pflid")
     .from("review_timeline_events")
     .select("*")
     .in("timeline_group_id", groupIds)
@@ -100,10 +118,13 @@ export async function buildTimelineContextFromDB(
 
   // Weighted trust score
   const trustScore = groups.reduce(
-    (sum, g) => sum + (g.timeline_score ?? 50) * g.review_count,
+    (sum: number, g: { timeline_score: number | null; review_count: number }) =>
+      sum + (g.timeline_score ?? 50) * g.review_count,
     0
-  ) / groups.reduce((sum, g) => sum + g.review_count, 0)
-
+  ) / groups.reduce(
+    (sum: number, g: { review_count: number }) => sum + g.review_count,
+    0
+  )
   return {
     timeline_events: typedEvents,
     symptom_progression: symptomProgression,
@@ -138,7 +159,7 @@ function computeSymptomProgression(events: ExtractedTimelineEvent[]): TimelineCo
     // Trend: compare early vs late occurrence rate
     const midPoint = (firstSeen + lastSeen) / 2
     const earlyCount = sortedDays.filter((d) => d <= midPoint).length
-    const lateCount = sortedDays.filter((d) > midPoint).length
+    const lateCount = sortedDays.filter((d) => d > midPoint).length
     const earlyRate = earlyCount / Math.max(1, midPoint)
     const lateRate = lateCount / Math.max(1, lastSeen - midPoint)
 
@@ -221,7 +242,7 @@ export function timelineContextToPrompt(context: TimelineContext): string {
   lines.push(`### Timeline Events (sample)`)
   const sample = context.timeline_events.slice(0, 10)
   for (const e of sample) {
-    lines.push(`- Day ${e.day}: ${e.status} | ${e.event_type}${e.symptom ? ` | symptom: ${e.symptom}` : ""}${e.extracted_text ? ` | ${e.extracted_text}` : ""}`)
+    lines.push(`- Day ${e.event_day}: ${e.status} | ${e.event_type}${e.symptom ? ` | symptom: ${e.symptom}` : ""}${e.extracted_text ? ` | ${e.extracted_text}` : ""}`)
   }
 
   return lines.join("\n")

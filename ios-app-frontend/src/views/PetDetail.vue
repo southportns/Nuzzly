@@ -116,6 +116,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Toast } from 'tdesign-mobile-vue'
 import { usePets } from '../composables/usePets'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import PageHeader from '../components/PageHeader.vue'
 import FormField from '../components/FormField.vue'
 import ChipGroup from '../components/ChipGroup.vue'
@@ -224,7 +225,8 @@ async function handleSave() {
 async function handleDelete() {
   if (!confirm(`确定要删除 ${pet.value?.name} 的档案吗？此操作不可恢复。`)) return
   try {
-    await supabase.from('pets').update({ is_active: false }).eq('id', pet.value.id)
+    const { error } = await writeGateway('SOFT_DELETE_PET', { id: pet.value.id })
+    if (error) throw new Error(error)
     Toast({ theme: 'success', message: '已删除' })
     router.back()
   } catch (e) {

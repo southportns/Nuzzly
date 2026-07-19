@@ -250,7 +250,8 @@ export async function createDietLog(record: {
   })
 
   const admin = createAdminClient()
-  const { error } = await admin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (admin as any)
     .from("diet_logs")
     .insert({ ...record, profile_id: userId })
 
@@ -298,7 +299,8 @@ export async function createPetHealthRecord(record: {
   }
 
   const admin = createAdminClient()
-  const { error } = await admin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (admin as any)
     .from("health_records")
     .insert(record)
 
@@ -379,7 +381,8 @@ export async function createPetAllergy(record: {
   }
 
   const admin = createAdminClient()
-  const { error } = await admin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (admin as any)
     .from("pet_allergies")
     .insert(record)
 
@@ -449,7 +452,8 @@ export async function upsertEnvironmentProfile(record: {
 
   // Execute actual DB write immediately
   const admin = createAdminClient()
-  const { error } = await admin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (admin as any)
     .from("environment_profiles")
     .upsert(record, { onConflict: "pet_id" })
 

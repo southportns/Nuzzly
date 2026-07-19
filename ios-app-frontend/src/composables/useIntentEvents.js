@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
 
 const intentEvents = shallowRef([])
@@ -57,22 +58,29 @@ async function createIntentEvent({ event_type, pet_id, product_id, recommendatio
   const uid = await getUid()
   if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'createIntentEvent')
 
-  const { data, error } = await supabase
-    .from('intent_events')
-    .insert({
-      profile_id: uid,
+  try {
+    await writeGateway('CREATE_INTENT_EVENT', {
       event_type,
       pet_id,
       product_id,
       recommendation_id,
       metadata
     })
-    .select('*, products(name, brand), pets(name)')
-    .single()
-
-  if (error) throw normalizeError(error, 'createIntentEvent')
-  intentEvents.value = [data, ...intentEvents.value]
-  return data
+  } catch (e) {
+    throw normalizeError(e, 'createIntentEvent')
+  }
+  // gateway event 类型不返回行数据，本地构造一条乐观条目
+  const optimistic = {
+    profile_id: uid,
+    event_type,
+    pet_id,
+    product_id,
+    recommendation_id,
+    metadata,
+    created_at: new Date().toISOString()
+  }
+  intentEvents.value = [optimistic, ...intentEvents.value]
+  return optimistic
 }
 
 async function recordPurchaseIntent(productId, petId) {

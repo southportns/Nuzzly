@@ -118,11 +118,11 @@ export async function queryWeightLogs(petId: string, limit = 30) {
 export async function queryPendingSchedules(profileId: string) {
   const supabase = await createServerClient()
   const { data, error } = await supabase
-    .from("followup_schedules")
-    .select("*")
+    .from("review_followup_schedules")
+    .select("*, product_reviews(products(name, brand), pets(name))")
     .eq("profile_id", profileId)
     .eq("status", "pending")
-    .order("scheduled_at", { ascending: true })
+    .order("due_date", { ascending: true })
   return { data, error }
 }
 

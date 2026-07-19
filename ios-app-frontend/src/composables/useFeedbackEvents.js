@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
+import { writeGateway } from '../lib/gateway'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
 
 const feedbackEvents = shallowRef([])
@@ -57,21 +58,27 @@ async function createFeedbackEvent({ event_type, product_id, metadata, source = 
   const uid = await getUid()
   if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'createFeedbackEvent')
 
-  const { data, error } = await supabase
-    .from('feedback_events')
-    .insert({
-      profile_id: uid,
+  try {
+    await writeGateway('CREATE_FEEDBACK', {
       event_type,
       product_id,
       metadata,
       source
     })
-    .select('*, products(name, brand)')
-    .single()
-
-  if (error) throw normalizeError(error, 'createFeedbackEvent')
-  feedbackEvents.value = [data, ...feedbackEvents.value]
-  return data
+  } catch (e) {
+    throw normalizeError(e, 'createFeedbackEvent')
+  }
+  // gateway event 类型不返回行数据，本地构造一条乐观条目
+  const optimistic = {
+    profile_id: uid,
+    event_type,
+    product_id,
+    metadata,
+    source,
+    created_at: new Date().toISOString()
+  }
+  feedbackEvents.value = [optimistic, ...feedbackEvents.value]
+  return optimistic
 }
 
 async function recordProductView(productId) {
