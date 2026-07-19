@@ -28,22 +28,26 @@ create index if not exists idx_pet_families_profile_id on public.pet_families(pr
 alter table public.pet_families enable row level security;
 
 -- 策略：用户可以查看自己参与的宠物家庭
+drop policy if exists "Users can view own pet families" on public.pet_families;
 create policy "Users can view own pet families"
   on public.pet_families
   for select
   using (auth.uid() = profile_id);
 
 -- 策略：用户可以管理自己创建的宠物家庭记录
+drop policy if exists "Users can insert own pet families" on public.pet_families;
 create policy "Users can insert own pet families"
   on public.pet_families
   for insert
   with check (auth.uid() = profile_id);
 
+drop policy if exists "Users can update own pet families" on public.pet_families;
 create policy "Users can update own pet families"
   on public.pet_families
   for update
   using (auth.uid() = profile_id);
 
+drop policy if exists "Users can delete own pet families" on public.pet_families;
 create policy "Users can delete own pet families"
   on public.pet_families
   for delete

@@ -81,6 +81,7 @@ tsc_*.txt
 *.tmp
 *.temp
 .tmp-*
+.uploads/
 
 # Local dev scripts (may contain secrets)
 start-headroom.ps1

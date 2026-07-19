@@ -18,11 +18,13 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. 公开读(头像 URL 走匿名访问,跟 pet-avatars 一致)
+DROP POLICY IF EXISTS "user_avatars_select_public" ON storage.objects;
 CREATE POLICY "user_avatars_select_public" ON storage.objects
   FOR SELECT USING (bucket_id = 'user-avatars');
 
 -- 3. INSERT:必须写到自己的 folder
 --    路径约定:user-avatars/{auth.uid()}/avatar.{ext}
+DROP POLICY IF EXISTS "user_avatars_insert_own" ON storage.objects;
 CREATE POLICY "user_avatars_insert_own" ON storage.objects
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -31,6 +33,7 @@ CREATE POLICY "user_avatars_insert_own" ON storage.objects
   );
 
 -- 4. UPDATE:owner 才能覆盖自己的头像
+DROP POLICY IF EXISTS "user_avatars_update_own" ON storage.objects;
 CREATE POLICY "user_avatars_update_own" ON storage.objects
   FOR UPDATE TO authenticated
   USING (
@@ -43,6 +46,7 @@ CREATE POLICY "user_avatars_update_own" ON storage.objects
   );
 
 -- 5. DELETE:owner 才能删
+DROP POLICY IF EXISTS "user_avatars_delete_own" ON storage.objects;
 CREATE POLICY "user_avatars_delete_own" ON storage.objects
   FOR DELETE TO authenticated
   USING (

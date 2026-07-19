@@ -33,18 +33,21 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- RLS：用户可插入自己的记录；匿名用户也能插入（profile_id 为空）
 ALTER TABLE emoji_usage_stats ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "emoji_usage_stats_insert_own" ON emoji_usage_stats;
 CREATE POLICY "emoji_usage_stats_insert_own"
   ON emoji_usage_stats
   FOR INSERT
   TO authenticated
   WITH CHECK (profile_id = auth.uid() OR profile_id IS NULL);
 
+DROP POLICY IF EXISTS "emoji_usage_stats_read_own" ON emoji_usage_stats;
 CREATE POLICY "emoji_usage_stats_read_own"
   ON emoji_usage_stats
   FOR SELECT
   TO authenticated
   USING (profile_id = auth.uid());
 
+DROP POLICY IF EXISTS "emoji_usage_stats_admin_all" ON emoji_usage_stats;
 CREATE POLICY "emoji_usage_stats_admin_all"
   ON emoji_usage_stats
   FOR ALL
