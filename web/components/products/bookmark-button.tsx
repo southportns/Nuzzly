@@ -1,8 +1,8 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState, useTransition } from "react"
 import { createBookmarkAction, deleteBookmarkAction } from "@/app/(main)/products/[productId]/actions"
-import { Heart } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { trackIntentEvent } from "@/lib/tracking/intent-tracker"
@@ -46,7 +46,7 @@ export function BookmarkButton({ productId, userId, initialBookmarked }: { produ
           : "bg-[#F0EFED] text-[#6B6B6B] hover:text-[#FF7A59]"
       )}
     >
-      <Heart
+      <EmojiIcon name="Heart"
         className={cn("size-4 transition-all", bookmarked && "fill-[#FF7A59]")}
       />
       {bookmarked ? "已收藏" : "收藏"}

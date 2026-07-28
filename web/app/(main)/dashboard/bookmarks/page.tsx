@@ -1,7 +1,7 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getUser, queryBookmarks } from "@/lib/supabase/query"
-import { Heart } from "lucide-react"
 
 export const metadata = {
   title: "我的收藏 — Nuzzly毛球镇",
@@ -32,7 +32,7 @@ export default async function BookmarksPage() {
                 className="group rounded-[16px] border border-transparent bg-[#F7F6F3] p-4 transition-all hover:border-[rgba(0,0,0,0.06)] hover:bg-white hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)]"
               >
                 <div className="flex aspect-[4/3] items-center justify-center rounded-[14px] bg-white">
-                  <Heart className="size-8 text-[#D2D1CF]" />
+                  <EmojiIcon name="Heart" className="size-8 text-[#D2D1CF]" />
                 </div>
                 <div className="mt-4">
                   <p className="text-[12.5px] text-[#6B6B6B]">{b.products.brand}</p>
@@ -56,7 +56,7 @@ export default async function BookmarksPage() {
         </section>
       ) : (
         <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-16 text-center">
-          <Heart className="mx-auto size-12 text-[#D2D1CF]" />
+          <EmojiIcon name="Heart" className="mx-auto size-12 text-[#D2D1CF]" />
           <p className="mt-4 text-[17px] text-[#6B6B6B]">暂无收藏</p>
           <p className="mt-1 text-[14px] text-[#D2D1CF]">浏览产品库，收藏你感兴趣的猫咪产品</p>
           <Link

@@ -45,7 +45,26 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     strictPort: false,
-    open: false
+    open: false,
+    proxy: {
+      // 代理 /api 请求到 web 后端，避免浏览器跨域 (CORS)
+      // 开发时前端 localhost:5173 → 后端 localhost:3000
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        // SSE 流式响应需要禁用 buffer，否则数据会攒批才推送
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            proxyReq.setHeader('Connection', 'keep-alive')
+          })
+        }
+      },
+      // 代理 Fluent Emoji 3D 资源到 web 后端（与 web 端共用图集，避免重复部署）
+      '/fluentui-emoji': {
+        target: 'http://localhost:3000',
+        changeOrigin: true
+      }
+    }
   },
   css: {
     postcss: {

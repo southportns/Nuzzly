@@ -3,7 +3,6 @@
 import { PetForm, type PetFormPayload } from "@/components/pets/pet-form"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/hooks/use-auth"
-import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
   insertPetAttachment,
@@ -83,7 +82,6 @@ export function EditPetForm({
   initialEnvironment,
 }: EditPetFormProps) {
   const { user } = useAuth()
-  const router = useRouter()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createClient() as any
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -101,36 +99,33 @@ export function EditPetForm({
 
       // 1.5. Handle avatar changes
       if (avatarFile) {
-        // New avatar uploaded — delete old avatar first
         const { data: petData } = await supabase
           .from("pets")
           .select("photo_url")
           .eq("id", pet.id)
           .single()
 
-        const up = await uploadPetAvatar(avatarFile, pet.id)
+        const up = await uploadPetAvatar(avatarFile, user.id, pet.id)
         if (up.url) {
           await supabase.from("pets").update({ photo_url: up.url }).eq("id", pet.id)
-
-          // Delete old avatar file from storage
           if (petData?.photo_url) {
-            await deletePetAvatar(pet.id, petData.photo_url).catch(() => null)
+            await deletePetAvatar(user.id, petData.photo_url).catch(() => null)
           }
         }
       } else if (avatarRemoved) {
-        // Avatar was explicitly removed
         await supabase.from("pets").update({ photo_url: null }).eq("id", pet.id)
       }
 
-      // 2. Sync diseases: delete all + re-insert (simple, robust)
-      await supabase.from("pet_disease_records").delete().eq("pet_id", pet.id)
+      // 2. Sync diseases: delete all + re-insert
+      const { error: delDisErr } = await supabase.from("pet_disease_records").delete().eq("pet_id", pet.id)
+      if (delDisErr) console.warn("删除疾病记录失败:", delDisErr.message)
+
       for (const d of payload.diseases) {
         const { data: rec, error: dErr } = await insertPetDisease({ ...d, pet_id: pet.id }, user.id)
         if (dErr) {
           toast.warning(`疾病记录保存失败：${dErr.message}`)
           continue
         }
-        // Link medical_record attachments to this disease
         const medicalAtts = payload.attachments.filter(
           (a) => a.category === "medical_record" && a.is_new && a.file
         )
@@ -154,7 +149,9 @@ export function EditPetForm({
       }
 
       // 3. Sync medications
-      await supabase.from("pet_medication_records").delete().eq("pet_id", pet.id)
+      const { error: delMedErr } = await supabase.from("pet_medication_records").delete().eq("pet_id", pet.id)
+      if (delMedErr) console.warn("删除用药记录失败:", delMedErr.message)
+
       for (const m of payload.medications) {
         const { data: rec, error: mErr } = await insertPetMedication({ ...m, pet_id: pet.id }, user.id)
         if (mErr) {
@@ -183,12 +180,11 @@ export function EditPetForm({
         }
       }
 
-      // 4. Handle removed attachments: detect by id present in initialAttachments but not in payload.attachments
+      // 4. Handle removed attachments
       const newIds = new Set(payload.attachments.map((a) => a.id))
       for (const old of initialAttachments) {
         if (!newIds.has(old.id)) {
-          // Remove DB record and storage file
-          await deletePetAttachmentRecord(old.id, user.id)
+          await deletePetAttachmentRecord(old.id, user.id).catch(() => null)
           await deletePetAttachment(user.id, old.file_path).catch(() => null)
         }
       }
@@ -231,10 +227,13 @@ export function EditPetForm({
       }
 
       toast.success("宠物档案已更新")
-      router.push("/dashboard/pets")
-      router.refresh()
+      // Use timeout to ensure toast shows before navigation
+      setTimeout(() => {
+        window.location.href = `/dashboard/pets/${pet.id}`
+      }, 300)
       return { ok: true as const }
     } catch (e) {
+      console.error("保存宠物档案失败:", e)
       return { ok: false as const, error: e instanceof Error ? e.message : "未知错误" }
     }
   }

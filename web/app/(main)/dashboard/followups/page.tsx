@@ -1,6 +1,6 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { Clock } from "lucide-react"
 import { getUser, queryPendingSchedules } from "@/lib/supabase/query"
 
 export const metadata = {
@@ -53,7 +53,7 @@ export default async function FollowupsPage() {
           {overdue.length > 0 && (
             <div className="rounded-[20px] border border-[#ff3b30]/15 bg-white p-5">
               <div className="mb-3 flex items-center gap-2">
-                <Clock className="size-4 text-[#ff3b30]" />
+                <EmojiIcon name="Clock" className="size-4 text-[#ff3b30]" />
                 <span className="text-[14px] font-semibold text-[#ff3b30]">已逾期 · {overdue.length}</span>
               </div>
               <div className="space-y-2">
@@ -66,7 +66,7 @@ export default async function FollowupsPage() {
           {pending.length > 0 && (
             <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-5">
               <div className="mb-3 flex items-center gap-2">
-                <Clock className="size-4 text-[#ff9500]" />
+                <EmojiIcon name="Clock" className="size-4 text-[#ff9500]" />
                 <span className="text-[14px] font-semibold text-[#111111]">待完成 · {pending.length}</span>
               </div>
               <div className="space-y-2">
@@ -79,7 +79,7 @@ export default async function FollowupsPage() {
         </section>
       ) : (
         <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-12 text-center">
-          <Clock className="mx-auto size-10 text-[#D2D1CF]" />
+          <EmojiIcon name="Clock" className="mx-auto size-10 text-[#D2D1CF]" />
           <p className="mt-3 text-[14px] text-[#6B6B6B]">暂无长期追踪任务</p>
           <p className="mt-1 text-[12px] text-[#D2D1CF]">完成评价后会自动生成 Day 7 / 30 / 90 回访</p>
         </section>

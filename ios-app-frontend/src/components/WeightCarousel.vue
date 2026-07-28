@@ -1,26 +1,36 @@
 <template>
   <div class="weight-carousel" ref="containerRef">
-    <div class="carousel-track" ref="trackRef"
+    <!-- Threads 背景动画 -->
+    <Threads
+      :color="'rgb(120, 50, 10)'"
+      :amplitude="3"
+      :distance="0.5"
+      :enable-mouse-interaction="false"
+      class="weight-threads"
+    />
+
+    <div
+      class="carousel-track"
+      :style="trackStyle"
       @touchstart="onTouchStart"
       @touchmove="onTouchMove"
       @touchend="onTouchEnd"
-      :style="trackStyle"
     >
       <div
         v-for="(item, index) in items"
         :key="item.id ?? index"
         class="carousel-item"
-        :class="{ active: activeIndex === index }"
-        :style="itemStyle(index)"
       >
-        <div class="item-icon" :style="{ background: item.color || 'rgba(139,94,70,.1)' }">
-          <img v-if="item.avatar" :src="item.avatar" :alt="item.name" class="item-avatar" />
-          <span v-else class="item-emoji">{{ item.emoji || '🐾' }}</span>
-        </div>
-        <div class="item-body">
+        <div class="item-left">
+          <div class="item-label-row">今日体重</div>
           <div class="item-weight">{{ item.weight ?? '--' }}<span class="item-unit">kg</span></div>
           <div class="item-name">{{ item.name }}</div>
-          <div class="item-label">今日体重</div>
+        </div>
+        <div class="item-right">
+          <div class="item-icon" :style="{ background: item.color || 'rgba(139,94,70,.12)' }">
+            <img v-if="item.avatar" :src="item.avatar" :alt="item.name" class="item-avatar" />
+            <span v-else class="item-emoji">{{ item.emoji || '🐾' }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -38,83 +48,63 @@
     </div>
 
     <!-- 记录按钮 -->
-    <div class="carousel-action" @click="$emit('record')">
-      记录
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19L19 6m0 0v12.48M19 6H6.52"/></svg>
-    </div>
+    <div class="carousel-action" @click="$emit('record')">记录</div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import Threads from './Threads.vue'
 
 const props = defineProps({
   items: { type: Array, default: () => [] },
-  baseWidth: { type: Number, default: 155 },
   autoplay: { type: Boolean, default: true },
-  autoplayDelay: { type: Number, default: 3000 }
+  autoplayDelay: { type: Number, default: 3500 }
 })
 
 defineEmits(['record'])
 
-const GAP = 8
-const containerRef = ref(null)
-const trackRef = ref(null)
 const activeIndex = ref(0)
-const touchStart = ref({ x: 0, y: 0 })
-const touchDelta = ref(0)
 const isDragging = ref(false)
+const dragStartX = ref(0)
+const dragCurrentX = ref(0)
 
-const trackStyle = computed(() => {
-  const offset = -activeIndex.value * (props.baseWidth + GAP)
-  const translate = offset + touchDelta.value
-  return {
-    transform: `translateX(${translate}px)`,
-    transition: isDragging.value ? 'none' : 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)'
-  }
-})
-
-function itemStyle(index) {
-  const dist = Math.abs(index - activeIndex.value)
-  const scale = dist === 0 ? 1 : dist === 1 ? 0.92 : 0.82
-  const opacity = dist === 0 ? 1 : dist === 1 ? 0.6 : 0.3
-  return {
-    transform: `scale(${scale})`,
-    opacity,
-    width: `${props.baseWidth}px`
-  }
-}
+const trackStyle = computed(() => ({
+  transform: `translateX(calc(-${activeIndex.value * 100}% + ${isDragging.value ? dragCurrentX.value - dragStartX.value : 0}px))`,
+  transition: isDragging.value ? 'none' : 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)'
+}))
 
 function onTouchStart(e) {
-  touchStart.value = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-  touchDelta.value = 0
+  if (props.items.length <= 1) return
   isDragging.value = true
+  dragStartX.value = e.touches[0].clientX
+  dragCurrentX.value = e.touches[0].clientX
+  stopAutoplay()
 }
 
 function onTouchMove(e) {
   if (!isDragging.value) return
-  const dx = e.touches[0].clientX - touchStart.value.x
-  const dy = e.touches[0].clientY - touchStart.value.y
-  if (Math.abs(dy) > Math.abs(dx)) return
-  touchDelta.value = dx
+  dragCurrentX.value = e.touches[0].clientX
 }
 
 function onTouchEnd() {
+  if (!isDragging.value) return
   isDragging.value = false
-  const threshold = props.baseWidth * 0.2
-  if (touchDelta.value < -threshold && activeIndex.value < props.items.length - 1) {
+  const deltaX = dragCurrentX.value - dragStartX.value
+  const threshold = 40
+  if (deltaX < -threshold && activeIndex.value < props.items.length - 1) {
     activeIndex.value++
-  } else if (touchDelta.value > threshold && activeIndex.value > 0) {
+  } else if (deltaX > threshold && activeIndex.value > 0) {
     activeIndex.value--
   }
-  touchDelta.value = 0
+  startAutoplay()
 }
 
 function goTo(index) {
-  activeIndex.value = index
+  activeIndex.value = Math.max(0, Math.min(index, props.items.length - 1))
+  startAutoplay()
 }
 
-// 自动轮播
 let autoplayTimer = null
 function startAutoplay() {
   stopAutoplay()
@@ -131,8 +121,6 @@ watch(() => props.items.length, () => {
   activeIndex.value = 0
   startAutoplay()
 }, { immediate: true })
-
-defineExpose({ startAutoplay, stopAutoplay })
 </script>
 
 <style scoped>
@@ -141,101 +129,115 @@ defineExpose({ startAutoplay, stopAutoplay })
   overflow: hidden;
   background: var(--card);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
+  box-shadow: 0px 4px 16px 5px #b6b4b4;
   border: 1px solid var(--border);
-  padding: 16px;
-  width: clamp(130px,40vw,155px);
-  height: clamp(130px,40vw,155px);
-  cursor: grab;
+  padding: 16px 16px 13px;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
+  top: auto;
 }
 
-.weight-carousel:active {
-  cursor: grabbing;
+.weight-threads {
+  opacity: 0.12;
+  pointer-events: none;
 }
 
 .carousel-track {
+  position: relative;
+  z-index: 1;
   display: flex;
-  gap: 8px;
-  height: calc(100% - 28px);
+  width: 100%;
+  will-change: transform;
 }
 
 .carousel-item {
-  flex-shrink: 0;
+  flex: 0 0 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.item-left {
+  flex: 0 0 48%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-              opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  gap: 8px;
+  padding-left: 3px;
+}
+
+.item-label-row {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.item-weight {
+  font-family: var(--font-num);
+  font-size: clamp(28px, 8vw, 42px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+}
+
+.item-unit {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+.item-name {
+  font-size: 14px;
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.item-right {
+  width: 48%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
 }
 
 .item-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  flex-shrink: 0;
 }
 
 .item-avatar {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 14px;
+  border-radius: 18px;
 }
 
 .item-emoji {
-  font-size: 22px;
+  font-size: 36px;
   line-height: 1;
-}
-
-.item-body {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.item-weight {
-  font-family: var(--font-num);
-  font-size: clamp(24px,7vw,36px);
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  color: var(--color-fg);
-}
-
-.item-unit {
-  font-size: 16px;
-  font-weight: 400;
-  color: var(--color-muted);
-  margin-left: 2px;
-}
-
-.item-name {
-  font-size: 14px;
-  color: var(--color-muted);
-  letter-spacing: 0.01em;
-  margin-top: 2px;
-}
-
-.item-label {
-  font-size: 14px;
-  color: var(--color-muted);
-  letter-spacing: 0.01em;
 }
 
 /* 指示器 */
 .carousel-indicators {
   position: absolute;
-  bottom: 36px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 6px;
+  z-index: 1;
 }
 
 .indicator {
@@ -245,34 +247,34 @@ defineExpose({ startAutoplay, stopAutoplay })
   padding: 0;
   border-radius: 50%;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.2s;
+  transition: background-color 0.15s, transform 0.15s;
 }
 
 .indicator.active {
-  background-color: var(--color-fg);
+  background-color: var(--fg);
   transform: scale(1.2);
 }
 
 .indicator.inactive {
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: rgba(0, 0, 0, 0.18);
 }
 
 /* 记录按钮 */
 .carousel-action {
   position: absolute;
-  bottom: 10px;
-  right: 16px;
+  top: 12px;
+  right: 12px;
   font-size: 13px;
-  color: var(--color-primary);
+  color: var(--brown);
   font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 3px;
   cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 10px;
+  transition: background-color 0.2s;
+  z-index: 1;
 }
 
-.carousel-action svg {
-  width: 12px;
-  height: 12px;
+.carousel-action:active {
+  background-color: rgba(139, 94, 70, 0.08);
 }
 </style>

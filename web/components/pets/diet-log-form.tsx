@@ -1,5 +1,6 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
@@ -8,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { SelectDropdown, type SelectOption } from "@/components/ui/select-dropdown"
-import { Loader2, Check } from "lucide-react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import {
@@ -141,7 +141,7 @@ export function DietLogForm({ petId }: { petId: string }) {
                         setOpen(false)
                       }}
                     >
-                      <Check
+                      <EmojiIcon name="Check"
                         className={cn(
                           "mr-2 h-4 w-4",
                           selectedProduct?.id === product.id ? "opacity-100" : "opacity-0",
@@ -196,7 +196,7 @@ export function DietLogForm({ petId }: { petId: string }) {
         </div>
       </div>
       <Button type="submit" size="sm" disabled={loading}>
-        {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
+        {loading && <EmojiIcon name="Loader2" className="mr-2 size-4 animate-spin" />}
         添加记录
       </Button>
     </form>

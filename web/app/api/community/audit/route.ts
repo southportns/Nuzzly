@@ -1,13 +1,15 @@
-// POST /api/community/audit — 内容安全审核（文本 + 图片）
-// 对接阿里云/网易易盾第三方审核 API；本地词库兜底
+// POST /api/community/audit — 内容安全审核(文本 + 图片)
+// 对接阿里云内容安全 API;本地词库兜底;脱敏后发送;写入 third_party_audit_log
+// 降级策略:第三方未配置或异常时,返回 pending(放行至待审核队列),不直接通过
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { desensitize, sha256Hex } from "@/lib/desensitize"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-// 内置敏感词（与 iOS 端 content-filter.js 同步）
+// 内置敏感词(与 iOS 端 content-filter.js 同步)
 const BUILTIN_WORDS = [
   "颠覆国家", "分裂国家", "推翻政权", "反华", "反动",
   "色情", "裸体", "裸聊", "约炮", "招嫖", "卖淫",
@@ -17,7 +19,6 @@ const BUILTIN_WORDS = [
   "转账汇款", "中奖通知", "账号冻结",
 ]
 
-// 本地词库检测
 function localWordCheck(text: string): string[] {
   const hits: string[] = []
   for (const word of BUILTIN_WORDS) {
@@ -26,92 +27,121 @@ function localWordCheck(text: string): string[] {
   return hits
 }
 
-// 第三方文本审核（阿里云内容安全）
-async function thirdPartyTextAudit(text: string): Promise<{ passed: boolean; reason?: string }> {
-  // 生产环境：对接阿里云内容安全 / 网易易盾
-  // 环境变量 ALIYUN_ACCESS_KEY / ALIYUN_SECRET_KEY 未配置时，降级为本地词库
+interface AuditResult {
+  passed: boolean
+  label?: string
+  provider: string
+  /** 降级模式:本地词库未命中,但未真正过第三方审核,需要人工 pending */
+  degraded: boolean
+}
+
+// 第三方文本审核(阿里云内容安全)
+async function thirdPartyTextAudit(text: string): Promise<AuditResult> {
+  // 环境变量未配置:降级为本地词库 + pending(不直接 passed)
   if (!process.env.ALIYUN_ACCESS_KEY || !process.env.ALIYUN_SECRET_KEY) {
-    // 降级：仅本地词库
     const words = localWordCheck(text)
     if (words.length > 0) {
-      return { passed: false, reason: `内容包含敏感词：${words.join("、")}` }
+      return { passed: false, label: "local_blocklist", provider: "local", degraded: false }
     }
-    return { passed: true }
+    return { passed: true, provider: "local", degraded: true }
   }
 
   try {
     // 阿里云内容安全 API 调用
-    // 文档：https://help.aliyun.com/document_detail/53427.html
-    const response = await fetch("https://green.aliyuncs.com/green/text/scan", {
+    // 文档:https://help.aliyun.com/document_detail/53427.html
+    const body = JSON.stringify({
+      scenes: ["antispam"],
+      tasks: [{ content: text }],
+    })
+    const signature = await generateAliyunSignature("POST", "/green/text/scan", body)
+
+    const response = await fetch("https://green.cn-shanghai.aliyuncs.com/green/text/scan", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `ACS ${process.env.ALIYUN_ACCESS_KEY}:${generateSignature()}`,
+        "Authorization": `acs ${process.env.ALIYUN_ACCESS_KEY}:${signature}`,
+        "X-acs-action": "TextScan",
+        "X-acs-version": "2022-03-02",
       },
-      body: JSON.stringify({
-        scenes: ["antispam"],
-        tasks: [{ content: text }],
-      }),
+      body,
     })
 
     if (!response.ok) {
-      console.warn("[community-audit] 阿里云 API 调用失败，降级为本地词库")
+      console.warn("[community-audit] 阿里云 API 调用失败,降级为本地词库:", response.status)
       const words = localWordCheck(text)
-      if (words.length > 0) return { passed: false, reason: `内容包含敏感词` }
-      return { passed: true }
+      if (words.length > 0) {
+        return { passed: false, label: "local_blocklist", provider: "local", degraded: false }
+      }
+      return { passed: true, provider: "local", degraded: true }
     }
 
     const result = await response.json()
     const data = result?.data?.[0]
-    if (data?.label === "spam" || data?.label === "politics" || data?.label === "abuse" || data?.label === "porn" || data?.label === "terrorism" || data?.label === "contraband") {
-      return { passed: false, reason: `内容审核未通过：${data.label}` }
+    const blockedLabels = ["spam", "politics", "abuse", "porn", "terrorism", "contraband"]
+    if (data?.label && blockedLabels.includes(data.label)) {
+      return { passed: false, label: data.label, provider: "aliyun", degraded: false }
     }
-    return { passed: true }
+    return { passed: true, label: data?.label, provider: "aliyun", degraded: false }
   } catch (err) {
-    console.warn("[community-audit] 第三方审核异常，降级为本地词库:", err)
+    console.warn("[community-audit] 第三方审核异常,降级为本地词库:", err)
     const words = localWordCheck(text)
-    if (words.length > 0) return { passed: false, reason: `内容包含敏感词` }
-    return { passed: true }
+    if (words.length > 0) {
+      return { passed: false, label: "local_blocklist", provider: "local", degraded: false }
+    }
+    return { passed: true, provider: "local", degraded: true }
   }
 }
 
 // 第三方图片审核
-async function thirdPartyImageAudit(imageUrl: string): Promise<{ passed: boolean; reason?: string }> {
-  // 环境变量未配置时，放行（后端兜底：人工审核 pending 状态的帖子）
+async function thirdPartyImageAudit(imageUrl: string): Promise<AuditResult> {
   if (!process.env.ALIYUN_ACCESS_KEY || !process.env.ALIYUN_SECRET_KEY) {
-    return { passed: true }
+    return { passed: true, provider: "local", degraded: true }
   }
 
   try {
-    const response = await fetch("https://green.aliyuncs.com/green/image/scan", {
+    const body = JSON.stringify({
+      scenes: ["porn", "terrorism"],
+      tasks: [{ url: imageUrl }],
+    })
+    const signature = await generateAliyunSignature("POST", "/green/image/scan", body)
+
+    const response = await fetch("https://green.cn-shanghai.aliyuncs.com/green/image/scan", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `ACS ${process.env.ALIYUN_ACCESS_KEY}:${generateSignature()}`,
+        "Authorization": `acs ${process.env.ALIYUN_ACCESS_KEY}:${signature}`,
+        "X-acs-action": "ImageScan",
+        "X-acs-version": "2022-03-02",
       },
-      body: JSON.stringify({
-        scenes: ["porn", "terrorism"],
-        tasks: [{ url: imageUrl }],
-      }),
+      body,
     })
 
-    if (!response.ok) return { passed: true }
+    if (!response.ok) return { passed: true, provider: "local", degraded: true }
 
     const result = await response.json()
     const data = result?.data?.[0]
     if (data?.label === "porn" || data?.label === "terrorism") {
-      return { passed: false, reason: "图片审核未通过" }
+      return { passed: false, label: data.label, provider: "aliyun", degraded: false }
     }
-    return { passed: true }
+    return { passed: true, label: data?.label, provider: "aliyun", degraded: false }
   } catch {
-    return { passed: true } // 降级放行
+    return { passed: true, provider: "local", degraded: true }
   }
 }
 
-// 简易签名生成（生产环境需使用阿里云 SDK）
-function generateSignature(): string {
-  // 此处为占位符，生产环境应使用 @alicloud/openapi-client SDK
-  return "placeholder-signature"
+// 阿里云 ROA 风格签名(HMAC-SHA1 + Base64)
+async function generateAliyunSignature(method: string, resource: string, body: string): Promise<string> {
+  const crypto = await import("node:crypto")
+  const accessKeySecret = process.env.ALIYUN_SECRET_KEY!
+  const contentType = "application/json"
+  const date = new Date().toUTCString()
+  const md5 = crypto.createHash("md5").update(body).digest("base64")
+
+  const stringToSign = `${method}\n${contentType}\n${md5}\n${date}\n${resource}`
+  const signature = crypto.createHmac("sha1", accessKeySecret)
+    .update(stringToSign)
+    .digest("base64")
+  return signature
 }
 
 // 鉴权
@@ -126,6 +156,16 @@ async function getAuthUser(request: Request, supabase: Awaited<ReturnType<typeof
   return { user: r.data?.user ?? null, error: r.error ?? null }
 }
 
+// 从请求头获取客户端 IP
+function getClientIp(request: Request): string | null {
+  const xff = request.headers.get("x-forwarded-for")
+  if (xff) {
+    const ip = xff.split(",")[0].trim()
+    if (ip) return ip
+  }
+  return request.headers.get("x-real-ip") || null
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
@@ -137,12 +177,10 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { content, imageUrl } = body
 
-    // 至少提供一个
     if (!content && !imageUrl) {
       return NextResponse.json({ error: "content 或 imageUrl 必填" }, { status: 400 })
     }
 
-    // 内容长度限制（防止超大文本耗尽第三方 API 配额 / DoS）
     const MAX_CONTENT_LENGTH = 2000
     if (content && typeof content === "string" && content.length > MAX_CONTENT_LENGTH) {
       return NextResponse.json(
@@ -154,29 +192,93 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "imageUrl 必须为字符串" }, { status: 400 })
     }
 
+    const clientIp = getClientIp(request)
+    const db = createAdminClient()
+
     // 文本审核
     if (content) {
-      const result = await thirdPartyTextAudit(content)
+      // 1. 脱敏后再发送给第三方
+      const sanitizedContent = desensitize(content)
+      // 2. 计算 hash(基于原始内容,与 RPC 内的 hash 一致)
+      const payloadHash = await sha256Hex(content)
+      // 3. 调用审核
+      const result = await thirdPartyTextAudit(sanitizedContent)
+
+      // 4. 写入 third_party_audit_log(使用 service_role,绕过 RLS)
+      const { data: logRow, error: logErr } = await db
+        .from("third_party_audit_log")
+        .insert({
+          profile_id: user.id,
+          audit_type: "text",
+          provider: result.provider,
+          request_payload_hash: payloadHash,
+          response_label: result.label ?? null,
+          response_passed: result.passed,
+        })
+        .select("id")
+        .single()
+
+      if (logErr) {
+        console.error("[community-audit] 写入审计日志失败:", logErr.message)
+      }
+
       if (!result.passed) {
-        // 记录审核日志到 user_behavior_log（不回显具体命中词，防止反向爬词库）
-        const db = createAdminClient()
+        // 同时记录行为日志
         await db.from("user_behavior_log").insert({
           profile_id: user.id,
           event_type: "community_post_rejected",
-          context: { content_preview: content.slice(0, 100), reason: result.reason },
+          context: { content_preview: content.slice(0, 100), reason: "审核未通过" },
           severity: 1,
         })
-        // 客户端只看到通用提示，不暴露具体命中的敏感词
-        return NextResponse.json({ passed: false, reason: "内容审核未通过" })
+        return NextResponse.json({
+          passed: false,
+          reason: "内容审核未通过",
+          audit_token: logRow?.id,
+          client_ip: clientIp,
+        })
       }
+
+      return NextResponse.json({
+        passed: true,
+        audit_token: logRow?.id,
+        degraded: result.degraded,
+        client_ip: clientIp,
+      })
     }
 
     // 图片审核
     if (imageUrl) {
       const result = await thirdPartyImageAudit(imageUrl)
+      const payloadHash = await sha256Hex(imageUrl)
+
+      const { data: logRow } = await db
+        .from("third_party_audit_log")
+        .insert({
+          profile_id: user.id,
+          audit_type: "image",
+          provider: result.provider,
+          request_payload_hash: payloadHash,
+          response_label: result.label ?? null,
+          response_passed: result.passed,
+        })
+        .select("id")
+        .single()
+
       if (!result.passed) {
-        return NextResponse.json({ passed: false, reason: "图片审核未通过" })
+        return NextResponse.json({
+          passed: false,
+          reason: "图片审核未通过",
+          audit_token: logRow?.id,
+          client_ip: clientIp,
+        })
       }
+
+      return NextResponse.json({
+        passed: true,
+        audit_token: logRow?.id,
+        degraded: result.degraded,
+        client_ip: clientIp,
+      })
     }
 
     return NextResponse.json({ passed: true })

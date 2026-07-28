@@ -1,11 +1,11 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { deletePet } from "@/lib/supabase/actions/pet-form-actions"
 import { Button } from "@/components/ui/button"
-import { Trash2, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 export function PetDeleteButton({ petId, petName }: { petId: string; petName: string }) {
@@ -48,9 +48,9 @@ export function PetDeleteButton({ petId, petName }: { petId: string; petName: st
       disabled={deleting}
     >
       {deleting ? (
-        <Loader2 className="size-4 animate-spin" />
+        <EmojiIcon name="Loader2" className="size-4 animate-spin" />
       ) : (
-        <Trash2 className="size-4" />
+        <EmojiIcon name="Trash2" className="size-4" />
       )}
     </Button>
   )

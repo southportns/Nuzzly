@@ -1,10 +1,10 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { Sparkles, User, Loader2, Send } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const suggestions = [
@@ -107,7 +107,7 @@ export function AIChat({ productContext }: { productContext?: string }) {
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       {messages.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center px-4">
-          <Sparkles className="size-12 text-primary mb-4" />
+          <EmojiIcon name="Sparkles" className="size-12 text-primary mb-4" />
           <h2 className="text-xl font-semibold mb-2">AI 宠物营养助手</h2>
           <p className="text-sm text-muted-foreground text-center max-w-md mb-8">
             基于社区真实长期反馈数据，为你的宠物提供个性化推荐与分析
@@ -138,7 +138,7 @@ export function AIChat({ productContext }: { productContext?: string }) {
             >
               {msg.role === "assistant" && (
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15">
-                  <Sparkles className="size-4 text-primary" />
+                  <EmojiIcon name="Sparkles" className="size-4 text-primary" />
                 </div>
               )}
               <div
@@ -149,11 +149,11 @@ export function AIChat({ productContext }: { productContext?: string }) {
                     : "bg-primary/5 border border-emerald-500/10"
                 )}
               >
-                {msg.content || (loading && <Loader2 className="size-4 animate-spin" />)}
+                {msg.content || (loading && <EmojiIcon name="Loader2" className="size-4 animate-spin" />)}
               </div>
               {msg.role === "user" && (
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                  <User className="size-4 text-muted-foreground" />
+                  <EmojiIcon name="User" className="size-4 text-muted-foreground" />
                 </div>
               )}
             </div>
@@ -175,7 +175,7 @@ export function AIChat({ productContext }: { productContext?: string }) {
             disabled={loading}
           />
           <Button type="submit" size="icon" disabled={loading || !input.trim()}>
-            {loading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+            {loading ? <EmojiIcon name="Loader2" className="size-4 animate-spin" /> : <EmojiIcon name="Send" className="size-4" />}
           </Button>
         </form>
         <p className="mt-2 text-xs text-muted-foreground text-center">

@@ -1,12 +1,12 @@
 /**
- * 扫描 fluentui-emoji submodule，生成 web/lib/fluent-emoji-index.json
+ * 扫描 fluentui-emoji submodule，生成 web/public/fluent-emoji-index.json
  * 用法: npx tsx scripts/generate-fluent-emoji-index.ts
  */
 import * as fs from "node:fs"
 import * as path from "node:path"
 
 const ASSETS_DIR = path.resolve(__dirname, "../public/fluentui-emoji/assets")
-const OUTPUT_FILE = path.resolve(__dirname, "../lib/fluent-emoji-index.json")
+const OUTPUT_FILE = path.resolve(__dirname, "../public/fluent-emoji-index.json")
 const IOS_OUTPUT_FILE = path.resolve(__dirname, "../../ios-app-frontend/src/lib/fluent-emoji-index.json")
 
 interface FluentEmojiMetadata {

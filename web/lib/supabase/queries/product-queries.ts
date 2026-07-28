@@ -3,7 +3,7 @@
 // =============================================
 
 // Phase 1.2.2: Migrated to Write Gateway
-import { createClient as createServerClient } from "@/lib/supabase/server"
+import { createClient as createServerClient, createServiceRoleClient } from "@/lib/supabase/server"
 import { getWriteGateway, generateIdempotencyKey } from "@/lib/gateway/write-gateway"
 import type {
   Product,
@@ -142,51 +142,81 @@ export async function queryRiskEvents(productId: string) {
 
 // ── Homepage: Top Cat Food Products ──
 
-export async function queryTopCatFood(limit = 10) {
-  const supabase = await createServerClient()
-  const db = supabase as any
+import { unstable_cache } from "next/cache"
 
-  const { data: products, error } = await db
-    .from("products")
-    .select(`
-      id, name, brand,
-      product_metrics_daily(average_rating, stool_issue_rate, repurchase_rate, review_count),
-      product_categories!inner(slug)
-    `)
-    .eq("is_active", true)
-    .eq("applicable_species", "cats")
-    .order("created_at", { ascending: false })
-    .limit(50)
-
-  if (error || !products) return { data: null, error }
-
-  const processed = products
-    .map((p: any) => {
-      const metrics = p.product_metrics_daily ?? []
-      const latest = metrics[0] ?? {}
-      const avgRating = latest.average_rating ? Number(latest.average_rating).toFixed(1) : "4.0"
-      const stoolRate = latest.stool_issue_rate ? `${(Number(latest.stool_issue_rate) * 100).toFixed(1)}%` : "5.0%"
-      const repurchase = latest.repurchase_rate ? `${(Number(latest.repurchase_rate) * 100).toFixed(0)}%` : "65%"
-      const reviewCount = latest.review_count ?? 0
-      const palatability = latest.average_rating ? `${Math.min(98, Math.round(Number(latest.average_rating) * 20))}%` : "80%"
-
-      return {
-        id: p.id,
-        name: p.name,
-        brand: p.brand,
-        avgRating,
-        stoolRate,
-        repurchase,
-        palatability,
-        reviewCount,
-        compositeScore: Number(avgRating) * 20 + Number(repurchase) - Number(stoolRate) * 5,
-      }
-    })
-    .sort((a: any, b: any) => b.compositeScore - a.compositeScore)
-    .slice(0, limit)
-
-  return { data: processed, error: null }
+// 定义返回类型（替代 any）
+interface TopCatFoodItem {
+  id: string
+  name: string
+  brand: string
+  avgRating: string
+  stoolRate: string
+  repurchase: string
+  palatability: string
+  reviewCount: number
+  compositeScore: number
 }
+
+interface RawProductWithMetrics {
+  id: string
+  name: string
+  brand: string
+  product_metrics_daily: Array<{
+    average_rating: number | null
+    stool_issue_rate: number | null
+    repurchase_rate: number | null
+    review_count: number | null
+  }>
+}
+
+export const queryTopCatFood = unstable_cache(
+  async (limit = 10) => {
+    const supabase = createServiceRoleClient()
+
+    const { data: products, error } = await supabase
+      .from("products")
+      .select(`
+        id, name, brand,
+        product_metrics_daily(average_rating, stool_issue_rate, repurchase_rate, review_count),
+        product_categories!inner(slug)
+      `)
+      .eq("is_active", true)
+      .eq("applicable_species", "cats")
+      .order("created_at", { ascending: false })
+      .limit(50)
+
+    if (error || !products) return null
+
+    const processed = (products as RawProductWithMetrics[])
+      .map((p): TopCatFoodItem => {
+        const metrics = p.product_metrics_daily ?? []
+        const latest = metrics[0] ?? {}
+        const avgRating = latest.average_rating ? Number(latest.average_rating).toFixed(1) : "4.0"
+        const stoolRate = latest.stool_issue_rate ? `${(Number(latest.stool_issue_rate) * 100).toFixed(1)}%` : "5.0%"
+        const repurchase = latest.repurchase_rate ? `${(Number(latest.repurchase_rate) * 100).toFixed(0)}%` : "65%"
+        const reviewCount = latest.review_count ?? 0
+        const palatability = latest.average_rating ? `${Math.min(98, Math.round(Number(latest.average_rating) * 20))}%` : "80%"
+
+        return {
+          id: p.id,
+          name: p.name,
+          brand: p.brand,
+          avgRating,
+          stoolRate,
+          repurchase,
+          palatability,
+          reviewCount,
+          compositeScore: Number(avgRating) * 20 + Number(repurchase) - Number(stoolRate) * 5,
+        }
+      })
+      .sort((a, b) => b.compositeScore - a.compositeScore)
+      .slice(0, limit)
+
+    return processed
+  },
+  ["top-cat-food"],
+  { revalidate: 300, tags: ["products"] }
+)
 
 // ── Bookmarks ──
 

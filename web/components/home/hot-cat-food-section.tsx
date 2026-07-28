@@ -1,7 +1,4 @@
-import Link from "next/link"
-import { ChevronRight } from "lucide-react"
 import { ProductCarousel } from "@/components/home/product-carousel"
-import { queryTopCatFood } from "@/lib/supabase/query"
 
 const fallbackProducts = [
   { id: "1", name: "皇家布偶猫专属粮", brand: "Royal Canin", palatability: "92%", stoolRate: "3.2%", repurchase: "78%", avgRating: "4.6" },
@@ -12,9 +9,8 @@ const fallbackProducts = [
   { id: "6", name: "纽翠斯黑钻猫粮", brand: "Nutrience", palatability: "80%", stoolRate: "4.5%", repurchase: "65%", avgRating: "4.0" },
 ]
 
-export async function HotCatFoodSection() {
-  const { data: dbProducts } = await queryTopCatFood(10)
-  const products = dbProducts ?? fallbackProducts
+export async function HotCatFoodSection({ initialProducts }: { initialProducts?: any[] | null }) {
+  const products = initialProducts ?? fallbackProducts
 
   return (
     <section className="mx-auto max-w-[1440px] px-6 pb-24 md:px-12">
@@ -27,12 +23,6 @@ export async function HotCatFoodSection() {
             基于社区真实反馈数据，每日更新推荐
           </p>
         </div>
-        <Link
-          href="/products"
-          className="flex items-center gap-0.5 text-[15px] font-medium text-[#FF7A59] transition-colors hover:text-[#E86A4A]"
-        >
-          查看全部 <ChevronRight className="size-4" />
-        </Link>
       </div>
 
       <div className="mt-8">

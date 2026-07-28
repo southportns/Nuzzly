@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { EmojiIcon } from "@/components/ui/emoji-icon"
+import { FluentEmoji } from "@/components/ui/fluent-emoji"
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback, useMemo, memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, Send, Sparkles, User, PawPrint, Clock, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Mascot3D } from "./mascot-3d"
 import { useAuth } from "@/hooks/use-auth"
@@ -12,15 +13,14 @@ import ReactMarkdown from "react-markdown"
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize"
 import { rehypeFluentEmoji } from "@/lib/rehype-fluent-emoji"
 
-// rehype-sanitize 自定义 schema：在默认白名单基础上保留 Fluent Emoji 渲染所需的 img 标签属性
-// 默认 schema 已禁用 script/iframe/style/raw HTML，可有效防止 AI 输出 XSS
+// ── Static config (module-level, created once) ───────────────────────────────
+
 const sanitizeSchema = {
   ...defaultSchema,
   attributes: {
     ...defaultSchema.attributes,
     img: ["src", "alt", "width", "height", "loading", "className", "class"],
   },
-  // 显式禁用所有 javascript: 协议（默认 schema 已禁，这里强化）
   protocols: {
     ...defaultSchema.protocols,
     src: ["http", "https"],
@@ -28,7 +28,6 @@ const sanitizeSchema = {
   },
 }
 
-// Markdown 渲染样式：让 AI 回复的标题、列表、加粗等格式清晰呈现
 const markdownComponents: import("react-markdown").Components = {
   h1: ({ children }) => (
     <h1 className="text-[16px] font-bold text-[#111111] mt-4 mb-2 leading-tight">{children}</h1>
@@ -74,10 +73,37 @@ const markdownComponents: import("react-markdown").Components = {
   pre: ({ children }) => (
     <pre className="bg-[#F0EFED] rounded-xl p-3 overflow-x-auto text-[12px] my-2">{children}</pre>
   ),
+  img: ({ src, alt, width, height, className }) => {
+    const rawClass = className as string | string[] | undefined
+    const resolvedClass =
+      typeof rawClass === "string"
+        ? rawClass
+        : Array.isArray(rawClass)
+          ? rawClass.join(" ")
+          : ""
+    return (
+      <img
+        src={src}
+        alt={alt ?? ""}
+        width={width ?? 16}
+        height={height ?? 16}
+        loading="lazy"
+        className={resolvedClass || "inline-block size-4 object-contain align-text-bottom mx-0.5"}
+        onError={(e) => {
+          const target = e.target as HTMLImageElement
+          target.style.display = "none"
+        }}
+      />
+    )
+  },
 }
 
-// Logo avatar for assistant messages
-function AssistantAvatar() {
+// Stable rehypePlugins reference (created once)
+const rehypePlugins = [[rehypeSanitize, sanitizeSchema], rehypeFluentEmoji] as const
+
+// ── Static sub-components ────────────────────────────────────────────────────
+
+const AssistantAvatar = memo(function AssistantAvatar() {
   return (
     <img
       src="/logo.png"
@@ -85,13 +111,81 @@ function AssistantAvatar() {
       className="size-8 shrink-0 rounded-full object-cover shadow-[0_2px_8px_rgba(255,122,89,0.2)]"
     />
   )
+})
+
+const ThinkingIndicator = memo(function ThinkingIndicator() {
+  return (
+    <div className="flex items-center gap-2 py-0.5 text-[#A0A09E]">
+      <EmojiIcon name="PawPrint" className="size-4 text-[#FF7A59] animate-bounce" />
+      <span className="text-[13px]">球球正在思考中</span>
+      <span className="flex gap-0.5">
+        <span className="size-1 rounded-full bg-[#FFB89A] animate-bounce" style={{ animationDelay: "0ms" }} />
+        <span className="size-1 rounded-full bg-[#FFB89A] animate-bounce" style={{ animationDelay: "150ms" }} />
+        <span className="size-1 rounded-full bg-[#FFB89A] animate-bounce" style={{ animationDelay: "300ms" }} />
+      </span>
+    </div>
+  )
+})
+
+// ── Individual message item (memoized – skips re-render if content unchanged) ─
+
+interface ChatMessageItemProps {
+  role: "user" | "assistant"
+  content: string
+  isLoading: boolean
+  userAvatar: string | null
 }
 
+const ChatMessageItem = memo(function ChatMessageItem({ role, content, isLoading, userAvatar }: ChatMessageItemProps) {
+  return (
+    <div
+      className={cn(
+        "flex gap-3",
+        role === "user" ? "justify-end pr-5" : "justify-start"
+      )}
+    >
+      {role === "assistant" && <AssistantAvatar />}
+      <div
+        className={cn(
+          "rounded-2xl px-4 py-3 text-[14px] leading-[1.7] max-w-[80%] shadow-sm",
+          role === "user"
+            ? "bg-gradient-to-br from-[#FFB89A] to-[#FF7A59] text-white rounded-tr-md"
+            : "bg-white border border-[rgba(0,0,0,0.05)] text-[#333333] rounded-tl-md"
+        )}
+      >
+        {role === "assistant" ? (
+          content ? (
+            <ReactMarkdown
+              components={markdownComponents}
+              rehypePlugins={rehypePlugins as any}
+            >
+              {content}
+            </ReactMarkdown>
+          ) : isLoading ? (
+            <ThinkingIndicator />
+          ) : null
+        ) : (
+          <span className="whitespace-pre-wrap">{content}</span>
+        )}
+      </div>
+      {role === "user" && (
+        <img
+          src={userAvatar || "/zdytoux.png"}
+          alt="我"
+          className="size-8 shrink-0 rounded-full object-cover bg-[#F0EFED]"
+        />
+      )}
+    </div>
+  )
+})
+
+// ── Constants ────────────────────────────────────────────────────────────────
+
 const welcomeSuggestions = [
-  { text: "5岁布偶猫肠胃敏感，应该选什么猫粮？", icon: PawPrint },
-  { text: "如何判断猫粮的蛋白质来源是否优质？", icon: Sparkles },
-  { text: "渴望六种鱼和爱肯拿农场盛宴哪个好？", icon: Sparkles },
-  { text: "无谷猫粮真的比有谷猫粮好吗？", icon: Sparkles },
+  "5岁布偶猫肠胃敏感，应该选什么猫粮？",
+  "如何判断猫粮的蛋白质来源是否优质？",
+  "渴望六种鱼和爱肯拿农场盛宴哪个好？",
+  "无谷猫粮真的比有谷猫粮好吗？",
 ]
 
 interface ChatMessage {
@@ -99,8 +193,15 @@ interface ChatMessage {
   content: string
 }
 
-export function AIChatNew({ productContext }: { productContext?: string }) {
-  console.log("[AIChatNew] rendered")
+export interface AIChatNewRef {
+  openHistory: () => void
+  newChat: () => void
+}
+
+// ── Main component ───────────────────────────────────────────────────────────
+
+export const AIChatNew = forwardRef<AIChatNewRef, { productContext?: string }>(
+  function AIChatNew({ productContext }, ref) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
@@ -151,6 +252,18 @@ export function AIChatNew({ productContext }: { productContext?: string }) {
     loadHistory()
   }
 
+  function newChat() {
+    setMessages([])
+    setInput("")
+    setLoading(false)
+    setHistoryOpen(false)
+  }
+
+  useImperativeHandle(ref, () => ({
+    openHistory,
+    newChat,
+  }))
+
   function loadHistoryItem(item: { user_message: string; ai_response: string }) {
     setMessages([
       { role: "user", content: item.user_message },
@@ -159,17 +272,32 @@ export function AIChatNew({ productContext }: { productContext?: string }) {
     setHistoryOpen(false)
   }
 
+  async function deleteHistoryItem(id: string) {
+    try {
+      const res = await fetch("/api/ai/chat/history", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      })
+      if (res.ok) {
+        setHistoryItems((prev) => prev.filter((item) => item.id !== id))
+      }
+    } catch {}
+  }
+
   useEffect(() => {
     messagesEnd.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  async function sendMessage(content: string) {
+  const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || loading) return
 
     const newMessages = [...messages, { role: "user" as const, content }]
     setMessages(newMessages)
     setInput("")
     setLoading(true)
+
+    setMessages((prev) => [...prev, { role: "assistant", content: "" }])
 
     try {
       const response = await fetch("/api/ai/chat", {
@@ -183,10 +311,14 @@ export function AIChatNew({ productContext }: { productContext?: string }) {
 
       if (!response.ok) {
         const err = await response.json()
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: `出错了：${err.error ?? "请稍后重试"}` },
-        ])
+        setMessages((prev) => {
+          const updated = [...prev]
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: `出错了：${err.error ?? "请稍后重试"}`,
+          }
+          return updated
+        })
         setLoading(false)
         return
       }
@@ -194,8 +326,6 @@ export function AIChatNew({ productContext }: { productContext?: string }) {
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
       let assistantContent = ""
-
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }])
 
       if (reader) {
         while (true) {
@@ -228,81 +358,128 @@ export function AIChatNew({ productContext }: { productContext?: string }) {
         }
       }
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "连接失败，请检查 AI 服务配置。" },
-      ])
+      setMessages((prev) => {
+        const updated = [...prev]
+        updated[updated.length - 1] = {
+          role: "assistant",
+          content: "连接失败，请检查 AI 服务配置。",
+        }
+        return updated
+      })
     }
 
     setLoading(false)
-  }
+  }, [messages, loading, productContext])
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value)
+  }, [])
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage(input)
+    }
+  }, [sendMessage, input])
+
+  const handleFormSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault()
+    sendMessage(input)
+  }, [sendMessage, input])
 
   const hasMessages = messages.length > 0
 
+  // Memoize message list to avoid re-processing markdown on unrelated state changes
+  const messageList = useMemo(() => {
+    if (!hasMessages) return null
+    return messages.map((msg, i) => (
+      <ChatMessageItem
+        key={`${msg.role}-${i}`}
+        role={msg.role}
+        content={msg.content}
+        isLoading={loading}
+        userAvatar={userAvatar}
+      />
+    ))
+  }, [messages, loading, userAvatar, hasMessages])
+
   return (
     <div className="flex flex-col h-full relative">
-      {/* History button - top right */}
-      <button
-        onClick={openHistory}
-        className="absolute top-4 right-4 z-10 flex items-center gap-1.5 rounded-xl border border-[rgba(0,0,0,0.06)] bg-white/80 backdrop-blur-sm px-3 py-2 text-[12px] font-medium text-[#6B6B6B] transition-all hover:border-[#FFB89A]/40 hover:bg-white hover:text-[#FF7A59]"
-      >
-        <Clock className="size-3.5" />
-        历史记录
-      </button>
-
       {/* History panel */}
       {historyOpen && (
         <div className="absolute inset-0 z-20 flex">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/10 backdrop-blur-[2px]"
             onClick={() => setHistoryOpen(false)}
           />
-          {/* Panel */}
           <div className="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-[−8px_0_30px_rgba(0,0,0,0.08)] rounded-l-2xl flex flex-col overflow-hidden">
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-[rgba(0,0,0,0.06)] px-4 py-3">
               <div className="flex items-center gap-2">
-                <Clock className="size-4 text-[#FF7A59]" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" className="text-[#FF7A59]">
+                  <path d="M9,1c-2.488,0-4.774,1.157-6.268,3.048l-.117-.846c-.058-.41-.442-.696-.846-.64-.411,.057-.697,.436-.641,.846l.408,2.945c.053,.375,.374,.647,.742,.647,.034,0,.069-.002,.104-.007l2.944-.407c.41-.057,.697-.436,.641-.846-.057-.411-.443-.694-.846-.641l-1.448,.2c1.199-1.727,3.168-2.8,5.326-2.8,3.397,0,6.245,2.651,6.483,6.037,.027,.395,.357,.697,.747,.697,.018,0,.036,0,.054-.002,.413-.029,.725-.388,.695-.801-.293-4.167-3.798-7.431-7.979-7.431Z" fill="currentColor" />
+                  <circle cx="14.127" cy="14.126" r=".75" fill="currentColor" />
+                  <circle cx="9" cy="16.25" r=".75" fill="currentColor" />
+                  <circle cx="3.873" cy="14.126" r=".75" fill="currentColor" />
+                  <circle cx="1.75" cy="9" r=".75" fill="currentColor" />
+                  <path d="M15.985,11.082c-.383-.159-.821,.023-.98,.406-.159,.383,.023,.821,.406,.98s.821-.023,.98-.406-.023-.821-.406-.98Z" fill="currentColor" />
+                  <path d="M11.487,15.005c-.383,.158-.564,.597-.406,.98,.159,.382,.597,.564,.98,.406s.564-.597,.406-.98-.597-.564-.98-.406Z" fill="currentColor" />
+                  <path d="M6.513,15.005c-.383-.159-.821,.023-.98,.406s.023,.821,.406,.98,.821-.023,.98-.406c.159-.383-.023-.822-.406-.98Z" fill="currentColor" />
+                  <path d="M2.015,11.082c-.383,.159-.564,.597-.406,.98s.597,.564,.98,.406,.564-.597,.406-.98c-.159-.383-.597-.564-.98-.406Z" fill="currentColor" />
+                </svg>
                 <span className="text-[14px] font-semibold text-[#111111]">历史记录</span>
               </div>
               <button
                 onClick={() => setHistoryOpen(false)}
                 className="flex size-7 items-center justify-center rounded-lg text-[#6B6B6B] hover:bg-[#F0EFED] transition-colors"
               >
-                <X className="size-4" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" className="text-current">
+                  <rect x="11" y="1.101" width="2" height="21.799" transform="translate(-4.971 12) rotate(-45)" fill="currentColor" />
+                  <rect x="1.101" y="11" width="21.799" height="2" transform="translate(-4.971 12) rotate(-45)" fill="currentColor" />
+                </svg>
               </button>
             </div>
 
-            {/* History list */}
             <div className="flex-1 overflow-y-auto">
               {historyLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="size-5 animate-spin text-[#FF7A59]" />
+                  <EmojiIcon name="Loader2" className="size-5 animate-spin text-[#FF7A59]" />
                 </div>
               ) : historyItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-4">
-                  <Clock className="size-8 text-[#D2D1CF] mb-2" />
+                  <EmojiIcon name="Clock" className="size-8 text-[#D2D1CF] mb-2" />
                   <p className="text-[13px] text-[#A0A09E]">暂无历史记录</p>
                 </div>
               ) : (
                 <div className="p-2 space-y-1">
                   {historyItems.map((item) => (
-                    <button
+                    <div
                       key={item.id}
-                      onClick={() => loadHistoryItem(item)}
-                      className="w-full text-left rounded-xl px-3 py-3 transition-all hover:bg-[#F7F6F3] group"
+                      className="flex items-start gap-2 rounded-xl px-3 py-3 transition-all hover:bg-[#F7F6F3] group"
                     >
-                      <p className="text-[12px] font-medium text-[#111111] truncate group-hover:text-[#FF7A59]">
-                        {item.user_message}
-                      </p>
-                      <p className="text-[11px] text-[#A0A09E] mt-1 line-clamp-2">
-                        {item.ai_response.slice(0, 80)}...
-                      </p>
-                      <p className="text-[10px] text-[#D2D1CF] mt-1">
-                        {new Date(item.created_at).toLocaleString("zh-CN")}
-                      </p>
-                    </button>
+                      <button
+                        onClick={() => loadHistoryItem(item)}
+                        className="flex-1 text-left min-w-0"
+                      >
+                        <p className="text-[12px] font-medium text-[#111111] truncate group-hover:text-[#FF7A59]">
+                          {item.user_message}
+                        </p>
+                        <p className="text-[10px] text-[#D2D1CF] mt-1">
+                          {new Date(item.created_at).toLocaleString("zh-CN")}
+                        </p>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          deleteHistoryItem(item.id)
+                        }}
+                        className="shrink-0 mt-0.5 p-1 rounded-md text-[#B0B0AE] hover:text-[#FF7A59] hover:bg-[#FFE8DF] transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="14" height="14" viewBox="0 0 18 18">
+                          <path d="M4,14.75c-.192,0-.384-.073-.53-.22-.293-.293-.293-.768,0-1.061L13.47,3.47c.293-.293,.768-.293,1.061,0s.293,.768,0,1.061L4.53,14.53c-.146,.146-.338,.22-.53,.22Z" fill="currentColor"/>
+                          <path d="M14,14.75c-.192,0-.384-.073-.53-.22L3.47,4.53c-.293-.293-.293-.768,0-1.061s.768-.293,1.061,0L14.53,13.47c.293,.293,.293,.768,0,1.061-.146,.146-.338,.22-.53,.22Z" fill="currentColor"/>
+                        </svg>
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -322,36 +499,30 @@ export function AIChatNew({ productContext }: { productContext?: string }) {
             基于社区真实长期反馈数据，为你的宠物提供个性化产品推荐与营养分析
           </p>
 
-          {/* Suggestion chips */}
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-2xl">
-            {welcomeSuggestions.map((s, i) => (
+            {welcomeSuggestions.map((text, i) => (
               <button
-                key={s.text}
-                onClick={() => sendMessage(s.text)}
+                key={text}
+                onClick={() => sendMessage(text)}
                 className="group flex items-start gap-2.5 rounded-2xl border border-[rgba(0,0,0,0.05)] bg-white/80 backdrop-blur-sm px-4 py-3 text-left transition-all duration-200 hover:border-[#FFB89A]/40 hover:bg-white hover:shadow-[0_4px_16px_rgba(255,122,89,0.08)] hover:-translate-y-0.5"
                 style={{ animationDelay: `${i * 80}ms` }}
               >
-                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#FFB89A]/20 to-[#FF7A59]/10 mt-0.5 transition-colors group-hover:from-[#FFB89A]/30 group-hover:to-[#FF7A59]/20">
-                  <s.icon className="size-3.5 text-[#FF7A59]" />
-                </div>
+                <FluentEmoji
+                  name="orange circle"
+                  size={14}
+                  className="mt-0.5 shrink-0 drop-shadow-[0_1px_2px_rgba(255,122,89,0.3)]"
+                />
                 <span className="text-[13px] leading-relaxed text-[#444444] group-hover:text-[#111111] whitespace-nowrap overflow-hidden text-ellipsis">
-                  {s.text}
+                  {text}
                 </span>
               </button>
             ))}
           </div>
 
-          {/* Quick feature hints */}
           <div className="mt-6 flex items-center gap-4 text-[11px] text-[#A0A09E]">
-            <span className="flex items-center gap-1">
-              <Sparkles className="size-3 text-[#FF7A59]" />
-              智能推荐
-            </span>
+            <span>智能推荐</span>
             <span className="w-1 h-1 rounded-full bg-[#D2D1CF]" />
-            <span className="flex items-center gap-1">
-              <PawPrint className="size-3 text-[#A8C5A0]" />
-              成分分析
-            </span>
+            <span>成分分析</span>
             <span className="w-1 h-1 rounded-full bg-[#D2D1CF]" />
             <span>产品对比</span>
           </div>
@@ -360,53 +531,7 @@ export function AIChatNew({ productContext }: { productContext?: string }) {
         /* Chat Messages */
         <div className="flex-1 overflow-y-auto px-6 py-6 md:px-12">
           <div className="mx-auto max-w-4xl space-y-5">
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "flex gap-3",
-                  msg.role === "user" ? "justify-end pr-5" : "justify-start"
-                )}
-              >
-                {msg.role === "assistant" && (
-                  <AssistantAvatar />
-                )}
-                <div
-                  className={cn(
-                    "rounded-2xl px-4 py-3 text-[14px] leading-[1.7] max-w-[80%] shadow-sm",
-                    msg.role === "user"
-                      ? "bg-gradient-to-br from-[#FFB89A] to-[#FF7A59] text-white rounded-tr-md"
-                      : "bg-white border border-[rgba(0,0,0,0.05)] text-[#333333] rounded-tl-md"
-                  )}
-                >
-                  {msg.role === "assistant" ? (
-                    msg.content ? (
-                      <ReactMarkdown
-                        components={markdownComponents}
-                        rehypePlugins={[[rehypeSanitize, sanitizeSchema], rehypeFluentEmoji]}
-                      >
-                        {msg.content}
-                      </ReactMarkdown>
-                    ) : loading ? (
-                      <div className="flex items-center gap-1.5 py-0.5">
-                        <span className="size-1.5 rounded-full bg-[#FFB89A] animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="size-1.5 rounded-full bg-[#FFB89A] animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <span className="size-1.5 rounded-full bg-[#FFB89A] animate-bounce" style={{ animationDelay: "300ms" }} />
-                      </div>
-                    ) : null
-                  ) : (
-                    <span className="whitespace-pre-wrap">{msg.content}</span>
-                  )}
-                </div>
-                {msg.role === "user" && (
-                  <img
-                    src={userAvatar || "/zdytoux.png"}
-                    alt="我"
-                    className="size-8 shrink-0 rounded-full object-cover bg-[#F0EFED]"
-                  />
-                )}
-              </div>
-            ))}
+            {messageList}
             <div ref={messagesEnd} />
           </div>
         </div>
@@ -415,22 +540,17 @@ export function AIChatNew({ productContext }: { productContext?: string }) {
       {/* Input Bar */}
       <div className="border-t border-[rgba(0,0,0,0.04)] bg-white/40 backdrop-blur-sm px-6 py-4 md:px-12">
         <form
-          onSubmit={(e) => { e.preventDefault(); sendMessage(input) }}
+          onSubmit={handleFormSubmit}
           className="mx-auto max-w-4xl"
         >
           <div className="flex items-end gap-2 rounded-2xl border border-[rgba(0,0,0,0.06)] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.04)] px-4 py-2.5 transition-all focus-within:border-[#FFB89A]/50 focus-within:shadow-[0_4px_20px_rgba(255,122,89,0.1)]">
             <Input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               placeholder="问我任何关于宠物食品的问题…"
-              className="flex-1 border-0 bg-transparent shadow-none text-[14px] focus-visible:ring-0 px-0 py-0 placeholder:text-[#B0B0AE]"
+              className="flex-1 border-0 bg-transparent shadow-none text-[14px] focus-visible:ring-0 pl-5 pr-0 py-0 placeholder:text-[#B0B0AE]"
               disabled={loading}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  sendMessage(input)
-                }
-              }}
+              onKeyDown={handleKeyDown}
             />
             <Button
               type="submit"
@@ -443,7 +563,11 @@ export function AIChatNew({ productContext }: { productContext?: string }) {
                   : "bg-[#F0EFED] text-[#B0B0AE] hover:bg-[#E5E4E2]"
               )}
             >
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              {loading ? <EmojiIcon name="Loader2" className="size-4 animate-spin" /> : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                  <path d="M3.474,2.784L14.897,6.958c.481,.176,.467,.861-.021,1.018l-5.228,1.673-1.673,5.228c-.156,.488-.842,.502-1.018,.021L2.784,3.474c-.157-.43,.26-.847,.69-.69Z" fill="none" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+                </svg>
+              )}
             </Button>
           </div>
           <p className="mt-2.5 text-center text-[10.5px] text-[#B0B0AE]">
@@ -453,4 +577,4 @@ export function AIChatNew({ productContext }: { productContext?: string }) {
       </div>
     </div>
   )
-}
+})

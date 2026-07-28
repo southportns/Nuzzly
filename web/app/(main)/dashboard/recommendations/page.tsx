@@ -1,5 +1,5 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { redirect } from "next/navigation"
-import { ThumbsUp, ThumbsDown, Eye, MousePointerClick } from "lucide-react"
 import { getUser } from "@/lib/supabase/query"
 import { createClient } from "@/lib/supabase/server"
 
@@ -7,11 +7,11 @@ export const metadata = {
   title: "推荐反馈 — Nuzzly毛球镇",
 }
 
-const eventMeta: Record<string, { label: string; icon: typeof ThumbsUp; color: string }> = {
-  accept: { label: "采纳推荐", icon: ThumbsUp, color: "text-[#FF7A59] bg-[#FF7A59]/10" },
-  reject: { label: "拒绝推荐", icon: ThumbsDown, color: "text-[#ff3b30] bg-[#ff3b30]/10" },
-  click: { label: "点击查看", icon: MousePointerClick, color: "text-[#7BA7BC] bg-[#7BA7BC]/10" },
-  view: { label: "浏览", icon: Eye, color: "text-[#6B6B6B] bg-[#6B6B6B]/10" },
+const eventMeta: Record<string, { label: string; iconName: string; color: string }> = {
+  accept: { label: "采纳推荐", iconName: "ThumbsUp", color: "text-[#FF7A59] bg-[#FF7A59]/10" },
+  reject: { label: "拒绝推荐", iconName: "ThumbsDown", color: "text-[#ff3b30] bg-[#ff3b30]/10" },
+  click: { label: "点击查看", iconName: "MousePointerClick", color: "text-[#7BA7BC] bg-[#7BA7BC]/10" },
+  view: { label: "浏览", iconName: "Eye", color: "text-[#6B6B6B] bg-[#6B6B6B]/10" },
 }
 
 export default async function RecommendationsPage() {
@@ -69,12 +69,11 @@ export default async function RecommendationsPage() {
           <ul className="divide-y divide-[#F0EFED]">
             {events.map((e) => {
               const meta = eventMeta[e.event_type] ?? eventMeta.view
-              const Icon = meta.icon
               return (
                 <li key={e.id} className="flex items-center justify-between py-3">
                   <span className="flex items-center gap-3">
                     <span className={`flex size-8 items-center justify-center rounded-full ${meta.color}`}>
-                      <Icon className="size-3.5" />
+                      <EmojiIcon name={meta.iconName} className="size-3.5" />
                     </span>
                     <span className="flex flex-col">
                       <span className="text-[14px] font-medium text-[#111111]">{meta.label}</span>
@@ -92,7 +91,7 @@ export default async function RecommendationsPage() {
           </ul>
         ) : (
           <div className="py-12 text-center">
-            <Eye className="mx-auto size-10 text-[#D2D1CF]" />
+            <EmojiIcon name="MessageSquare" className="mx-auto size-10 text-[#D2D1CF]" />
             <p className="mt-3 text-[14px] text-[#6B6B6B]">暂无推荐反馈记录</p>
             <p className="mt-1 text-[12px] text-[#D2D1CF]">与推荐卡片互动后会自动记录</p>
           </div>

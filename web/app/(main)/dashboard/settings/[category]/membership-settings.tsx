@@ -1,5 +1,4 @@
 import { SettingsCard } from "@/components/settings/settings-card"
-import { Star } from "lucide-react"
 
 export default function MembershipSettings() {
   return (

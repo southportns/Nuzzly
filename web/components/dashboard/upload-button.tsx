@@ -1,7 +1,7 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState, useRef } from "react"
-import { Upload, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 interface Props {
@@ -58,9 +58,9 @@ export function UploadButton({ petId }: Props) {
         className="flex items-center gap-2 rounded-full bg-[#FF7A59] px-4 py-2 text-[14px] font-medium text-white hover:bg-[#FF6A49] disabled:opacity-50"
       >
         {uploading ? (
-          <Loader2 className="size-4 animate-spin" />
+          <EmojiIcon name="Loader2" className="size-4 animate-spin" />
         ) : (
-          <Upload className="size-4" />
+          <EmojiIcon name="Upload" className="size-4" />
         )}
         上传文件
       </button>

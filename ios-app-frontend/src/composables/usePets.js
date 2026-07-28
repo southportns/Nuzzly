@@ -21,7 +21,7 @@ async function fetchPets() {
 
   const { data, error } = await supabase
     .from('pets')
-    .select('id, name, species, breed, age_years, age_months, gender, weight_kg, neutered, stomach_health, photo_url, avatar_url, is_active')
+    .select('id, name, species, breed, age_years, age_months, gender, weight_kg, neutered, stomach_health, photo_url, avatar_url, is_active, life_stage')
     .eq('profile_id', uid)
     .eq('is_active', true)
     .order('created_at')

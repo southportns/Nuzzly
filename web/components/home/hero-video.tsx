@@ -1,8 +1,8 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Play } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useAuth } from "@/hooks/use-auth"
 
@@ -10,7 +10,7 @@ export function HeroVideo({ petCount = 0 }: { petCount?: number }) {
   const { user } = useAuth()
   const videoRef = useRef<HTMLVideoElement>(null)
   const [hasEnded, setHasEnded] = useState(false)
-  const [videoError, setVideoError] = useState(false)
+  const [videoLoaded, setVideoLoaded] = useState(false)
   const [displayCount, setDisplayCount] = useState(0)
   const finalCount = petCount + 55029
 
@@ -43,32 +43,33 @@ export function HeroVideo({ petCount = 0 }: { petCount?: number }) {
     }
   }, [])
 
-  const handleVideoError = useCallback(() => {
-    setVideoError(true)
+  const handleVideoCanPlay = useCallback(() => {
+    setVideoLoaded(true)
   }, [])
 
   return (
     <div className="relative aspect-[2.5/1] w-full">
+      {/* LCP element: static image loads immediately */}
+      <img
+        src="/hero-background.png"
+        alt="Nuzzly town"
+        fetchPriority="high"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      {/* Video loads in background, covers image when ready */}
       <video
         ref={videoRef}
         src="/nuzzly-town.mp4"
-        poster="/hero-background.png"
         autoPlay
         muted
         playsInline
-        preload="metadata"
-        className="absolute inset-0 h-full w-full object-cover"
+        preload="auto"
+        onCanPlay={handleVideoCanPlay}
         onEnded={() => setHasEnded(true)}
-        onError={handleVideoError}
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
+          videoLoaded ? "opacity-100" : "opacity-0"
+        }`}
       />
-      {/* Fallback: show poster image if video fails to load */}
-      {videoError && (
-        <img
-          src="/hero-background.png"
-          alt="Nuzzly town"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      )}
 
       {/* Warm gradient overlay */}
       <div className="absolute inset-0 z-[5] bg-gradient-to-r from-[#3D2817]/60 via-[#3D2817]/30 to-transparent" />
@@ -102,9 +103,7 @@ export function HeroVideo({ petCount = 0 }: { petCount?: number }) {
       {/* Floating Data Card */}
       <div className="absolute right-[15%] top-[30%] z-20 hidden rounded-[14px] bg-[#3D2817]/70 backdrop-blur-xl px-4 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10 md:block lg:right-[18%]">
         <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#FFB59E] flex-shrink-0 mt-0.5">
-            <path d="M2 10L5 6L8 8L14 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <EmojiIcon name="Check" size={14} className="flex-shrink-0 mt-0.5" />
           <span className="text-[12px] text-white/80 leading-none">累计追踪</span>
           <span className="text-[14px] font-semibold text-white leading-none">{displayCount.toLocaleString()}+</span>
           <span className="text-[12px] text-white/80 leading-none">只猫咪</span>
@@ -115,9 +114,19 @@ export function HeroVideo({ petCount = 0 }: { petCount?: number }) {
       {hasEnded && (
         <button
           onClick={handleReplay}
-          className="absolute bottom-6 right-6 z-20 flex size-12 items-center justify-center rounded-full bg-white/90 shadow-[0_4px_16px_rgba(0,0,0,0.15)] backdrop-blur-sm transition-all hover:scale-110 hover:bg-white"
+          className="absolute bottom-6 right-6 z-20 flex size-12 items-center justify-center rounded-full bg-white/60 text-[#FF7A59] shadow-[0_4px_16px_rgba(0,0,0,0.15)] backdrop-blur-sm transition-all hover:scale-110 hover:bg-white/80"
         >
-          <Play className="size-5 fill-[#8B5E46] text-[#8B5E46] ml-0.5" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 18 18" className="ml-0.5">
+            <path d="M12.031,10.08c.388-.227,.62-.63,.62-1.08s-.232-.853-.62-1.08c0,0,0,0,0,0l-3.651-2.129c-.387-.226-.866-.226-1.252-.004-.387,.223-.627,.638-.627,1.084v4.259c0,.446,.24,.861,.627,1.084,.192,.11,.407,.166,.623,.166,.218,0,.436-.057,.63-.169l3.651-2.13Z" fill="currentColor" />
+            <path d="M9,1c-.414,0-.75,.336-.75,.75s.336,.75,.75,.75c3.584,0,6.5,2.916,6.5,6.5s-2.916,6.5-6.5,6.5c-.414,0-.75,.336-.75,.75s.336,.75,.75,.75c4.411,0,8-3.589,8-8S13.411,1,9,1Z" fill="currentColor" />
+            <path d="M3.343,13.596c-.293,.293-.293,.768,0,1.061,.293,.293,.768,.293,1.061,0,.293-.293,.293-.768,0-1.061s-.768-.293-1.061,0Z" fill="currentColor" />
+            <circle cx="1.75" cy="9" r=".75" fill="currentColor" />
+            <path d="M3.343,3.343c-.293,.293-.293,.768,0,1.061s.768,.293,1.061,0,.293-.768,0-1.061c-.293-.293-.768-.293-1.061,0Z" fill="currentColor" />
+            <path d="M6.513,15.005c-.383-.158-.821,.023-.98,.406-.159,.383,.023,.821,.406,.98,.383,.158,.821-.023,.98-.406s-.023-.822-.406-.98Z" fill="currentColor" />
+            <path d="M2.015,11.082c-.383,.158-.564,.597-.406,.98,.159,.383,.597,.564,.98,.406,.383-.158,.564-.597,.406-.98-.159-.383-.597-.564-.98-.406Z" fill="currentColor" />
+            <path d="M2.589,5.533c-.383-.159-.821,.023-.98,.406-.159,.383,.023,.822,.406,.98,.383,.158,.821-.023,.98-.406,.159-.383-.023-.821-.406-.98Z" fill="currentColor" />
+            <path d="M6.513,2.995c.383-.158,.564-.597,.406-.98-.159-.383-.597-.564-.98-.406-.383,.159-.564,.597-.406,.98s.597,.564,.98,.406Z" fill="currentColor" />
+          </svg>
         </button>
       )}
     </div>

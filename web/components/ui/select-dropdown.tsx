@@ -1,8 +1,8 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
-import { Check, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export interface SelectOption {
@@ -62,12 +62,16 @@ export function SelectDropdown({
             {selected ? selected.label : placeholder}
           </span>
         </span>
-        <ChevronDown
+        <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="18px" height="18px" viewBox="0 0 18 18"
           className={cn(
             "size-4 shrink-0 text-[#6B6B6B] transition-transform duration-200",
             open && "rotate-180 text-[#FF7A59]"
           )}
-        />
+        >
+          <g data-transform-wrapper="on" transform="translate(18 0) scale(-1 1)">
+            <path d="M9,13.5c-.192,0-.384-.073-.53-.22L2.22,7.03c-.293-.293-.293-.768,0-1.061s.768-.293,1.061,0l5.72,5.72,5.72-5.72c.293-.293,.768-.293,1.061,0s.293,.768,0,1.061l-6.25,6.25c-.146,.146-.338,.22-.53,.22Z" fill="currentColor" />
+          </g>
+        </svg>
       </PopoverPrimitive.Trigger>
 
       <PopoverPrimitive.Portal>
@@ -112,7 +116,7 @@ export function SelectDropdown({
                     )}
                   </span>
                   {isActive && (
-                    <Check className="size-4 shrink-0 text-[#FF7A59]" strokeWidth={2.5} />
+                    <EmojiIcon name="Check" className="size-4 shrink-0 text-[#FF7A59]" />
                   )}
                 </button>
               )

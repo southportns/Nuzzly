@@ -28,6 +28,7 @@ export default async function DashboardLayout({
       email={user.email}
       avatarUrl={avatarUrl}
       userNumber={userNumber ? String(userNumber) : null}
+      profile={profile}
     >
       {children}
     </DashboardLayoutClient>

@@ -1,9 +1,9 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Utensils } from "lucide-react"
 
 interface DietTrendChartProps {
   petId: string
@@ -62,7 +62,7 @@ export function DietTrendChart({ petId }: DietTrendChartProps) {
     <Card className="rounded-[16px] border-[rgba(0,0,0,0.05)] bg-white">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Utensils className="size-4 text-[#FF7A59]" />
+          <EmojiIcon name="Utensils" className="size-4 text-[#FF7A59]" />
           饮食趋势
         </CardTitle>
       </CardHeader>

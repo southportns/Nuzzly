@@ -15,7 +15,7 @@ async function fetchReports(status = 'pending', limit = 50) {
 
   const { data, error } = await supabase
     .from('community_reports')
-    .select('*, community_posts(content, profile_id), profiles(display_name)')
+    .select('*, community_posts(content, profile_id), public_profiles(display_name)')
     .eq('status', status)
     .order('created_at', { ascending: false })
     .limit(limit)

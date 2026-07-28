@@ -63,13 +63,23 @@ async function addAllergy({ pet_id, allergen, severity = 'mild', confirmed = fal
 }
 
 async function deleteAllergy(id) {
+  const uid = await getUid()
+  if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'deleteAllergy')
+  // 先查 allergy 的 pet_id，再验证 pet 属于当前用户
+  const { data: allergy } = await supabase.from('pet_allergies').select('pet_id').eq('id', id).maybeSingle()
+  if (allergy) {
+    const { data: pet } = await supabase.from('pets').select('profile_id').eq('id', allergy.pet_id).maybeSingle()
+    if (pet?.profile_id !== uid) throw normalizeError({ code: 'FORBIDDEN', message: '无权操作他人的宠物数据' }, 'deleteAllergy')
+  }
   const { error } = await supabase.from('pet_allergies').delete().eq('id', id)
   if (error) throw normalizeError(error, 'deleteAllergy')
   allergies.value = allergies.value.filter(a => a.id !== id)
 }
 
 async function deleteHealthRecord(id) {
-  const { error } = await supabase.from('health_records').delete().eq('id', id)
+  const uid = await getUid()
+  if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'deleteHealthRecord')
+  const { error } = await supabase.from('health_records').delete().eq('id', id).eq('profile_id', uid)
   if (error) throw normalizeError(error, 'deleteHealthRecord')
 }
 

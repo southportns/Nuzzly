@@ -1,8 +1,8 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Star, ShieldCheck, AlertTriangle, Clock, Edit3, Tag } from "lucide-react"
 import { queryProduct, queryIngredients, queryVersions, queryReviews, queryRiskEvents, queryMetrics, getUser, queryProductTags } from "@/lib/supabase/query"
 import { createClient } from "@/lib/supabase/server"
 import { ProductTrends } from "@/components/products/product-trends"
@@ -97,7 +97,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               href={`/products/${productId}/review`}
               className="inline-flex items-center gap-1.5 rounded-full bg-[#FF7A59] px-5 py-2 text-[17px] font-normal text-white transition-colors hover:bg-[#E86A4A] active:scale-[0.98]"
             >
-              <Edit3 className="size-4" />
+              <EmojiIcon name="Edit3" className="size-4" />
               提交使用反馈
             </Link>
             <BookmarkButton productId={productId} userId={user?.id} initialBookmarked={isBookmarked} />
@@ -133,7 +133,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px]"
                     style={{ backgroundColor: `${color}12`, color }}
                   >
-                    <Tag className="size-3" />
+                    <EmojiIcon name="Tag" className="size-3" />
                     <span className="opacity-70">{tagLabels[tag.tag_type] ?? tag.tag_type}</span>
                     <span className="font-medium">{tag.tag_value}</span>
                   </span>
@@ -148,7 +148,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <div className="rounded-[18px] border border-[rgba(0,0,0,0.06)] p-5">
             <p className="text-[14px] text-[#6B6B6B]">综合评分</p>
             <div className="mt-2 flex items-baseline gap-1">
-              <Star className="size-4 fill-[#ff9500] text-[#ff9500]" />
+              <EmojiIcon name="Star" className="size-4 fill-[#ff9500] text-[#ff9500]" />
               <span className="text-[28px] font-semibold text-[#111111]">{avgRating ?? "--"}</span>
               <span className="text-[14px] text-[#6B6B6B]">/5</span>
             </div>
@@ -170,7 +170,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <div className="rounded-[18px] border border-[rgba(0,0,0,0.06)] p-5">
             <p className="text-[14px] text-[#6B6B6B]">透明度评分</p>
             <div className="mt-2 flex items-baseline gap-1">
-              <ShieldCheck className="size-4 text-[#FF7A59]" />
+              <EmojiIcon name="ShieldCheck" className="size-4 text-[#FF7A59]" />
               <span className="text-[28px] font-semibold text-[#111111]">
                 {product.transparency_score != null ? String(product.transparency_score) : "--"}
               </span>
@@ -237,7 +237,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <TabsTrigger value="ingredients">成分分析</TabsTrigger>
               <TabsTrigger value="timeline">时间轴</TabsTrigger>
               {riskEvents && riskEvents.length > 0 && (
-                <TabsTrigger value="risks"><AlertTriangle className="mr-1 size-3.5" />风险记录</TabsTrigger>
+                <TabsTrigger value="risks"><EmojiIcon name="AlertTriangle" className="mr-1 size-3.5" />风险记录</TabsTrigger>
               )}
             </TabsList>
 
@@ -316,7 +316,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             <TabsContent value="risks" className="mt-4">
               <div className="rounded-[18px] border border-[rgba(0,0,0,0.06)] p-6">
                 <p className="flex items-center gap-2 text-[17px] font-semibold text-[#111111]">
-                  <AlertTriangle className="size-5 text-[#ff9500]" />风险记录
+                  <EmojiIcon name="AlertTriangle" className="size-5 text-[#ff9500]" />风险记录
                 </p>
                 {riskEvents && riskEvents.length > 0 ? (
                   <div className="mt-4 space-y-3">
@@ -363,12 +363,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                           </p>
                         </div>
                         <span className="rounded-full bg-[#F0EFED] px-2.5 py-1 text-[12px] text-[#6B6B6B]">
-                          <Clock className="mr-1 inline size-3" />{review.usage_duration}
+                          <EmojiIcon name="Clock" className="mr-1 inline size-3" />{review.usage_duration}
                         </span>
                       </div>
                       <div className="mt-3 flex items-center gap-0.5">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className={`size-3.5 ${i < (review.overall_rating ?? 3) ? "fill-[#ff9500] text-[#ff9500]" : "text-[#e0e0e0]"}`} />
+                          <EmojiIcon name="Star" key={i} className={`size-3.5 ${i < (review.overall_rating ?? 3) ? "fill-[#ff9500] text-[#ff9500]" : "text-[#e0e0e0]"}`} />
                         ))}
                       </div>
                       {review.review_text && <p className="mt-2 text-[14px] leading-[1.47] text-[#111111]">{review.review_text}</p>}

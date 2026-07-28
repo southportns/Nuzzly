@@ -1,10 +1,10 @@
 "use client"
 
+import { EmojiIcon, emojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { markNotificationRead } from "@/lib/supabase/queries/notification-queries"
 import { useAuth } from "@/hooks/use-auth"
-import { Bell, Clock, AlertTriangle, CheckCircle, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface Notification {
@@ -17,11 +17,11 @@ interface Notification {
   created_at: string
 }
 
-const typeConfig: Record<string, { icon: typeof Bell; color: string }> = {
-  followup_reminder: { icon: Clock, color: "text-[#FF7A59]" },
-  followup_overdue: { icon: AlertTriangle, color: "text-[#E85D4A]" },
-  review_published: { icon: CheckCircle, color: "text-[#A8C5A0]" },
-  trust_score_change: { icon: ShieldCheck, color: "text-[#7BA7BC]" },
+const typeConfig: Record<string, { icon: ReturnType<typeof emojiIcon>; color: string }> = {
+  followup_reminder: { icon: emojiIcon("Clock"), color: "text-[#FF7A59]" },
+  followup_overdue: { icon: emojiIcon("AlertTriangle"), color: "text-[#E85D4A]" },
+  review_published: { icon: emojiIcon("CheckCircle"), color: "text-[#A8C5A0]" },
+  trust_score_change: { icon: emojiIcon("ShieldCheck"), color: "text-[#7BA7BC]" },
 }
 
 export function NotificationList({ initialNotifications }: { initialNotifications: Notification[] }) {
@@ -42,7 +42,10 @@ export function NotificationList({ initialNotifications }: { initialNotification
   if (notifications.length === 0) {
     return (
       <div className="py-12 text-center">
-        <Bell className="mx-auto size-8 text-[#D2D1CF]" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 18 18" className="mx-auto text-[#D2D1CF]">
+          <path d="M15.75 12.75C14.645 12.75 13.75 11.855 13.75 10.75V6.5C13.75 3.877 11.623 1.75 9 1.75C6.377 1.75 4.25 3.877 4.25 6.5V10.75C4.25 11.855 3.355 12.75 2.25 12.75H15.75Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <path d="M10.5 15.3843C10.2005 15.9018 9.6409 16.25 9 16.25C8.3591 16.25 7.7995 15.9018 7.5 15.3843" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </svg>
         <p className="mt-3 text-[14px] text-[#6B6B6B]">暂无通知</p>
       </div>
     )

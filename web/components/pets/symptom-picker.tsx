@@ -1,7 +1,7 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState, useEffect, useCallback } from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
@@ -95,7 +95,7 @@ export function SymptomPicker({
           ) : (
             <span className="text-muted-foreground">{placeholder}</span>
           )}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <EmojiIcon name="ChevronsUpDown" className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[350px] p-0">
@@ -121,7 +121,7 @@ export function SymptomPicker({
                       setOpen(false)
                     }}
                   >
-                    <Check
+                    <EmojiIcon name="Check"
                       className={cn(
                         "mr-2 h-4 w-4",
                         value === symptom.canonical_name ? "opacity-100" : "opacity-0"
@@ -212,7 +212,7 @@ export function SymptomMultiPicker({
             {selectedSymptoms.length > 0
               ? `已选择 ${selectedSymptoms.length} 个症状`
               : placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <EmojiIcon name="ChevronsUpDown" className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[350px] p-0">
@@ -230,7 +230,7 @@ export function SymptomMultiPicker({
                       value={symptom.canonical_name}
                       onSelect={() => handleToggle(symptom.canonical_name)}
                     >
-                      <Check
+                      <EmojiIcon name="Check"
                         className={cn(
                           "mr-2 h-4 w-4",
                           value.includes(symptom.canonical_name) ? "opacity-100" : "opacity-0"

@@ -1,6 +1,8 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/hooks/use-auth"
@@ -18,7 +20,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
-import { CheckCircle2, ChevronLeft, ChevronRight, Star, Upload, Loader2, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type DurationBucketValue =
@@ -190,7 +191,7 @@ export function ReviewWizard({ productId, productName }: { productId: string; pr
         <div className="flex justify-between mb-2">
           {stepLabels.map((label, i) => (
             <span key={label} className={cn("text-xs", i + 1 === step ? "text-primary font-medium" : i + 1 < step ? "text-muted-foreground" : "text-muted-foreground/50")}>
-              {i + 1 < step ? <CheckCircle2 className="size-3 inline mr-0.5" /> : null}
+              {i + 1 < step ? <EmojiIcon name="CheckCircle2" className="size-3 inline mr-0.5" /> : null}
               {label}
             </span>
           ))}
@@ -225,7 +226,7 @@ export function ReviewWizard({ productId, productName }: { productId: string; pr
                     <p className="text-xs text-muted-foreground">{d.days}</p>
                   </div>
                   <Badge variant="outline" className="gap-1">
-                    <Clock className="size-3" />
+                    <EmojiIcon name="Clock" className="size-3" />
                     {trustLabel(d.value)}
                   </Badge>
                 </button>
@@ -251,7 +252,7 @@ export function ReviewWizard({ productId, productName }: { productId: string; pr
                     onClick={() => setStep(2)}
                     disabled={!customDays || Number(customDays) < 1 || Number(customDays) > 3650}
                   >
-                    下一步<ChevronRight className="size-4 ml-1" />
+                    下一步<EmojiIcon name="ChevronRight" className="size-4 ml-1" />
                   </Button>
                 </div>
               </div>
@@ -284,9 +285,9 @@ export function ReviewWizard({ productId, productName }: { productId: string; pr
                       petId === pet.id && "border-primary/50 bg-primary/5"
                     )}
                   >
-                    <div className="flex size-10 shrink-0 overflow-hidden rounded-full bg-primary/10">
+                    <div className="relative flex size-10 shrink-0 overflow-hidden rounded-full bg-primary/10">
                       {pet.photo_url ? (
-                        <img src={pet.photo_url} alt={pet.name} className="size-full object-cover" />
+                        <Image src={pet.photo_url} alt={pet.name} fill className="object-cover" sizes="40px" />
                       ) : (
                         <div className="flex size-full items-center justify-center text-lg">
                           {pet.species === "cat" ? "🐱" : pet.species === "dog" ? "🐶" : "🐾"}
@@ -306,7 +307,7 @@ export function ReviewWizard({ productId, productName }: { productId: string; pr
             )}
             <div className="flex gap-2 mt-4">
               <Button variant="ghost" size="sm" onClick={() => setStep(1)}>
-                <ChevronLeft className="size-4 mr-1" />上一步
+                <EmojiIcon name="ChevronLeft" className="size-4 mr-1" />上一步
               </Button>
             </div>
           </CardContent>
@@ -333,11 +334,11 @@ export function ReviewWizard({ productId, productName }: { productId: string; pr
 
             <div className="flex gap-2 pt-2">
               <Button variant="ghost" size="sm" onClick={() => setStep(2)}>
-                <ChevronLeft className="size-4 mr-1" />上一步
+                <EmojiIcon name="ChevronLeft" className="size-4 mr-1" />上一步
               </Button>
               <Button size="sm" className="ml-auto" onClick={() => setStep(4)}
                 disabled={!palatability && !stool && !coat && !energy && !overall && !blackChin && !vomit && !tearStain && !shedding}>
-                下一步<ChevronRight className="size-4 ml-1" />
+                下一步<EmojiIcon name="ChevronRight" className="size-4 ml-1" />
               </Button>
             </div>
           </CardContent>
@@ -392,10 +393,10 @@ export function ReviewWizard({ productId, productName }: { productId: string; pr
             </div>
             <div className="flex gap-2 pt-2">
               <Button variant="ghost" size="sm" onClick={() => setStep(3)}>
-                <ChevronLeft className="size-4 mr-1" />上一步
+                <EmojiIcon name="ChevronLeft" className="size-4 mr-1" />上一步
               </Button>
               <Button size="sm" className="ml-auto" onClick={() => setStep(5)}>
-                下一步<ChevronRight className="size-4 ml-1" />
+                下一步<EmojiIcon name="ChevronRight" className="size-4 ml-1" />
               </Button>
             </div>
           </CardContent>
@@ -411,7 +412,7 @@ export function ReviewWizard({ productId, productName }: { productId: string; pr
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-lg border-2 border-dashed border-[rgba(0,0,0,0.1)] bg-[#F0EFED]/50 p-6 text-center transition-colors hover:border-[#FF7A59]/30">
-              <Upload className="mx-auto size-8 text-[#6B6B6B]" />
+              <EmojiIcon name="Upload" className="mx-auto size-8 text-[#6B6B6B]" />
               <p className="mt-2 text-sm text-[#6B6B6B]">点击或拖拽上传凭证图片</p>
               <p className="mt-1 text-xs text-[#6B6B6B]/60">支持 JPG/PNG，最多 5 张，每张不超过 5MB</p>
               <input
@@ -452,10 +453,10 @@ export function ReviewWizard({ productId, productName }: { productId: string; pr
 
             <div className="flex gap-2 pt-2">
               <Button variant="ghost" size="sm" onClick={() => setStep(4)}>
-                <ChevronLeft className="size-4 mr-1" />上一步
+                <EmojiIcon name="ChevronLeft" className="size-4 mr-1" />上一步
               </Button>
               <Button size="sm" className="ml-auto" onClick={() => setStep(6)}>
-                下一步<ChevronRight className="size-4 ml-1" />
+                下一步<EmojiIcon name="ChevronRight" className="size-4 ml-1" />
               </Button>
             </div>
           </CardContent>
@@ -485,7 +486,7 @@ export function ReviewWizard({ productId, productName }: { productId: string; pr
                 <span className="text-sm text-muted-foreground">总体评分</span>
                 <div className="flex gap-0.5">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className={cn("size-4", i < overall ? "fill-amber-400 text-amber-400" : "text-muted")} />
+                    <EmojiIcon name="Star" key={i} className={cn("size-4", i < overall ? "fill-amber-400 text-amber-400" : "text-muted")} />
                   ))}
                 </div>
               </div>
@@ -522,10 +523,10 @@ export function ReviewWizard({ productId, productName }: { productId: string; pr
 
             <div className="flex gap-2 pt-2">
               <Button variant="ghost" size="sm" onClick={() => setStep(5)}>
-                <ChevronLeft className="size-4 mr-1" />上一步
+                <EmojiIcon name="ChevronLeft" className="size-4 mr-1" />上一步
               </Button>
               <Button size="sm" className="ml-auto" onClick={handleSubmit} disabled={loading}>
-                {loading && <Loader2 className="size-4 mr-2 animate-spin" />}
+                {loading && <EmojiIcon name="Loader2" className="size-4 mr-2 animate-spin" />}
                 提交评价
               </Button>
             </div>
@@ -558,7 +559,7 @@ function RatingRow({ label, description, value, onChange }: {
               value !== null && score <= value ? "text-amber-400" : "text-muted hover:text-amber-400/50"
             )}
           >
-            <Star className={cn("size-5", value !== null && score <= value ? "fill-amber-400" : "")} />
+            <EmojiIcon name="Star" className={cn("size-5", value !== null && score <= value ? "fill-amber-400" : "")} />
           </button>
         ))}
       </div>

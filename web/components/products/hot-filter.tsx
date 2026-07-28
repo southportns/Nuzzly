@@ -1,16 +1,16 @@
 "use client"
 
+import { emojiIcon } from "@/components/ui/emoji-icon"
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { TrendingUp, ShieldCheck, Heart, Baby, Clock, Sparkles } from "lucide-react"
 
 const hotFilters = [
-  { slug: "high-repurchase", label: "高复购", icon: TrendingUp },
-  { slug: "low-dispute", label: "低争议", icon: ShieldCheck },
-  { slug: "stomach-friendly", label: "肠胃友好", icon: Heart },
-  { slug: "kitten", label: "幼猫适用", icon: Baby },
-  { slug: "long-term", label: "长期好评", icon: Clock },
-  { slug: "cost-effective", label: "高性价比", icon: Sparkles },
+  { slug: "high-repurchase", label: "高复购", icon: emojiIcon("TrendingUp") },
+  { slug: "low-dispute", label: "低争议", icon: emojiIcon("ShieldCheck") },
+  { slug: "stomach-friendly", label: "肠胃友好", icon: emojiIcon("Heart") },
+  { slug: "kitten", label: "幼猫适用", icon: emojiIcon("Baby") },
+  { slug: "long-term", label: "长期好评", icon: emojiIcon("Clock") },
+  { slug: "cost-effective", label: "高性价比", icon: emojiIcon("Sparkles") },
 ]
 
 export function HotFilter({ activeHot }: { activeHot?: string }) {

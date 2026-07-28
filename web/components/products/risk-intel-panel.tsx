@@ -1,8 +1,8 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { AlertTriangle, TrendingUp, TrendingDown, Activity, Clock } from "lucide-react"
 
 interface RiskEvent {
   id: string; title: string; severity: string; event_date: string
@@ -45,8 +45,8 @@ export function RiskIntelPanel({ riskIntel }: Props) {
   if (!ri) return null
 
   function trendIcon(t: string) {
-    if (t === "rising") return <TrendingUp className="size-3 text-red-400" />
-    if (t === "improving") return <TrendingDown className="size-3 text-primary" />
+    if (t === "rising") return <EmojiIcon name="TrendingUp" className="size-3 text-red-400" />
+    if (t === "improving") return <EmojiIcon name="TrendingDown" className="size-3 text-primary" />
     return null
   }
 
@@ -58,7 +58,7 @@ export function RiskIntelPanel({ riskIntel }: Props) {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Activity className="size-4 text-primary" />
+          <EmojiIcon name="Activity" className="size-4 text-primary" />
           风险情报
           {ri.recent_spike && (
             <Badge variant="destructive" className="text-[10px] ml-2">异常激增</Badge>
@@ -88,7 +88,7 @@ export function RiskIntelPanel({ riskIntel }: Props) {
             {ri.risk_trend === "rising" ? "上升中" : ri.risk_trend === "improving" ? "改善中" : "稳定"}
           </span>
           <span className="text-muted-foreground ml-auto flex items-center gap-1">
-            <Clock className="size-3" />
+            <EmojiIcon name="Clock" className="size-3" />
             时间衰减风险分 {ri.time_decayed_risk_score?.toFixed(2)}
           </span>
         </div>
@@ -98,13 +98,13 @@ export function RiskIntelPanel({ riskIntel }: Props) {
           <div className="space-y-1.5 mb-4">
             {ri.anomalies.rating_drop_detected && (
               <div className="flex items-center gap-2 text-sm text-amber-400 bg-amber-500/5 rounded-lg px-3 py-2">
-                <TrendingDown className="size-4" />
+                <EmojiIcon name="TrendingDown" className="size-4" />
                 近14天评分下降 {Math.abs(ri.anomalies.rating_change ?? 0).toFixed(1)} 分
               </div>
             )}
             {ri.anomalies.stool_spike_detected && (
               <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/5 rounded-lg px-3 py-2">
-                <AlertTriangle className="size-4" />
+                <EmojiIcon name="AlertTriangle" className="size-4" />
                 软便率异常上升 {((ri.anomalies.stool_change ?? 0) * 100).toFixed(0)}%
               </div>
             )}

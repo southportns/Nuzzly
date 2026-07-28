@@ -1,7 +1,7 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { requireAdmin, getAdminStats, listReviewsForAdmin, listUsers } from "@/lib/supabase/query"
 import { redirect } from "next/navigation"
-import { Users, PawPrint, Package, Star, AlertTriangle, MessageSquareWarning, ChevronRight } from "lucide-react"
 
 export const metadata = {
   title: "管理员控制台 — Nuzzly毛球镇",
@@ -19,12 +19,12 @@ export default async function AdminOverviewPage() {
   ])
 
   const cards = [
-    { label: "总用户", value: stats.userCount, icon: Users, href: "/admin/users", accent: "#7BA7BC" },
-    { label: "总宠物档案", value: stats.petCount, icon: PawPrint, href: "/admin/users", accent: "#A8C5A0" },
-    { label: "产品数", value: stats.productCount, icon: Package, href: "/admin/products", accent: "#E8A87C" },
-    { label: "评价总数", value: stats.reviewCount, icon: Star, href: "/admin/reviews", accent: "#FF7A59" },
-    { label: "近 7 天新评价", value: stats.reviewLast7d, icon: MessageSquareWarning, href: "/admin/reviews", accent: "#B59BD8" },
-    { label: "被标记用户", value: stats.flaggedCount, icon: AlertTriangle, href: "/admin/users?flagged=1", accent: "#ff3b30" },
+    { label: "总用户", value: stats.userCount, iconName: "Users", href: "/admin/users", accent: "#7BA7BC" },
+    { label: "总宠物档案", value: stats.petCount, iconName: "PawPrint", href: "/admin/users", accent: "#A8C5A0" },
+    { label: "产品数", value: stats.productCount, iconName: "Package", href: "/admin/products", accent: "#E8A87C" },
+    { label: "评价总数", value: stats.reviewCount, iconName: "Star", href: "/admin/reviews", accent: "#FF7A59" },
+    { label: "近 7 天新评价", value: stats.reviewLast7d, iconName: "MessageSquareWarning", href: "/admin/reviews", accent: "#B59BD8" },
+    { label: "被标记用户", value: stats.flaggedCount, iconName: "AlertTriangle", href: "/admin/users?flagged=1", accent: "#ff3b30" },
   ]
 
   return (
@@ -48,14 +48,14 @@ export default async function AdminOverviewPage() {
                 className="flex size-11 items-center justify-center rounded-2xl"
                 style={{ backgroundColor: `${c.accent}1a`, color: c.accent }}
               >
-                <c.icon className="size-5" />
+                <EmojiIcon name={c.iconName} className="size-5" />
               </div>
               <div>
                 <div className="text-[24px] font-bold leading-none text-[#111111]">{c.value.toLocaleString()}</div>
                 <div className="mt-1.5 text-[12.5px] text-[#6B6B6B]">{c.label}</div>
               </div>
             </div>
-            <ChevronRight className="size-4 text-[#D2D1CF] transition-transform group-hover:translate-x-0.5" />
+            <EmojiIcon name="ChevronRight" className="size-4 text-[#D2D1CF] transition-transform group-hover:translate-x-0.5" />
           </Link>
         ))}
       </div>
@@ -138,7 +138,7 @@ export default async function AdminOverviewPage() {
           ) : (
             <div className="py-8 text-center">
               <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-[#A8C5A0]/15 text-[#A8C5A0]">
-                <AlertTriangle className="size-5" />
+                <EmojiIcon name="AlertTriangle" className="size-5" />
               </div>
               <p className="text-[13px] text-[#6B6B6B]">社区秩序良好，暂无被标记用户</p>
             </div>

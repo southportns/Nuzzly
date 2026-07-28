@@ -28,7 +28,7 @@ export function Mascot3D({ size = "large", mood = "welcome", className }: Mascot
     }
     const script = document.createElement("script")
     script.type = "module"
-    script.src = "https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
+    script.src = "/model-viewer.min.js"
     script.onload = () => setScriptReady(true)
     document.head.appendChild(script)
   }, [])
@@ -62,11 +62,17 @@ export function Mascot3D({ size = "large", mood = "welcome", className }: Mascot
     mv.setAttribute("disable-zoom", "")
     mv.setAttribute("loading", "eager")
     mv.setAttribute("reveal", "auto")
+    mv.setAttribute("animation-name", "idle")
     mv.style.touchAction = "pan-y"
     mv.style.width = "100%"
     mv.style.height = "100%"
     mv.style.opacity = "0"
     mv.style.transition = "opacity 700ms"
+    // Hide the default progress bar
+    const progressSlot = document.createElement("div")
+    progressSlot.setAttribute("slot", "progress-bar")
+    progressSlot.style.display = "none"
+    mv.appendChild(progressSlot)
 
     mv.addEventListener("load", () => {
       setTimeout(() => {
@@ -133,6 +139,9 @@ export function Mascot3D({ size = "large", mood = "welcome", className }: Mascot
       )}
 
       <style>{`
+        model-viewer::part(default-progress-bar) {
+          display: none;
+        }
         @keyframes mascot-pulse {
           0%, 100% { opacity: 0.6; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.05); }

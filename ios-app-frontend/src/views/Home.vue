@@ -73,19 +73,9 @@
     <div class="dashboard">
       <WeightCarousel
         :items="weightCarouselItems"
-        class="anim-fade-up anim-delay-4"
+        class="anim-fade-up anim-delay-4 weight-hero"
         @record="$router.push('/record/create?type=weight')"
       />
-
-      <div class="dash-card anim-fade-up anim-delay-4" @click="$router.push('/health-reminders')">
-        <div class="dash-icon green"></div>
-        <div class="dash-value">{{ dueReminderCount }}<span class="dash-unit">条</span></div>
-        <div class="dash-label">健康提醒</div>
-        <div class="dash-action">
-          查看全部
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19L19 6m0 0v12.48M19 6H6.52"/></svg>
-        </div>
-      </div>
 
       <div class="dash-card accent-bg anim-fade-up anim-delay-5">
         <div class="dash-icon green"></div>
@@ -100,6 +90,16 @@
         <div class="dash-action" @click.stop="$router.push('/record/create?type=diet')">
           添加
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h6m6 0h-6m0 0V6m0 6v6"/></svg>
+        </div>
+      </div>
+
+      <div class="dash-card anim-fade-up anim-delay-6" @click="$router.push('/health-reminders')">
+        <div class="dash-icon green"></div>
+        <div class="dash-value">{{ dueReminderCount }}<span class="dash-unit">条</span></div>
+        <div class="dash-label">健康提醒</div>
+        <div class="dash-action">
+          查看全部
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19L19 6m0 0v12.48M19 6H6.52"/></svg>
         </div>
       </div>
     </div>
@@ -256,7 +256,7 @@ onUnmounted(() => {
 .header{position:relative;padding:0 24px;z-index:1}
 .header-row{display:flex;align-items:center;justify-content:space-between}
 .avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--beige),var(--brown));display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 2px 12px rgba(139,94,70,.12);flex-shrink:0;overflow:hidden}
-.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;box-shadow:0px 7px 16px 14px rgba(0,0,0,0.25)}
 .header-actions{display:flex;gap:12px}
 .action-circle{width:41.31px;height:41.31px;border-radius:50%;background:var(--card);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer;transition:transform .2s,box-shadow .2s}
 .action-circle:active{transform:scale(.92)}
@@ -271,7 +271,7 @@ onUnmounted(() => {
 .qa-btn.primary{background:var(--brown);border:none;box-shadow:var(--shadow-btn)}
 .qa-btn.primary svg{color:#fff}
 .qa-btn .qa-label{position:absolute;bottom:-20px;font-size:11px;color:var(--muted);white-space:nowrap;letter-spacing:.01em}
-.hero-card{margin:28px 24px 0;background:var(--card);border-radius:var(--radius-card);box-shadow:var(--shadow-card);border:1px solid var(--border);padding:16px 16px 13px;display:flex;align-items:flex-end;gap:12px;position:relative;z-index:1;overflow:visible}
+.hero-card{margin:28px 24px 0;background:var(--card);border-radius:var(--radius-card);box-shadow:0px 4px 16px 5px rgba(0,0,0,0.25);border:1px solid var(--border);padding:16px 16px 13px;display:flex;align-items:flex-end;gap:12px;position:relative;z-index:1;overflow:visible}
 .hero-card.no-image{min-height:auto;padding:16px 22px}
 .hero-left{flex:0 0 48%;display:flex;flex-direction:column;gap:8px;padding-left:3px}
 .hero-tag{display:inline-flex;align-items:center;gap:4px;background:rgba(108,138,105,.1);color:var(--green);font-size:11px;font-weight:500;padding:3px 8px;border-radius:var(--radius-btn);width:100%;box-sizing:border-box;letter-spacing:.02em;white-space:nowrap}
@@ -300,6 +300,7 @@ onUnmounted(() => {
 @keyframes hero-pulse{0%,100%{opacity:0.6;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}}
 @keyframes hero-shadow{0%,100%{transform:translateX(-50%) scaleX(1);opacity:0.6}50%{transform:translateX(-50%) scaleX(0.9);opacity:0.4}}
 .dashboard{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:28px 24px 0;position:relative;z-index:1}
+.weight-hero{grid-column:1 / -1}
 .dash-card{background:var(--card);border-radius:var(--radius-card);box-shadow:var(--shadow-card);border:1px solid var(--border);padding:24px;width:100%;aspect-ratio:1;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:transform .2s;position:relative;overflow:hidden}
 .dash-card:active{transform:scale(.97)}
 .dash-card.accent-bg{background:rgba(215,181,147,.12)}

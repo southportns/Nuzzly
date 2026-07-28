@@ -26,3 +26,21 @@ export async function createClient() {
     { cookies: cookieMethods }
   )
 }
+
+/**
+ * Service-role client for server-side-only queries.
+ * Does NOT use cookies() — safe to call inside unstable_cache().
+ * Uses SERVICE_ROLE_KEY for elevated permissions (bypasses RLS).
+ */
+export function createServiceRoleClient() {
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      cookies: {
+        getAll() { return [] },
+        setAll() {},
+      },
+    }
+  )
+}

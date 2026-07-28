@@ -47,16 +47,35 @@ defineProps({
    撑爆 405px tab-bar 容器,导致 .tab-center 被挤到容器外看不到。
    这里覆盖锁定实际像素。 */
 .tab-bar.ignore-vw .tab-item {
-  padding: 8px 16px;
+  padding: 8px 12px;
   gap: 3px;
 }
 
 .tab-bar.ignore-vw .tab-item > svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
 }
 
 .tab-bar.ignore-vw .tab-item > span {
   font-size: 10px;
+}
+
+/* 小屏幕适配：减小间距和图标尺寸 */
+@media (max-width: 375px) {
+  .tab-bar.ignore-vw .tab-item {
+    padding: 8px 8px;
+  }
+  .tab-bar.ignore-vw .tab-item > svg {
+    width: 20px;
+    height: 20px;
+  }
+  .tab-bar.ignore-vw .tab-center-btn {
+    width: 48px;
+    height: 48px;
+  }
+  .tab-bar.ignore-vw .tab-center-btn .tab-logo {
+    width: 56px;
+    height: 56px;
+  }
 }
 </style>

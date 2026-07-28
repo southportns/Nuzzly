@@ -1,5 +1,5 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { redirect } from "next/navigation"
-import { Calendar, Plus, Clock, Activity } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { getUser } from "@/lib/supabase/query"
 import { getPetEvents, getEventTimeline } from "@/lib/supabase/queries/event-queries"
@@ -49,7 +49,7 @@ export default async function PetEventsPage() {
           href={`/dashboard/health/events/new?pet=${petId}`}
           className="flex items-center gap-2 rounded-full bg-[#FF7A59] px-4 py-2 text-[14px] font-medium text-white hover:bg-[#FF6A49]"
         >
-          <Plus className="size-4" />
+          <EmojiIcon name="Plus" className="size-4" />
           记录事件
         </a>
       </div>
@@ -90,7 +90,7 @@ export default async function PetEventsPage() {
       {Object.keys(timeline).length > 0 && (
         <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Clock className="size-5 text-[#FF7A59]" />
+            <EmojiIcon name="Clock" className="size-5 text-[#FF7A59]" />
             <span className="text-[15px] font-semibold text-[#111111]">事件时间线</span>
           </div>
           <EventTimeline timeline={timeline} />
@@ -100,7 +100,7 @@ export default async function PetEventsPage() {
       {/* All Events */}
       <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Calendar className="size-5 text-[#FF7A59]" />
+          <EmojiIcon name="Calendar" className="size-5 text-[#FF7A59]" />
           <span className="text-[15px] font-semibold text-[#111111]">全部事件</span>
         </div>
         
@@ -108,7 +108,7 @@ export default async function PetEventsPage() {
           <PetEventsList events={events} />
         ) : (
           <div className="py-12 text-center">
-            <Activity className="mx-auto mb-3 size-12 text-[#e0e0e0]" />
+            <EmojiIcon name="Activity" className="mx-auto mb-3 size-12 text-[#e0e0e0]" />
             <p className="text-[14px] text-[#6B6B6B]">暂无事件记录</p>
             <p className="mt-1 text-[12px] text-[#999]">点击上方按钮记录第一个事件</p>
           </div>

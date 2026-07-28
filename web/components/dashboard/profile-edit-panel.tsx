@@ -1,10 +1,10 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { preprocessImage } from "@/lib/image"
 import { uploadUserAvatar } from "@/lib/supabase/storage"
-import { X, Camera, Loader2 } from "lucide-react"
 
 interface ProfileData {
   username: string | null
@@ -134,7 +134,7 @@ export function ProfileEditPanel({
   if (loading) {
     return (
       <div className="flex h-48 items-center justify-center rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white">
-        <Loader2 className="size-5 animate-spin text-[#FF7A59]" />
+        <EmojiIcon name="Loader2" className="size-5 animate-spin text-[#FF7A59]" />
       </div>
     )
   }
@@ -149,7 +149,7 @@ export function ProfileEditPanel({
           onClick={onClose}
           className="flex size-8 items-center justify-center rounded-full text-[#9A9A95] transition-colors hover:bg-[#F7F6F3] hover:text-[#111111]"
         >
-          <X className="size-4" />
+          <EmojiIcon name="X" className="size-4" />
         </button>
       </div>
 
@@ -174,7 +174,7 @@ export function ProfileEditPanel({
                 </span>
               )}
               <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
-                <Camera className="size-5 text-white" />
+                <EmojiIcon name="Camera" className="size-5 text-white" />
               </div>
             </button>
             <input
@@ -256,7 +256,7 @@ export function ProfileEditPanel({
               >
                 {saving ? (
                   <span className="flex items-center justify-center gap-1.5">
-                    <Loader2 className="size-4 animate-spin" />
+                    <EmojiIcon name="Loader2" className="size-4 animate-spin" />
                     保存中
                   </span>
                 ) : (

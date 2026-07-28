@@ -1,11 +1,12 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { openLoginModal } from "@/hooks/use-login-modal"
 import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
 import { SettingsCard } from "@/components/settings/settings-card"
-import { AlertTriangle, Mail } from "lucide-react"
 
 interface AccountSettingsProps {
   user: User
@@ -71,7 +72,8 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
       alert("账号已注销")
       setShowDeleteConfirm(false)
       setDeleteConfirmText("")
-      router.replace("/login")
+      openLoginModal()
+      router.refresh()
     } catch (e: any) {
       alert(e.message || "注销失败,请联系客服")
     } finally {
@@ -93,7 +95,7 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
           邮箱
         </div>
         <div className="flex items-center gap-2 px-4 py-3.5">
-          <Mail className="size-4 text-[#6B6B6B]" />
+          <EmojiIcon name="Mail" className="size-4 text-[#6B6B6B]" />
           <span className="text-[15px] text-[#111111]">{user.email || "未登录"}</span>
         </div>
       </SettingsCard>
@@ -136,7 +138,7 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
       <SettingsCard className="border-[#FF3B30]/15">
         <div className="p-4">
           <div className="mb-3 flex items-start gap-2 rounded-[10px] bg-[#FF3B30]/5 p-3">
-            <AlertTriangle className="size-4 shrink-0 text-[#FF3B30]" />
+            <EmojiIcon name="AlertTriangle" className="size-4 shrink-0 text-[#FF3B30]" />
             <span className="text-[13px] leading-relaxed text-[#FF3B30]">
               注销账号后,所有数据将被永久删除且无法恢复
             </span>

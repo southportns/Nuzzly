@@ -105,7 +105,7 @@ export default function CssFrame({ children, className = "" }: CssFrameProps) {
       <div
         className="absolute overflow-hidden"
         style={{
-          inset: "21px",
+          inset: "18px",
           borderRadius: "calc(1.5rem - 12px)",
         }}
       >

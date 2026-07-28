@@ -1,7 +1,7 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
-import { Pill, Clock, CheckCircle, StopCircle, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
@@ -77,7 +77,7 @@ export function MedicationRecordsList({ records, showStopButton = false }: Props
               <div className={`flex size-10 items-center justify-center rounded-full ${
                 record.is_ongoing ? "bg-[#FF7A59]/10" : "bg-[#6B6B6B]/10"
               }`}>
-                <Pill className={`size-5 ${record.is_ongoing ? "text-[#FF7A59]" : "text-[#6B6B6B]"}`} />
+                <EmojiIcon name="Pill" className={`size-5 ${record.is_ongoing ? "text-[#FF7A59]" : "text-[#6B6B6B]"}`} />
               </div>
               <div>
                 <p className="text-[14px] font-medium text-[#111111]">{record.name}</p>
@@ -95,12 +95,12 @@ export function MedicationRecordsList({ records, showStopButton = false }: Props
                 </p>
                 {record.is_ongoing ? (
                   <span className="inline-flex items-center gap-1 text-[10px] text-[#ff9500]">
-                    <Clock className="size-2.5" />
+                    <EmojiIcon name="Clock" className="size-2.5" />
                     进行中
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-[10px] text-[#34c759]">
-                    <CheckCircle className="size-2.5" />
+                    <EmojiIcon name="CheckCircle" className="size-2.5" />
                     已完成
                   </span>
                 )}
@@ -112,9 +112,9 @@ export function MedicationRecordsList({ records, showStopButton = false }: Props
                   className="rounded-full p-2 text-[#ff3b30] hover:bg-[#ff3b30]/10"
                 >
                   {isStopping ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <EmojiIcon name="Loader2" className="size-4 animate-spin" />
                   ) : (
-                    <StopCircle className="size-4" />
+                    <EmojiIcon name="StopCircle" className="size-4" />
                   )}
                 </button>
               )}

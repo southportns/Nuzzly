@@ -1,6 +1,6 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { redirect } from "next/navigation"
 import { requireAdmin, listReviewsForAdmin } from "@/lib/supabase/query"
-import { Star, ChevronRight } from "lucide-react"
 import Link from "next/link"
 
 export const metadata = {
@@ -78,7 +78,7 @@ export default async function AdminReviewsPage() {
                     target="_blank"
                     className="inline-flex items-center gap-1 text-[12.5px] text-[#FF7A59] hover:underline"
                   >
-                    查看产品 <ChevronRight className="size-3" />
+                    查看产品 <EmojiIcon name="ChevronRight" className="size-3" />
                   </Link>
                 </footer>
               </article>

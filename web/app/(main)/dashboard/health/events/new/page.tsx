@@ -1,8 +1,8 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
@@ -68,7 +68,7 @@ export default function NewEventPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/health/events" className="flex items-center gap-1 text-[14px] text-[#6B6B6B] hover:text-[#111111]">
-          <ArrowLeft className="size-4" />
+          <EmojiIcon name="ArrowLeft" className="size-4" />
           返回
         </Link>
         <h1 className="text-[28px] font-semibold text-[#111111]">记录事件</h1>
@@ -172,7 +172,7 @@ export default function NewEventPage() {
             disabled={loading}
             className="flex-1 rounded-full bg-[#FF7A59] py-3 text-[14px] font-medium text-white hover:bg-[#FF6A49] disabled:opacity-50"
           >
-            {loading ? <Loader2 className="mx-auto size-5 animate-spin" /> : "保存记录"}
+            {loading ? <EmojiIcon name="Loader2" className="mx-auto size-5 animate-spin" /> : "保存记录"}
           </button>
         </div>
       </form>

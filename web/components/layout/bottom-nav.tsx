@@ -1,16 +1,16 @@
 "use client"
 
+import { emojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Search, PlusCircle, Sparkles, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const tabs = [
-  { href: "/", label: "首页", icon: Home },
-  { href: "/products", label: "产品库", icon: Search },
-  { href: "/products/review", label: "发布", icon: PlusCircle },
-  { href: "/ai", label: "AI助手", icon: Sparkles },
-  { href: "/dashboard", label: "我的", icon: User },
+  { href: "/", label: "首页", icon: emojiIcon("Home") },
+  { href: "/products", label: "产品库", icon: emojiIcon("Search") },
+  { href: "/products/review", label: "发布", icon: emojiIcon("PlusCircle") },
+  { href: "/ai", label: "AI助手", icon: emojiIcon("Sparkles") },
+  { href: "/dashboard", label: "我的", icon: emojiIcon("User") },
 ]
 
 export function BottomNav() {

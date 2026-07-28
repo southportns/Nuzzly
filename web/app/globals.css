@@ -168,7 +168,6 @@ a,
   * { @apply border-border outline-ring/50; }
   body { @apply bg-background text-foreground antialiased; }
   html { @apply font-sans; }
-  html { scrollbar-gutter: stable; }
   a { color: inherit; text-decoration: none; }
 }
 
@@ -199,4 +198,13 @@ a,
   background: #FF7A59;
   border-color: transparent;
   background-clip: content-box;
+}
+
+/* Hidden scrollbar utility */
+.scrollbar-hidden {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }

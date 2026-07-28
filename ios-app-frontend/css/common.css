@@ -105,11 +105,11 @@ button,input,select,textarea,a,[role="button"],.clickable{
 /* ===== Floating Tab Bar ===== */
 .tab-bar.ignore-vw{
   position:fixed;
-  bottom:0;
+  bottom:calc(8px + var(--safe-bottom));
   left:50%;
   transform:translateX(-50%);
-  margin-bottom:calc(20px + var(--safe-bottom));
-  width:405px;
+  width:calc(100% - 32px);
+  max-width:405px;
   height:51px;
   background:rgba(255,255,255,.82);
   backdrop-filter:blur(40px);

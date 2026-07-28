@@ -1,5 +1,5 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { redirect } from "next/navigation"
-import { AlertTriangle, Plus, Activity, CheckCircle, Clock } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { getUser } from "@/lib/supabase/query"
 import { getDiseaseRecords } from "@/lib/supabase/queries/disease-queries"
@@ -44,7 +44,7 @@ export default async function DiseaseRecordsPage() {
           href={`/dashboard/health/diseases/new?pet=${petId}`}
           className="flex items-center gap-2 rounded-full bg-[#FF7A59] px-4 py-2 text-[14px] font-medium text-white hover:bg-[#FF6A49]"
         >
-          <Plus className="size-4" />
+          <EmojiIcon name="Plus" className="size-4" />
           添加记录
         </a>
       </div>
@@ -53,21 +53,21 @@ export default async function DiseaseRecordsPage() {
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-5">
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="size-4 text-[#ff9500]" />
+            <EmojiIcon name="AlertTriangle" className="size-4 text-[#ff9500]" />
             <span className="text-[12px] text-[#6B6B6B]">进行中</span>
           </div>
           <span className="text-[32px] font-semibold text-[#111111]">{activeDiseases.length}</span>
         </div>
         <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-5">
           <div className="flex items-center gap-2 mb-2">
-            <Activity className="size-4 text-[#585858]" />
+            <EmojiIcon name="Activity" className="size-4 text-[#585858]" />
             <span className="text-[12px] text-[#6B6B6B]">慢性病</span>
           </div>
           <span className="text-[32px] font-semibold text-[#111111]">{chronicDiseases.length}</span>
         </div>
         <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-5">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle className="size-4 text-[#34c759]" />
+            <EmojiIcon name="CheckCircle" className="size-4 text-[#34c759]" />
             <span className="text-[12px] text-[#6B6B6B]">已康复</span>
           </div>
           <span className="text-[32px] font-semibold text-[#111111]">{resolvedDiseases.length}</span>
@@ -77,7 +77,7 @@ export default async function DiseaseRecordsPage() {
       {/* Disease Records List */}
       <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
         <div className="flex items-center gap-2 mb-4">
-          <AlertTriangle className="size-5 text-[#FF7A59]" />
+          <EmojiIcon name="AlertTriangle" className="size-5 text-[#FF7A59]" />
           <span className="text-[15px] font-semibold text-[#111111]">全部记录</span>
         </div>
         
@@ -85,7 +85,7 @@ export default async function DiseaseRecordsPage() {
           <DiseaseRecordsList records={diseases} />
         ) : (
           <div className="py-12 text-center">
-            <Activity className="mx-auto mb-3 size-12 text-[#e0e0e0]" />
+            <EmojiIcon name="Activity" className="mx-auto mb-3 size-12 text-[#e0e0e0]" />
             <p className="text-[14px] text-[#6B6B6B]">暂无疾病记录</p>
             <p className="mt-1 text-[12px] text-[#999]">点击上方按钮添加第一条记录</p>
           </div>

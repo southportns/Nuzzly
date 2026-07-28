@@ -1,5 +1,6 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { useEffect, useRef, useState } from "react"
@@ -63,20 +64,7 @@ export function ProductCarousel({ products }: { products: ProductData[] }) {
           >
             {/* Product image placeholder */}
             <div className="flex aspect-square items-center justify-center rounded-[20px] bg-[#F0EFED]">
-              <svg
-                width="48"
-                height="48"
-                viewBox="0 0 48 48"
-                fill="none"
-                className="text-[#D2D1CF]"
-              >
-                <path
-                  d="M12 13L7 6L10 6L15 12L24 9L33 12L38 6L41 6L36 13C40 16 43 20 43 25C43 34 34 41 24 41C14 41 5 34 5 25C5 20 8 16 12 13Z"
-                  fill="currentColor"
-                />
-                <circle cx="18" cy="24" r="2.5" fill="white" />
-                <circle cx="30" cy="24" r="2.5" fill="white" />
-              </svg>
+              <EmojiIcon name="PawPrint" size={48} className="opacity-60" />
             </div>
 
             <div className="mt-4 flex flex-col gap-0.5">
@@ -88,9 +76,12 @@ export function ProductCarousel({ products }: { products: ProductData[] }) {
             <div className="mt-2 flex items-center gap-1">
               <div className="flex gap-0.5">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <svg key={i} width="14" height="14" viewBox="0 0 14 14" fill={i < Math.round(Number(p.avgRating)) ? "#FF7A59" : "#F0EFED"}>
-                    <path d="M7 1l1.8 3.6L13 5.3l-3 2.9.7 4.1L7 10.5 3.3 12.3l.7-4.1-3-2.9 4.2-.7L7 1z" />
-                  </svg>
+                  <EmojiIcon
+                    key={i}
+                    name="Star"
+                    size={14}
+                    className={i < Math.round(Number(p.avgRating)) ? "" : "grayscale opacity-40"}
+                  />
                 ))}
               </div>
               <span className="text-[12px] text-[#6B6B6B]">{p.avgRating}</span>

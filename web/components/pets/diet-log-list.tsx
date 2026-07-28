@@ -1,12 +1,12 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { deleteDietLog } from "@/lib/supabase/actions/pet-form-actions"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 const foodTypeLabels: Record<string, string> = {
@@ -83,7 +83,7 @@ export function DietLogList({ initialLogs }: { initialLogs: DietLog[] }) {
               onClick={() => handleDelete(log.id)}
               disabled={deletingId === log.id}
             >
-              <Trash2 className="size-3.5" />
+              <EmojiIcon name="Trash2" className="size-3.5" />
             </Button>
           </div>
         </div>

@@ -61,7 +61,7 @@ export type PetEventType =
 
 export type EventSource = 'user_input' | 'ai_extraction' | 'system_generated' | 'imported'
 
-export type LifeStage = 'kitten' | 'young_adult' | 'adult' | 'senior' | 'geriatric'
+export type LifeStage = 'kitten' | 'young_adult' | 'adult' | 'senior'
 
 export type ActivityLevel = 'very_low' | 'low' | 'medium' | 'high' | 'very_high'
 

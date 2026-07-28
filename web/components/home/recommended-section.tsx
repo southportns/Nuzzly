@@ -1,12 +1,12 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ShieldCheck, TrendingUp } from "lucide-react"
 
 interface ProductRow {
   id: string; name: string; brand: string; price_max: number | null
@@ -34,7 +34,7 @@ export function RecommendedSection() {
       <div className="mb-8 flex items-end justify-between">
         <div>
           <h2 className="flex items-center gap-2.5 text-xl font-semibold">
-            <TrendingUp className="size-5 text-primary" />
+            <EmojiIcon name="TrendingUp" className="size-5 text-primary" />
             社区热门产品
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">基于社区真实长期反馈的综合推荐</p>
@@ -51,7 +51,7 @@ export function RecommendedSection() {
                     <CardTitle className="text-base leading-snug">{p.name}</CardTitle>
                     <p className="text-sm text-muted-foreground mt-0.5">{p.brand}</p>
                   </div>
-                  <ShieldCheck className="size-4 text-primary shrink-0" />
+                  <EmojiIcon name="ShieldCheck" className="size-4 text-primary shrink-0" />
                 </div>
               </CardHeader>
               <CardContent>

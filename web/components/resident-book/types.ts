@@ -30,6 +30,37 @@ export interface ResidentHealth {
   weightTrend: string | null
   allergyNote: string | null
   medications: ResidentMedicationItem[]
+  weightLogs?: { date: string; weight: number }[]
+  diseases?: ResidentDiseaseItem[]
+  vaccinations?: ResidentVaccinationItem[]
+  // 所有宠物的健康数据，用于多宠切换
+  allPetsWeightLogs?: Record<string, { date: string; weight: number }[]>
+  allPetsDiseases?: Record<string, ResidentDiseaseItem[]>
+  allPetsVaccinations?: Record<string, ResidentVaccinationItem[]>
+  allPetsWeightKg?: Record<string, number | null>
+}
+
+export interface ResidentDiseaseItem {
+  id: string
+  name: string
+  diagnosedOn: string
+  status: string
+  notes?: string
+}
+
+export interface ResidentVaccinationItem {
+  id: string
+  name: string
+  administeredOn: string
+  nextDueDate?: string
+  notes?: string
+}
+
+export interface PetSelectorItem {
+  id: string
+  name: string
+  avatarUrl: string | null
+  species: string
 }
 
 export interface FamilyMember {
@@ -60,4 +91,5 @@ export interface ResidentBookData {
   growth: ResidentGrowthItem[]
   health: ResidentHealth
   family: FamilyMember[]
+  pets?: PetSelectorItem[]
 }

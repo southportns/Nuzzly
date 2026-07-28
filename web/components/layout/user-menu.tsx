@@ -1,9 +1,9 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useRef, useState } from "react"
-import { PawPrint, Sparkles, User, LogOut, Loader2 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 
 export function UserMenu() {
@@ -46,12 +46,15 @@ export function UserMenu() {
         className="group relative inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#FFB89A] via-[#FF9A7A] to-[#FF7A59] px-4 py-2 text-[13px] font-semibold text-white shadow-[0_4px_14px_rgba(255,122,89,0.28)] transition-all hover:scale-[1.03] hover:shadow-[0_6px_18px_rgba(255,122,89,0.38)] active:scale-[0.98]"
         title="我在这儿 · 跳转到个人中心"
       >
-        <span className="absolute -left-1 -top-1 inline-flex">
-          <Sparkles className="size-3 -rotate-12 text-[#FFD89A] opacity-90 transition-transform group-hover:rotate-0" />
-        </span>
-        <PawPrint className="size-3.5 transition-transform group-hover:rotate-[-8deg]" />
         <span>我在这儿</span>
-        <span className="ml-0.5 inline-block transition-transform group-hover:translate-x-0.5">🐾</span>
+        <span
+          className="ml-1 inline-block size-2.5 rounded-full transition-transform group-hover:translate-x-0.5"
+          style={{
+            background: "rgba(255, 255, 255, 0.6)",
+            boxShadow: "0 1px 3px rgba(255, 255, 255, 0.3), inset 0 0.5px 1px rgba(255, 255, 255, 0.8)",
+            backdropFilter: "blur(4px)",
+          }}
+        />
       </Link>
 
       <div
@@ -71,7 +74,10 @@ export function UserMenu() {
             role="menuitem"
           >
             <span className="flex size-8 items-center justify-center rounded-full bg-[#FF7A59]/10 text-[#FF7A59] transition-colors group-hover:bg-[#FF7A59]/20">
-              <User className="size-4" />
+              <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="18px" height="18px" viewBox="0 0 18 18" className="size-4">
+                <circle cx="9" cy="4.5" r="2.75" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" data-color="color-2" />
+                <path d="M13.762,15.516c.86-.271,1.312-1.221,.947-2.045-.97-2.191-3.159-3.721-5.709-3.721s-4.739,1.53-5.709,3.721c-.365,.825,.087,1.774,.947,2.045,1.225,.386,2.846,.734,4.762,.734s3.537-.348,4.762-.734Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+              </svg>
             </span>
             <span className="flex flex-col">
               <span className="text-[13.5px] font-semibold text-[#111111]">进入我的资料</span>
@@ -89,7 +95,16 @@ export function UserMenu() {
             role="menuitem"
           >
             <span className="flex size-8 items-center justify-center rounded-full bg-[#F7F6F3] text-[#6B6B6B] transition-colors group-hover:bg-[#ff3b30]/12 group-hover:text-[#ff3b30]">
-              {signingOut ? <Loader2 className="size-4 animate-spin" /> : <LogOut className="size-4" />}
+              {signingOut ? (
+                <EmojiIcon name="Loader2" className="size-4 animate-spin" />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="18px" height="18px" viewBox="0 0 18 18" className="size-4">
+                  <path d="M11.75,5.75V3.25c0-.552-.448-1-1-1H4.25c-.552,0-1,.448-1,1V14.75c0,.552,.448,1,1,1h6.5c.552,0,1-.448,1-1v-2.5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+                  <polyline points="14.5 6.25 17.25 9 14.5 11.75" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" data-color="color-2" />
+                  <line x1="17.25" y1="9" x2="11.25" y2="9" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" data-color="color-2" />
+                  <path d="M3.457,2.648l3.321,2.059c.294,.182,.473,.504,.473,.85v6.887c0,.346-.179,.667-.473,.85l-3.322,2.06" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+                </svg>
+              )}
             </span>
             <span className="flex flex-col">
               <span className="text-[13.5px] font-semibold text-[#111111]">退出登录</span>

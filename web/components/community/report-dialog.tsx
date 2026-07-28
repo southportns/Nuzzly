@@ -1,9 +1,9 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
-import { X } from "lucide-react"
 import type { User } from "@supabase/supabase-js"
 
 interface ReportDialogProps {
@@ -82,7 +82,7 @@ export function ReportDialog({ open, onOpenChange, postId, user }: ReportDialogP
             onClick={() => onOpenChange(false)}
             className="flex size-8 items-center justify-center rounded-full bg-[#F5F5F5] hover:bg-[#EEE]"
           >
-            <X className="size-4 text-[#6B6B6B]" />
+            <EmojiIcon name="X" className="size-4 text-[#6B6B6B]" />
           </button>
           <span className="text-[16px] font-semibold text-[#1A1A1A]">举报</span>
           <button
@@ -122,3 +122,5 @@ export function ReportDialog({ open, onOpenChange, postId, user }: ReportDialogP
     </div>
   )
 }
+
+export default ReportDialog

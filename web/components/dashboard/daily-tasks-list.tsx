@@ -1,7 +1,7 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
-import { CheckCircle2, Circle, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 interface Task {
@@ -131,11 +131,11 @@ export function DailyTasksList({ tasks, logs, petId, date }: Props) {
                 className="flex items-center gap-1"
               >
                 {isLoading ? (
-                  <Loader2 className="size-5 animate-spin text-[#FF7A59]" />
+                  <EmojiIcon name="Loader2" className="size-5 animate-spin text-[#FF7A59]" />
                 ) : isCompleted ? (
-                  <CheckCircle2 className="size-5 text-[#34c759]" />
+                  <EmojiIcon name="CheckCircle2" className="size-5 text-[#34c759]" />
                 ) : (
-                  <Circle className="size-5 text-[#D2D1CF] hover:text-[#FF7A59]" />
+                  <EmojiIcon name="Circle" className="size-5 text-[#D2D1CF] hover:text-[#FF7A59]" />
                 )}
               </button>
             </div>

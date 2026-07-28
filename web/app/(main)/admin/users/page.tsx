@@ -1,7 +1,7 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { requireAdmin, listUsers } from "@/lib/supabase/query"
-import { Search } from "lucide-react"
 import { UserRowActions } from "@/components/admin/user-row-actions"
 
 export const metadata = {
@@ -46,7 +46,7 @@ export default async function AdminUsersPage({
       {/* Filter bar */}
       <form className="flex flex-wrap items-center gap-3 rounded-[16px] border border-[rgba(0,0,0,0.05)] bg-white p-3">
         <label className="flex flex-1 items-center gap-2 rounded-full bg-[#F7F6F3] px-4 py-2.5">
-          <Search className="size-4 text-[#9B9A98]" />
+          <EmojiIcon name="Search" className="size-4 text-[#9B9A98]" />
           <input
             name="search"
             defaultValue={search}

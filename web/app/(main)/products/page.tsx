@@ -1,6 +1,6 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { ProductCard } from "@/components/products/product-card"
 import { SidebarNav } from "@/components/products/sidebar-nav"
-import { Search } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Suspense } from "react"
 import { queryCategories, queryProducts } from "@/lib/supabase/query"
@@ -22,11 +22,11 @@ export default async function ProductsPage({
         {/* Main layout: Sidebar + Content */}
         <div className="flex gap-8">
           {/* Left Sidebar */}
-          <aside className="hidden w-[240px] shrink-0 lg:block">
-            <div className="sticky top-24 rounded-[16px] border border-[#E5E7EB] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <aside className="hidden w-[240px] shrink-0 lg:block pt-24">
+            <div className="sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto rounded-[16px] border border-[#E5E7EB] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] scrollbar-hidden">
               {/* Search */}
               <div className="relative mb-6">
-                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9CA3AF]" />
+                <EmojiIcon name="Search" className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9CA3AF]" />
                 <input
                   name="q"
                   type="search"
@@ -46,7 +46,7 @@ export default async function ProductsPage({
           <div className="min-w-0 flex-1 pt-24">
             {/* Mobile search - visible on small screens */}
             <div className="relative mb-6 lg:hidden">
-              <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#9CA3AF]" />
+              <EmojiIcon name="Search" className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#9CA3AF]" />
               <input
                 name="q"
                 type="search"
@@ -82,10 +82,6 @@ async function MobileFilters({
   hot?: string
 }) {
   const { data: categories } = await queryCategories()
-  const catCategories = (categories ?? []).filter((c) =>
-    ["cat-food", "cat-litter", "cat-canned", "cat-snack", "cat-health"].includes(c.slug) ||
-    c.name.includes("猫")
-  )
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -97,7 +93,7 @@ async function MobileFilters({
       >
         全部
       </a>
-      {catCategories.map((cat) => (
+      {categories?.map((cat) => (
         <a
           key={cat.id}
           href={`/products?category=${cat.slug}`}
@@ -141,11 +137,7 @@ async function ProductGrid({ category }: { category?: string; hot?: string }) {
 
 async function SidebarNavWithData() {
   const { data: categories } = await queryCategories()
-  const catCategories = (categories ?? []).filter((c) =>
-    ["cat-food", "cat-litter", "cat-canned", "cat-snack", "cat-health"].includes(c.slug) ||
-    c.name.includes("猫")
-  )
-  return <SidebarNav categories={catCategories} />
+  return <SidebarNav categories={categories ?? []} />
 }
 
 function SidebarSkeleton() {

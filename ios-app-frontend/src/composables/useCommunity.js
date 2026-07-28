@@ -32,8 +32,8 @@ async function fetchPosts({ petType, breed, cursor } = {}) {
     .from('community_posts')
     .select(`
       id, profile_id, content, images, pet_type, breed,
-      likes_count, review_status, created_at,
-      public_profiles!inner(display_name, avatar_url)
+      likes_count, comments_count, favorites_count, review_status, created_at,
+      public_profiles!inner(display_name, avatar_url, username)
     `)
     .eq('is_deleted', false)
     .in('review_status', ['approved', 'auto_approved'])

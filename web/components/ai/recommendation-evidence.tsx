@@ -1,8 +1,8 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { AlertTriangle, BarChart3, Database, Info, ShieldCheck } from "lucide-react"
 import type { AccessLevel } from "@/lib/ai/explain-types"
 
 interface Props {
@@ -35,7 +35,7 @@ export function RecommendationEvidence({ breakdown, level }: Props) {
       {ma?.factors && ma.factors.length > 0 && (
         <div>
           <div className="flex items-center gap-1.5 mb-2">
-            <BarChart3 className="size-3.5 text-muted-foreground" />
+            <EmojiIcon name="BarChart3" className="size-3.5 text-muted-foreground" />
             <span className="text-xs font-medium text-muted-foreground">统计权重分解</span>
             {ma.attribution_type === "statistical_only" && (
               <Badge variant="outline" className="text-[10px] ml-1">仅统计</Badge>
@@ -62,14 +62,14 @@ export function RecommendationEvidence({ breakdown, level }: Props) {
       {(breakdown.evidence_support?.length ?? 0) > 0 && (
         <div>
           <div className="flex items-center gap-1.5 mb-2">
-            <Database className="size-3.5 text-primary" />
+            <EmojiIcon name="Database" className="size-3.5 text-primary" />
             <span className="text-xs font-medium text-primary">数据支持</span>
             {level === "L2" && <span className="text-[10px] text-muted-foreground/50 ml-auto">已过滤</span>}
           </div>
           <div className="space-y-1.5">
             {breakdown.evidence_support!.map((ep, i) => (
               <div key={i} className="flex items-start gap-2 rounded-lg bg-muted/30 p-2 text-xs">
-                <Info className="size-3 text-muted-foreground shrink-0 mt-0.5" />
+                <EmojiIcon name="Info" className="size-3 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
                   <span className="font-medium">{ep.data_point}</span>
                   <span className="text-muted-foreground"> — {ep.observed_value}</span>
@@ -85,7 +85,7 @@ export function RecommendationEvidence({ breakdown, level }: Props) {
       {(breakdown.negative_signals?.length ?? 0) > 0 && (
         <div>
           <div className="flex items-center gap-1.5 mb-2">
-            <AlertTriangle className="size-3.5 text-amber-400" />
+            <EmojiIcon name="AlertTriangle" className="size-3.5 text-amber-400" />
             <span className="text-xs font-medium text-amber-400">风险信号</span>
             {level === "L2" && <span className="text-[10px] text-muted-foreground/50 ml-auto">已过滤</span>}
           </div>
@@ -113,7 +113,7 @@ export function RecommendationEvidence({ breakdown, level }: Props) {
       {breakdown.product_confidence != null && (
         <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border/40">
           <span className="flex items-center gap-1">
-            <ShieldCheck className="size-3 text-primary" />数据置信度
+            <EmojiIcon name="ShieldCheck" className="size-3 text-primary" />数据置信度
           </span>
           <span className="tabular-nums font-medium">{breakdown.product_confidence}%</span>
         </div>

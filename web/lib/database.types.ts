@@ -351,6 +351,148 @@ export type Database = {
           },
         ]
       }
+      community_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_deleted: boolean
+          post_id: string
+          profile_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          post_id: string
+          profile_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          post_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_favorites_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_favorites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_favorites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_likes: {
         Row: {
           created_at: string
@@ -397,8 +539,10 @@ export type Database = {
       community_posts: {
         Row: {
           breed: string | null
+          comments_count: number | null
           content: string
           created_at: string
+          favorites_count: number | null
           id: string
           images: string[] | null
           ip_address: string | null
@@ -411,8 +555,10 @@ export type Database = {
         }
         Insert: {
           breed?: string | null
+          comments_count?: number | null
           content: string
           created_at?: string
+          favorites_count?: number | null
           id?: string
           images?: string[] | null
           ip_address?: string | null
@@ -425,8 +571,10 @@ export type Database = {
         }
         Update: {
           breed?: string | null
+          comments_count?: number | null
           content?: string
           created_at?: string
+          favorites_count?: number | null
           id?: string
           images?: string[] | null
           ip_address?: string | null
@@ -1150,7 +1298,7 @@ export type Database = {
           created_at: string
           id: string
           model_used: string | null
-          pet_id: string
+          pet_id: string | null
           profile_id: string
           report_id: string | null
           user_message: string
@@ -1161,8 +1309,8 @@ export type Database = {
           created_at?: string
           id?: string
           model_used?: string | null
-          pet_id: string
-          profile_id: string
+          pet_id?: string | null
+          profile_id?: string
           report_id?: string | null
           user_message: string
         }
@@ -1172,7 +1320,7 @@ export type Database = {
           created_at?: string
           id?: string
           model_used?: string | null
-          pet_id?: string
+          pet_id?: string | null
           profile_id?: string
           report_id?: string | null
           user_message?: string
@@ -4261,8 +4409,18 @@ export type Database = {
           p_breed: string
           p_content: string
           p_images: string[]
-          p_ip_address?: string
           p_pet_type: string
+          p_audit_token: string
+          p_ip_address?: string
+        }
+        Returns: string
+      }
+      create_community_comment: {
+        Args: {
+          p_post_id: string
+          p_content: string
+          p_audit_token: string
+          p_ip_address?: string
         }
         Returns: string
       }

@@ -1,7 +1,7 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
-import { Calendar, Clock, ChevronRight } from "lucide-react"
 import Link from "next/link"
 
 interface PetEvent {
@@ -70,7 +70,6 @@ export function PetEventsList({ events }: Props) {
                   严重度 {event.severity}
                 </span>
               )}
-              <ChevronRight className="size-4 text-[#D2D1CF]" />
             </div>
           </Link>
         )

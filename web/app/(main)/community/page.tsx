@@ -5,9 +5,5 @@ export const metadata = {
 }
 
 export default function CommunityPage() {
-  return (
-    <div className="min-h-screen bg-[#F7F6F3]">
-      <CommunityFeed />
-    </div>
-  )
+  return <CommunityFeed />
 }

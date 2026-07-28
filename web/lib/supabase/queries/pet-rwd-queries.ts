@@ -3,6 +3,7 @@
 // =============================================
 
 import { createClient as createServerClient } from "@/lib/supabase/server"
+import { sanitizeSearchString } from "@/lib/validation"
 import type {
   PetEvent,
   SymptomOntology,
@@ -106,11 +107,14 @@ export async function querySymptoms(category?: string) {
 }
 
 export async function searchSymptoms(searchTerm: string) {
+  const sanitized = sanitizeSearchString(searchTerm)
+  if (!sanitized) return { data: [] as SymptomOntology[], error: null }
+
   const supabase = await createServerClient()
   const { data, error } = await supabase
     .from("symptom_ontology")
     .select("*")
-    .or(`canonical_name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`)
+    .or(`canonical_name.ilike.%${sanitized}%,display_name.ilike.%${sanitized}%`)
     .eq("is_active", true)
   return { data: data as SymptomOntology[] | null, error }
 }

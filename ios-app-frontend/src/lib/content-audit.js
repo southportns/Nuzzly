@@ -79,8 +79,9 @@ export async function auditContent(content) {
     const result = await res.json()
     return { passed: result.passed, reason: result.reason }
   } catch (e) {
-    console.warn('[content-audit] 审核请求失败:', e.message)
-    return { passed: true, reason: '审核服务不可用，内容将人工复核' }
+    console.error('[content-audit] 审核请求失败:', e.message)
+    // 审核服务不可用时拒绝发布，防止通过 DoS 审核服务来绕过内容审核
+    return { passed: false, reason: '审核服务不可用，请稍后重试' }
   }
 }
 
@@ -110,7 +111,9 @@ export async function auditImage(imageUrl) {
 
     const result = await res.json()
     return { passed: result.passed, reason: result.reason }
-  } catch {
-    return { passed: true, reason: '图片审核服务不可用' }
+  } catch (e) {
+    console.error('[content-audit] 图片审核请求失败:', e.message)
+    // 审核服务不可用时拒绝，保持与文本审核一致的 fail-closed 策略
+    return { passed: false, reason: '图片审核服务不可用，请稍后重试' }
   }
 }

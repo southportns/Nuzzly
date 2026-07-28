@@ -49,15 +49,17 @@ export function useNotifications() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const unreadIds = notifications.value.filter(n => !n.is_read).map(n => n.id)
+    if (unreadIds.length === 0) return
     notifications.value = notifications.value.map(n => ({ ...n, is_read: true }))
     unreadCount.value = 0
-    for (const nid of unreadIds) {
-      try {
-        await writeGateway('MARK_NOTIFICATION_READ', { id: nid })
-      } catch (e) {
-        console.error('[useNotifications.markAllRead]', e.message)
-      }
-    }
+    // 并行批量标记，替代串行 for 循环（N 次 RTT → 1 次并发）
+    await Promise.all(
+      unreadIds.map(id =>
+        writeGateway('MARK_NOTIFICATION_READ', { id }).catch(e =>
+          console.error('[useNotifications.markAllRead]', e.message)
+        )
+      )
+    )
   }
 
   return {

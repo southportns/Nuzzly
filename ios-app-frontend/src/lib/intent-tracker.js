@@ -53,6 +53,12 @@ let eventQueue = []
 // 是否启用远程上报（可通过配置开关）
 let enableRemoteTracking = false
 
+// debounce 写 localStorage 的定时器（避免高频 track 频繁序列化）
+let saveTimer = null
+
+// setupAutoTracking 注册的监听器取消函数（用于 destroyTracker 清理）
+let unsubscribeFns = []
+
 /**
  * 初始化追踪器
  * - 加载本地缓存的事件
@@ -78,64 +84,65 @@ export function initTracker() {
 
 /**
  * 设置自动追踪（监听 Event Bus 事件）
+ * 监听器取消函数收集到 unsubscribeFns，供 destroyTracker 清理
  */
 function setupAutoTracking() {
   // 产品浏览
-  on(EVENTS.PRODUCT_VIEWED, (payload) => {
+  unsubscribeFns.push(on(EVENTS.PRODUCT_VIEWED, (payload) => {
     track(TRACK_EVENTS.PRODUCT_VIEW, {
       product_id: payload.id,
       product_name: payload.name,
       category: payload.category
     })
-  })
+  }))
 
   // 产品收藏
-  on(EVENTS.PRODUCT_BOOKMARKED, (payload) => {
+  unsubscribeFns.push(on(EVENTS.PRODUCT_BOOKMARKED, (payload) => {
     track(TRACK_EVENTS.PRODUCT_BOOKMARK, {
       product_id: payload.productId,
       bookmarked: payload.bookmarked
     })
-  })
+  }))
 
   // 评价创建
-  on(EVENTS.REVIEW_CREATED, (payload) => {
+  unsubscribeFns.push(on(EVENTS.REVIEW_CREATED, (payload) => {
     track(TRACK_EVENTS.REVIEW_CREATE, {
       product_id: payload.productId,
       rating: payload.rating
     })
-  })
+  }))
 
   // 宠物创建
-  on(EVENTS.PET_CREATED, (payload) => {
+  unsubscribeFns.push(on(EVENTS.PET_CREATED, (payload) => {
     track(TRACK_EVENTS.PET_CREATE, {
       pet_id: payload.id,
       species: payload.species,
       breed: payload.breed
     })
-  })
+  }))
 
   // 宠物切换
-  on(EVENTS.PET_SWITCHED, (payload) => {
+  unsubscribeFns.push(on(EVENTS.PET_SWITCHED, (payload) => {
     track(TRACK_EVENTS.PET_SWITCH, {
       pet_id: payload.id
     })
-  })
+  }))
 
   // 记录创建
-  on(EVENTS.RECORD_CREATED, (payload) => {
+  unsubscribeFns.push(on(EVENTS.RECORD_CREATED, (payload) => {
     track(TRACK_EVENTS.RECORD_CREATE, {
       pet_id: payload.petId,
       record_type: payload.type
     })
-  })
+  }))
 
   // 追踪创建
-  on(EVENTS.FOLLOWUP_CREATED, (payload) => {
+  unsubscribeFns.push(on(EVENTS.FOLLOWUP_CREATED, (payload) => {
     track(TRACK_EVENTS.FOLLOWUP_CREATE, {
       pet_id: payload.petId,
       product_id: payload.productId
     })
-  })
+  }))
 }
 
 /**
@@ -168,8 +175,8 @@ export function track(eventName, properties = {}, options = {}) {
     eventQueue = eventQueue.slice(-MAX_LOCAL_EVENTS)
   }
 
-  // 保存到本地存储
-  saveToLocalStorage()
+  // debounce 保存到本地存储（2s 内多次 track 只写一次，减少主线程阻塞）
+  debouncedSave()
 
   // 立即上报
   if (options.immediate || enableRemoteTracking) {
@@ -236,6 +243,32 @@ function saveToLocalStorage() {
   } catch (err) {
     console.warn('[Tracker] 保存到本地存储失败:', err)
   }
+}
+
+/**
+ * debounce 版 saveToLocalStorage：2s 内多次调用只执行一次写入
+ */
+function debouncedSave() {
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    saveToLocalStorage()
+    saveTimer = null
+  }, 2000)
+}
+
+/**
+ * 销毁追踪器：取消所有 Event Bus 监听器并同步保存队列
+ * 应在应用卸载或组件 onUnmounted 时调用，防止监听器泄漏
+ */
+export function destroyTracker() {
+  unsubscribeFns.forEach(fn => fn())
+  unsubscribeFns = []
+  if (saveTimer) {
+    clearTimeout(saveTimer)
+    saveTimer = null
+  }
+  saveToLocalStorage() // 同步保存残留事件
+  console.log('[Tracker] 已销毁，监听器已清理')
 }
 
 /**

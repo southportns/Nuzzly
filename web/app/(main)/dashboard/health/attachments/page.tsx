@@ -1,5 +1,5 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { redirect } from "next/navigation"
-import { Paperclip, Upload, Image, FileText, Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { getUser } from "@/lib/supabase/query"
 import { getAttachments } from "@/lib/supabase/queries/attachment-queries"
@@ -56,21 +56,21 @@ export default async function AttachmentsPage() {
       <div className="grid grid-cols-4 gap-4">
         <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Paperclip className="size-4 text-[#FF7A59]" />
+            <EmojiIcon name="Paperclip" className="size-4 text-[#FF7A59]" />
             <span className="text-[12px] text-[#6B6B6B]">全部</span>
           </div>
           <span className="text-[24px] font-semibold text-[#111111]">{attachments.length}</span>
         </div>
         <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Image className="size-4 text-[#585858]" />
+            <EmojiIcon name="Image" className="size-4 text-[#585858]" />
             <span className="text-[12px] text-[#6B6B6B]">图片</span>
           </div>
           <span className="text-[24px] font-semibold text-[#111111]">{images.length}</span>
         </div>
         <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-4">
           <div className="flex items-center gap-2 mb-2">
-            <FileText className="size-4 text-[#6B6B6B]" />
+            <EmojiIcon name="FileText" className="size-4 text-[#6B6B6B]" />
             <span className="text-[12px] text-[#6B6B6B]">文档</span>
           </div>
           <span className="text-[24px] font-semibold text-[#111111]">{documents.length}</span>
@@ -86,7 +86,7 @@ export default async function AttachmentsPage() {
       {/* Attachments List */}
       <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Paperclip className="size-5 text-[#FF7A59]" />
+          <EmojiIcon name="Paperclip" className="size-5 text-[#FF7A59]" />
           <span className="text-[15px] font-semibold text-[#111111]">全部附件</span>
         </div>
         
@@ -94,7 +94,7 @@ export default async function AttachmentsPage() {
           <AttachmentsList attachments={attachments} />
         ) : (
           <div className="py-12 text-center">
-            <Upload className="mx-auto mb-3 size-12 text-[#e0e0e0]" />
+            <EmojiIcon name="Upload" className="mx-auto mb-3 size-12 text-[#e0e0e0]" />
             <p className="text-[14px] text-[#6B6B6B]">暂无附件</p>
             <p className="mt-1 text-[12px] text-[#999]">点击上方按钮上传第一个文件</p>
           </div>

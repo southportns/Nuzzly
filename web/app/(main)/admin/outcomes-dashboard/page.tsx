@@ -1,5 +1,6 @@
 "use client"
 
+import { EmojiIcon, emojiIcon } from "@/components/ui/emoji-icon"
 import { Fragment, useCallback, useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -7,22 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
-import {
-  Activity,
-  AlertTriangle,
-  BarChart3,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  Gauge,
-  History,
-  Layers,
-  RefreshCw,
-  Sparkles,
-  Target,
-  TrendingUp,
-  Users,
-} from "lucide-react"
 
 // ─── Types (match /api/admin/outcomes/dashboard + /effectiveness responses) ─
 
@@ -223,7 +208,7 @@ export default function OutcomesDashboardPage() {
       <Card className="border-red-200 bg-red-50">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <AlertTriangle className="size-4 text-red-500" />
+            <EmojiIcon name="AlertTriangle" className="size-4 text-red-500" />
             <CardTitle>加载失败</CardTitle>
           </div>
         </CardHeader>
@@ -248,12 +233,12 @@ export default function OutcomesDashboardPage() {
   const dataCompleteness = Math.round((data.attribution.successRate ?? 0) * 100)
 
   const stats = [
-    { label: "处理推荐数", value: data.observability.flywheelCompletedCount, icon: Sparkles, accent: "#7BA7BC" },
-    { label: "结果分析数", value: data.observability.longitudinalCount, icon: BarChart3, accent: "#A8C5A0" },
-    { label: "归因计算数", value: data.observability.attributionCount, icon: Target, accent: "#E8A87C" },
-    { label: "基准更新数", value: data.observability.benchmarkUpdateCount, icon: Layers, accent: "#FF7A59" },
-    { label: "有效性重算数", value: data.observability.effectivenessScoreCount, icon: Gauge, accent: "#B59BD8" },
-    { label: "策略评估数", value: data.observability.explainabilityCount, icon: Activity, accent: "#4A7A91" },
+    { label: "处理推荐数", value: data.observability.flywheelCompletedCount, icon: emojiIcon("Sparkles"), accent: "#7BA7BC" },
+    { label: "结果分析数", value: data.observability.longitudinalCount, icon: emojiIcon("BarChart3"), accent: "#A8C5A0" },
+    { label: "归因计算数", value: data.observability.attributionCount, icon: emojiIcon("Target"), accent: "#E8A87C" },
+    { label: "基准更新数", value: data.observability.benchmarkUpdateCount, icon: emojiIcon("Layers"), accent: "#FF7A59" },
+    { label: "有效性重算数", value: data.observability.effectivenessScoreCount, icon: emojiIcon("Gauge"), accent: "#B59BD8" },
+    { label: "策略评估数", value: data.observability.explainabilityCount, icon: emojiIcon("Activity"), accent: "#4A7A91" },
   ]
 
   return (
@@ -271,7 +256,7 @@ export default function OutcomesDashboardPage() {
         <div className="flex shrink-0 items-center gap-2">
           <StatusBadge status={runStatus} />
           <Button onClick={handleRunFlywheel} disabled={running} size="sm">
-            <RefreshCw className={running ? "animate-spin" : ""} />
+            <EmojiIcon name="RefreshCw" className={running ? "animate-spin" : ""} />
             {running ? "运行中" : "运行飞轮"}
           </Button>
         </div>
@@ -296,7 +281,7 @@ export default function OutcomesDashboardPage() {
       {/* Section 1.5: Flywheel iterations trend */}
       <section>
         <div className="mb-3 flex items-center gap-2">
-          <History className="size-4 text-[#7BA7BC]" />
+          <EmojiIcon name="History" className="size-4 text-[#7BA7BC]" />
           <h2 className="text-[16px] font-semibold text-[#111111]">飞轮迭代历史趋势</h2>
         </div>
         <Card>
@@ -323,7 +308,7 @@ export default function OutcomesDashboardPage() {
         <Card className="mt-4">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Clock className="size-4 text-[#A8C5A0]" />
+              <EmojiIcon name="Clock" className="size-4 text-[#A8C5A0]" />
               <CardTitle className="text-sm">迭代详情</CardTitle>
             </div>
             <CardDescription>
@@ -428,7 +413,7 @@ export default function OutcomesDashboardPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Users className="size-4 text-[#7BA7BC]" />
+              <EmojiIcon name="Users" className="size-4 text-[#7BA7BC]" />
               <CardTitle className="text-sm">群体智能 · Top 5 Cohorts</CardTitle>
             </div>
             <CardDescription>cohort_intelligence · member_count / avg_health_score / avg_improvement_rate</CardDescription>
@@ -469,7 +454,7 @@ export default function OutcomesDashboardPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <TrendingUp className="size-4 text-[#A8C5A0]" />
+              <EmojiIcon name="TrendingUp" className="size-4 text-[#A8C5A0]" />
               <CardTitle className="text-sm">健康基准 · Top 5</CardTitle>
             </div>
             <CardDescription>health_benchmarks · sample_size / median_improvement / median_days_to_improvement</CardDescription>
@@ -542,7 +527,7 @@ function StatusBadge({ status }: { status: RunStatus }) {
   if (status === "running") {
     return (
       <Badge className="bg-amber-100 text-amber-700">
-        <RefreshCw className="animate-spin" />
+        <EmojiIcon name="RefreshCw" className="animate-spin" />
         running
       </Badge>
     )
@@ -895,9 +880,9 @@ function IterationsTable({ iterations }: { iterations: IterationItem[] }) {
                     {hasError ? (
                       <span className="inline-flex items-center gap-1">
                         {isOpen ? (
-                          <ChevronDown className="size-3" />
+                          <EmojiIcon name="ChevronDown" className="size-3" />
                         ) : (
-                          <ChevronRight className="size-3" />
+                          <EmojiIcon name="ChevronRight" className="size-3" />
                         )}
                         #{it.iteration_number}
                       </span>
@@ -930,7 +915,7 @@ function IterationsTable({ iterations }: { iterations: IterationItem[] }) {
                   <tr className="bg-red-50/50">
                     <td colSpan={6} className="py-2 px-3">
                       <div className="flex items-start gap-2">
-                        <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-red-500" />
+                        <EmojiIcon name="AlertTriangle" className="mt-0.5 size-3.5 shrink-0 text-red-500" />
                         <div className="min-w-0">
                           <div className="text-[11px] font-semibold uppercase tracking-wide text-red-600">
                             Error

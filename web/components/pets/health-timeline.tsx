@@ -1,22 +1,12 @@
 "use client"
 
+import { EmojiIcon, emojiIcon } from "@/components/ui/emoji-icon"
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-  Utensils,
-  AlertTriangle,
-  Stethoscope,
-  Pill,
-  Weight,
-  Activity,
-  Camera,
-  MessageSquare,
-  Calendar,
-} from "lucide-react"
 import type { PetEvent, PetEventType } from "@/lib/supabase/types"
 
 interface HealthTimelineProps {
@@ -25,26 +15,26 @@ interface HealthTimelineProps {
   showFilters?: boolean
 }
 
-const eventConfig: Record<PetEventType, { icon: typeof Utensils; label: string; color: string }> = {
-  food_start: { icon: Utensils, label: "开始食用", color: "bg-green-100 text-green-700" },
-  food_stop: { icon: Utensils, label: "停止食用", color: "bg-gray-100 text-gray-700" },
-  food_switch: { icon: Utensils, label: "更换食品", color: "bg-blue-100 text-blue-700" },
-  food_amount_change: { icon: Utensils, label: "食量变化", color: "bg-yellow-100 text-yellow-700" },
-  symptom_observed: { icon: AlertTriangle, label: "观察到症状", color: "bg-red-100 text-red-700" },
-  symptom_resolved: { icon: Activity, label: "症状消失", color: "bg-green-100 text-green-700" },
-  weight_change: { icon: Weight, label: "体重变化", color: "bg-purple-100 text-purple-700" },
-  energy_change: { icon: Activity, label: "活跃度变化", color: "bg-orange-100 text-orange-700" },
-  appetite_change: { icon: Utensils, label: "食欲变化", color: "bg-yellow-100 text-yellow-700" },
-  vet_visit: { icon: Stethoscope, label: "就医", color: "bg-red-100 text-red-700" },
-  diagnosis: { icon: Stethoscope, label: "诊断", color: "bg-red-100 text-red-700" },
-  medication_start: { icon: Pill, label: "开始用药", color: "bg-blue-100 text-blue-700" },
-  medication_stop: { icon: Pill, label: "停止用药", color: "bg-gray-100 text-gray-700" },
-  vaccination: { icon: Stethoscope, label: "疫苗接种", color: "bg-green-100 text-green-700" },
-  behavior_change: { icon: Activity, label: "行为变化", color: "bg-orange-100 text-orange-700" },
-  environment_change: { icon: Activity, label: "环境变化", color: "bg-gray-100 text-gray-700" },
-  review_posted: { icon: MessageSquare, label: "发布评价", color: "bg-blue-100 text-blue-700" },
-  followup_completed: { icon: Calendar, label: "完成追评", color: "bg-green-100 text-green-700" },
-  photo_uploaded: { icon: Camera, label: "上传照片", color: "bg-purple-100 text-purple-700" },
+const eventConfig: Record<PetEventType, { icon: ReturnType<typeof emojiIcon>; label: string; color: string }> = {
+  food_start: { icon: emojiIcon("Utensils"), label: "开始食用", color: "bg-green-100 text-green-700" },
+  food_stop: { icon: emojiIcon("Utensils"), label: "停止食用", color: "bg-gray-100 text-gray-700" },
+  food_switch: { icon: emojiIcon("Utensils"), label: "更换食品", color: "bg-blue-100 text-blue-700" },
+  food_amount_change: { icon: emojiIcon("Utensils"), label: "食量变化", color: "bg-yellow-100 text-yellow-700" },
+  symptom_observed: { icon: emojiIcon("AlertTriangle"), label: "观察到症状", color: "bg-red-100 text-red-700" },
+  symptom_resolved: { icon: emojiIcon("Activity"), label: "症状消失", color: "bg-green-100 text-green-700" },
+  weight_change: { icon: emojiIcon("Weight"), label: "体重变化", color: "bg-purple-100 text-purple-700" },
+  energy_change: { icon: emojiIcon("Activity"), label: "活跃度变化", color: "bg-orange-100 text-orange-700" },
+  appetite_change: { icon: emojiIcon("Utensils"), label: "食欲变化", color: "bg-yellow-100 text-yellow-700" },
+  vet_visit: { icon: emojiIcon("Stethoscope"), label: "就医", color: "bg-red-100 text-red-700" },
+  diagnosis: { icon: emojiIcon("Stethoscope"), label: "诊断", color: "bg-red-100 text-red-700" },
+  medication_start: { icon: emojiIcon("Pill"), label: "开始用药", color: "bg-blue-100 text-blue-700" },
+  medication_stop: { icon: emojiIcon("Pill"), label: "停止用药", color: "bg-gray-100 text-gray-700" },
+  vaccination: { icon: emojiIcon("Stethoscope"), label: "疫苗接种", color: "bg-green-100 text-green-700" },
+  behavior_change: { icon: emojiIcon("Activity"), label: "行为变化", color: "bg-orange-100 text-orange-700" },
+  environment_change: { icon: emojiIcon("Activity"), label: "环境变化", color: "bg-gray-100 text-gray-700" },
+  review_posted: { icon: emojiIcon("MessageSquare"), label: "发布评价", color: "bg-blue-100 text-blue-700" },
+  followup_completed: { icon: emojiIcon("Calendar"), label: "完成追评", color: "bg-green-100 text-green-700" },
+  photo_uploaded: { icon: emojiIcon("Camera"), label: "上传照片", color: "bg-purple-100 text-purple-700" },
 }
 
 const severityLabels: Record<number, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -166,7 +156,7 @@ export function HealthTimeline({ petId, limit = 50, showFilters = true }: Health
 
         {filteredEvents.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <Activity className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <EmojiIcon name="Activity" className="h-12 w-12 mx-auto mb-2 opacity-50" />
             <p>暂无健康事件记录</p>
             <p className="text-sm mt-1">记录宠物的饮食、症状、就医等信息</p>
           </div>
@@ -175,7 +165,7 @@ export function HealthTimeline({ petId, limit = 50, showFilters = true }: Health
             {Object.entries(groupedEvents).map(([dateKey, dayEvents]) => (
               <div key={dateKey}>
                 <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <EmojiIcon name="Calendar" className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-muted-foreground">{dateKey}</span>
                 </div>
                 <div className="space-y-3 pl-6 border-l-2 border-muted">

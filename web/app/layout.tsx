@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "@/components/ui/sonner";
-import { DynamicLobeProvider } from "@/components/dynamic-lobe-provider";
+import { AuthProvider } from "@/hooks/use-auth";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -32,14 +32,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" className="h-full antialiased" suppressHydrationWarning>
-      <head>
-        <link href="https://fonts.googleapis.com/css2?family=Varela+Round&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet" />
-        <link rel="preload" href="/qiuqiu.glb" as="fetch" crossOrigin="anonymous" />
-      </head>
       <body className="min-h-full flex flex-col">
-        <DynamicLobeProvider>
+        <AuthProvider>
           {children}
-        </DynamicLobeProvider>
+        </AuthProvider>
         <Toaster />
       </body>
     </html>

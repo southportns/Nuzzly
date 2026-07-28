@@ -20,19 +20,9 @@ export function NewPetForm() {
       return { ok: false as const, error: "未登录" }
     }
     try {
-      // 1. Upload avatar first (if any)
-      let photoUrl: string | null = null
-      if (avatarFile) {
-        const up = await uploadPetAvatar(avatarFile, "temp")
-        if (up.url) {
-          photoUrl = up.url
-        }
-      }
-
-      // 2. Insert pet
+      // 1. Insert pet first (without avatar)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const petData: Record<string, any> = { ...payload.pet, profile_id: user.id }
-      if (photoUrl) petData.photo_url = photoUrl
 
       const { data: pet, error: petErr } = await supabase
         .from("pets")
@@ -43,9 +33,9 @@ export function NewPetForm() {
 
       const petId = pet.id
 
-      // Re-upload avatar with correct petId if needed
-      if (avatarFile && photoUrl) {
-        const up = await uploadPetAvatar(avatarFile, petId)
+      // 2. Upload avatar with correct path (userId/petId)
+      if (avatarFile) {
+        const up = await uploadPetAvatar(avatarFile, user.id, petId)
         if (up.url) {
           await supabase.from("pets").update({ photo_url: up.url }).eq("id", petId)
         }

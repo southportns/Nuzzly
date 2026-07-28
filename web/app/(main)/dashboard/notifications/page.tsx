@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { Bell } from "lucide-react"
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { getUser, queryNotifications } from "@/lib/supabase/query"
 import { NotificationList } from "@/components/notifications/notification-list"
 
@@ -32,14 +32,14 @@ export default async function NotificationsPage() {
 
       <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
         <div className="mb-4 flex items-center gap-2">
-          <Bell className="size-4 text-[#FF7A59]" />
+          <EmojiIcon name="Bell" className="size-4 text-[#FF7A59]" />
           <span className="text-[15px] font-semibold text-[#111111]">所有通知</span>
         </div>
         {notifications && notifications.length > 0 ? (
           <NotificationList initialNotifications={notifications} />
         ) : (
           <div className="py-12 text-center">
-            <Bell className="mx-auto size-10 text-[#D2D1CF]" />
+            <EmojiIcon name="Bell" className="mx-auto size-8 text-[#D2D1CF]" />
             <p className="mt-3 text-[14px] text-[#6B6B6B]">暂无通知</p>
           </div>
         )}

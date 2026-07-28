@@ -46,7 +46,7 @@ export const healthTimelineReducer: ProjectionReducer<HealthTimelineProjection> 
   event: ProjectionEvent
 ): HealthTimelineProjection => {
   const s = state ?? INITIAL_STATE
-  const petId = (event.payload.pet_id as string) ?? event.aggregateId
+  const petId = (event.payload?.pet_id as string) ?? event.aggregateId
   const pet = s.pets[petId] ?? createDefaultPetState()
 
   switch (event.type) {

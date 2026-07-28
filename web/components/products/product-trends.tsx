@@ -1,5 +1,6 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -13,7 +14,6 @@ import {
 } from "recharts"
 import type { TooltipContentProps } from "recharts/types/component/Tooltip"
 import type { Payload as TooltipPayloadEntry } from "recharts/types/component/DefaultTooltipContent"
-import { TrendingUp, AlertTriangle, Star } from "lucide-react"
 
 interface MetricsData {
   date: string
@@ -64,7 +64,7 @@ export function ProductTrends({ metrics }: { metrics: MetricsData[] }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <TrendingUp className="size-5 text-primary" />
+          <EmojiIcon name="TrendingUp" className="size-5 text-primary" />
           长期趋势
         </CardTitle>
       </CardHeader>
@@ -72,13 +72,13 @@ export function ProductTrends({ metrics }: { metrics: MetricsData[] }) {
         <Tabs defaultValue="rating">
           <TabsList className="mb-4">
             <TabsTrigger value="rating" className="gap-1.5">
-              <Star className="size-3" />综合评分
+              <EmojiIcon name="Star" className="size-3" />综合评分
             </TabsTrigger>
             <TabsTrigger value="stool" className="gap-1.5">
-              <AlertTriangle className="size-3" />软便率
+              <EmojiIcon name="AlertTriangle" className="size-3" />软便率
             </TabsTrigger>
             <TabsTrigger value="repurchase" className="gap-1.5">
-              <TrendingUp className="size-3" />复购率
+              <EmojiIcon name="TrendingUp" className="size-3" />复购率
             </TabsTrigger>
           </TabsList>
 

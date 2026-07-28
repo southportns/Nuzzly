@@ -34,7 +34,9 @@ export interface WriteResult {
 // ─── Idempotency Store (in-memory + DB fallback) ───────────────────────────
 
 class IdempotencyStore {
-  private cache = new Map<string, WriteResult>()
+  private cache = new Map<string, { result: WriteResult; expiresAt: number }>()
+  private readonly MAX_SIZE = 1000
+  private readonly TTL_MS = 86_400_000 // 24小时
   private _admin: ReturnType<typeof createAdminClient> | null = null
 
   private get admin() {
@@ -44,10 +46,25 @@ class IdempotencyStore {
     return this._admin
   }
 
+  /** 清理过期条目 */
+  private cleanup(): void {
+    const now = Date.now()
+    for (const [key, value] of this.cache.entries()) {
+      if (now >= value.expiresAt) {
+        this.cache.delete(key)
+      }
+    }
+  }
+
   async check(key: string): Promise<WriteResult | null> {
-    // Check in-memory cache first
+    // 清理过期条目
+    this.cleanup()
+
+    // Check in-memory cache first (with TTL check)
     const cached = this.cache.get(key)
-    if (cached) return cached
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.result
+    }
 
     // Check in DB
     const { data } = await this.admin
@@ -58,15 +75,23 @@ class IdempotencyStore {
 
     if (data) {
       const result = data.result as unknown as WriteResult
-      this.cache.set(key, result)
+      this.cache.set(key, { result, expiresAt: Date.now() + this.TTL_MS })
       return result
     }
 
     return null
   }
 
-  async set(key: string, result: WriteResult, ttlMs: number = 86_400_000): Promise<void> {
-    this.cache.set(key, result)
+  async set(key: string, result: WriteResult, ttlMs: number = this.TTL_MS): Promise<void> {
+    // LRU 淘汰：超过最大容量时删除最早的条目
+    if (this.cache.size >= this.MAX_SIZE) {
+      const oldestKey = this.cache.keys().next().value
+      if (oldestKey) {
+        this.cache.delete(oldestKey)
+      }
+    }
+
+    this.cache.set(key, { result, expiresAt: Date.now() + ttlMs })
 
     // Persist to DB
     await this.admin.from("write_idempotency_keys").upsert({
@@ -200,98 +225,37 @@ export class WriteGateway {
   }
 
   private extractAggregateType(intent: WriteIntent): string {
-    return (
-      (intent.payload.aggregate_type as string) ??
-      this.typeToAggregateType(intent.type)
-    )
-  }
-
-  private typeToAggregateType(type: string): string {
-    const map: Record<string, string> = {
-      CREATE_REVIEW: "Review",
-      UPDATE_REVIEW: "Review",
-      DELETE_REVIEW: "Review",
-      CREATE_REVIEW_VOUCHER: "ReviewVoucher",
-      CREATE_FOLLOWUP_ENTRY: "FollowupEntry",
-      FLAG_USER: "Profile",
-      UNFLAG_USER: "Profile",
-      GRANT_ADMIN: "Profile",
-      REVOKE_ADMIN: "Profile",
-      CREATE_PET_EVENT: "PetEvent",
-      UPDATE_PROFILE: "Profile",
-      CREATE_PRODUCT: "Product",
-      UPDATE_PRODUCT: "Product",
-      CREATE_BOOKMARK: "Bookmark",
-      DELETE_BOOKMARK: "Bookmark",
-      CREATE_HEALTH_RECORD: "HealthRecord",
-      UPDATE_HEALTH_RECORD: "HealthRecord",
-      DEACTIVATE_HEALTH_MEMORY: "HealthMemory",
-      CREATE_PET_ATTACHMENT: "PetAttachment",
-      DELETE_PET_ATTACHMENT: "PetAttachment",
-      CREATE_DISEASE_RECORD: "DiseaseRecord",
-      UPDATE_DISEASE_RECORD: "DiseaseRecord",
-      DELETE_DISEASE_RECORD: "DiseaseRecord",
-      CREATE_MEDICATION_RECORD: "MedicationRecord",
-      UPDATE_MEDICATION_RECORD: "MedicationRecord",
-      DELETE_MEDICATION_RECORD: "MedicationRecord",
-      CREATE_FEEDBACK: "Feedback",
-      CREATE_METRICS_EVENT: "MetricsEvent",
-      CREATE_BANDIT_REWARD: "BanditReward",
-      UPDATE_BANDIT_ARM: "BanditArm",
-      CREATE_POLICY: "Policy",
-      UPDATE_POLICY: "Policy",
-      ARCHIVE_POLICY: "Policy",
-      CREATE_STRATEGY: "Strategy",
-      UPDATE_STRATEGY: "Strategy",
-      RETIRE_STRATEGY: "Strategy",
-      CREATE_TIMELINE_EVENT: "TimelineEvent",
-      UPDATE_TIMELINE_GROUP: "TimelineGroup",
-      CREATE_OUTCOME: "Outcome",
-      CREATE_CAUSAL_CHAIN: "CausalChain",
-      CREATE_DECISION_TRACE: "DecisionTrace",
-      CREATE_COUNTERFACTUAL: "Counterfactual",
-      CREATE_EXPLORATION_SAFETY_LOG: "ExplorationSafetyLog",
-      CREATE_CONSTRAINT_VIOLATION: "ConstraintViolation",
-      CREATE_AGENT_DECISION_LOG: "AgentDecisionLog",
-      CREATE_TRUST_ARBITRATION_LOG: "TrustArbitrationLog",
-      CREATE_RECOMMENDATION_TRACE_LOG: "RecommendationTraceLog",
-      // Phase 1.2.2 (P1): Client-side mutations
-      MARK_NOTIFICATION_READ: "Notification",
-      CREATE_DIET_LOG: "DietLog",
-      UPDATE_PET_WEIGHT: "Pet",
-      CREATE_PET_ALLERGY: "PetAllergy",
-      DELETE_PET_ALLERGY: "PetAllergy",
-      UPSERT_ENVIRONMENT_PROFILE: "EnvironmentProfile",
-      UPDATE_FOLLOWUP_SCHEDULE: "FollowupSchedule",
-      CREATE_INTENT_EVENT: "IntentEvent",
-      // 扩展: 推荐反馈 / 删除饮食记录 / 更新过敏 / 删除健康记录
-      CREATE_RECOMMENDATION_FEEDBACK: "RecommendationFeedback",
-      DELETE_DIET_LOG: "DietLog",
-      UPDATE_PET_ALLERGY: "PetAllergy",
-      DELETE_HEALTH_RECORD: "HealthRecord",
+    const typeMap: Record<string, string> = {
+      CREATE_REVIEW: "product_review",
+      UPDATE_PROFILE: "profile",
+      CREATE_HEALTH_RECORD: "health_record",
+      CREATE_PET: "pet",
+      UPDATE_PET: "pet",
+      CREATE_FOOD_USAGE_PERIOD: "food_usage",
     }
-    return map[type] ?? "Unknown"
+    return typeMap[intent.type] ?? "unknown"
   }
 }
 
-// ─── Singleton (lazy, server-only) ──────────────────────────────────────────
+// ─── Singleton ───────────────────────────────────────────────────────────
 
-let _writeGateway: WriteGateway | null = null
+let gatewayInstance: WriteGateway | null = null
 
 export function getWriteGateway(): WriteGateway {
-  if (!_writeGateway) {
-    _writeGateway = new WriteGateway()
+  if (!gatewayInstance) {
+    gatewayInstance = new WriteGateway()
   }
-  return _writeGateway
+  return gatewayInstance
 }
 
-// ─── Helper: Generate Idempotency Key ───────────────────────────────────────
-
-import { createHash } from "crypto"
-
-export function generateIdempotencyKey(type: string, payload: Record<string, unknown>): string {
-  // 使用 SHA-256 替代 DJB2 变种哈希，避免 32-bit 哈希碰撞导致幂等键误判
-  const stable = JSON.stringify({ type, ...payload })
-  const hash = createHash("sha256").update(stable).digest("hex").slice(0, 32)
-  return `ik_${type}_${hash}`
+/** Generate a deterministic idempotency key for a given operation */
+export function generateIdempotencyKey(
+  operation: string,
+  identifiers: Record<string, string>
+): string {
+  const sortedEntries = Object.entries(identifiers)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}=${v}`)
+    .join("&")
+  return `${operation}:${sortedEntries}`
 }

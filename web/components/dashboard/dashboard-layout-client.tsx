@@ -14,6 +14,12 @@ interface DashboardLayoutClientProps {
   email?: string | null
   avatarUrl?: string | null
   userNumber?: string | null
+  profile?: {
+    review_count?: number | null
+    long_term_review_count?: number | null
+    verified_purchase_count?: number | null
+    behavior_score?: number | null
+  } | null
 }
 
 export function DashboardLayoutClient({
@@ -24,13 +30,14 @@ export function DashboardLayoutClient({
   email,
   avatarUrl,
   userNumber,
+  profile,
 }: DashboardLayoutClientProps) {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
 
   return (
     <div className="min-h-[calc(100vh-72px)] bg-[#F7F6F3]">
-      <div className="mx-auto flex w-full max-w-[1240px] gap-8 px-6 py-10 md:px-10">
+      <div className="mx-auto flex w-[90%] max-w-[1900px] gap-8 py-10">
         <DashboardSidebar
           userId={userId}
           username={username}
@@ -39,6 +46,7 @@ export function DashboardLayoutClient({
           avatarUrl={avatarUrl}
           userNumber={userNumber}
           onEditClick={() => setEditing(true)}
+          profile={profile}
         />
         <DashboardMobileNav />
         <main className="min-w-0 flex-1">

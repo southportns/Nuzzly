@@ -1,12 +1,12 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Trash2, FileText, Image as ImageIcon, Loader2, Upload, X, Calendar, Stethoscope, Pill, Paperclip, Cat, Dog, PawPrint, ShoppingBag, TreePine, House, Heart, AlertCircle, MapPin, Home, Activity } from "lucide-react"
 import { SelectDropdown, type SelectOption } from "@/components/ui/select-dropdown"
 import { BreedCombobox } from "@/components/pets/breed-combobox"
 import { AvatarCropper } from "@/components/pets/avatar-cropper"
@@ -17,9 +17,9 @@ import { useMemo } from "react"
 
 // ── Static option lists ──
 const speciesOptions: SelectOption[] = [
-  { value: "cat", label: "猫咪", icon: <Cat className="size-4 text-[#FF7A59]" /> },
-  { value: "dog", label: "狗狗", icon: <Dog className="size-4 text-[#FF7A59]" /> },
-  { value: "other", label: "其他", icon: <PawPrint className="size-4 text-[#FF7A59]" /> },
+  { value: "cat", label: "猫咪", icon: <EmojiIcon name="Cat" className="size-4 text-[#FF7A59]" /> },
+  { value: "dog", label: "狗狗", icon: <EmojiIcon name="Dog" className="size-4 text-[#FF7A59]" /> },
+  { value: "other", label: "其他", icon: <EmojiIcon name="PawPrint" className="size-4 text-[#FF7A59]" /> },
 ]
 
 const genderOptions: SelectOption[] = [
@@ -40,11 +40,11 @@ const stomachOptions: SelectOption[] = [
 ]
 
 const sourceOptions: SelectOption[] = [
-  { value: "purchased", label: "购买", icon: <ShoppingBag className="size-4 text-[#6B6B6B]" />, description: "从正规渠道购买" },
-  { value: "wild_rescued", label: "野生救助", icon: <TreePine className="size-4 text-[#6B6B6B]" />, description: "救助的野生个体" },
-  { value: "home_raised", label: "家猫自育", icon: <House className="size-4 text-[#6B6B6B]" />, description: "自家繁育出生" },
-  { value: "stray_adopted", label: "流浪收留", icon: <Heart className="size-4 text-[#6B6B6B]" />, description: "收养的流浪动物" },
-  { value: "other", label: "其他", icon: <AlertCircle className="size-4 text-[#6B6B6B]" /> },
+  { value: "purchased", label: "购买", icon: <EmojiIcon name="ShoppingBag" className="size-4 text-[#6B6B6B]" />, description: "从正规渠道购买" },
+  { value: "wild_rescued", label: "野生救助", icon: <EmojiIcon name="TreePine" className="size-4 text-[#6B6B6B]" />, description: "救助的野生个体" },
+  { value: "home_raised", label: "家猫自育", icon: <EmojiIcon name="House" className="size-4 text-[#6B6B6B]" />, description: "自家繁育出生" },
+  { value: "stray_adopted", label: "流浪收留", icon: <EmojiIcon name="Heart" className="size-4 text-[#6B6B6B]" />, description: "收养的流浪动物" },
+  { value: "other", label: "其他", icon: <EmojiIcon name="AlertCircle" className="size-4 text-[#6B6B6B]" /> },
 ]
 
 const diseaseStatusOptions: SelectOption[] = [
@@ -177,10 +177,10 @@ interface AttachmentEntry {
 }
 
 const ATTACHMENT_CATEGORIES: Array<{ value: string; label: string; icon: React.ReactNode }> = [
-  { value: "medical_record", label: "就诊记录", icon: <Stethoscope className="size-3.5" /> },
-  { value: "medication_proof", label: "用药记录", icon: <Pill className="size-3.5" /> },
-  { value: "purchase_proof", label: "采购凭证", icon: <ShoppingBag className="size-3.5" /> },
-  { value: "other", label: "其他", icon: <Paperclip className="size-3.5" /> },
+  { value: "medical_record", label: "就诊记录", icon: <EmojiIcon name="Stethoscope" className="size-3.5" /> },
+  { value: "medication_proof", label: "用药记录", icon: <EmojiIcon name="Pill" className="size-3.5" /> },
+  { value: "purchase_proof", label: "采购凭证", icon: <EmojiIcon name="ShoppingBag" className="size-3.5" /> },
+  { value: "other", label: "其他", icon: <EmojiIcon name="Paperclip" className="size-3.5" /> },
 ]
 
 function genId() {
@@ -395,37 +395,42 @@ export function PetForm({
     }
     setSubmitting(true)
 
-    const result = await onSubmit({
-      pet: {
-        name: name.trim(),
-        species,
-        breed: breed.trim() || null,
-        birth_date: birthDate || null,
-        home_date: homeDate || null,
-        pet_source: source,
-        gender,
-        neutered: neutered === "true",
-        weight_kg: weight ? Number(weight) : null,
-        stomach_health: stomach,
-      },
-      diseases: diseases
-        .filter((d) => d.name.trim())
-        .map(({ id: _id, ...rest }) => rest),
-      medications: medications
-        .filter((m) => m.name.trim())
-        .map(({ id: _id, ...rest }) => rest),
-      attachments,
-      environment: {
-        region: envProvince || null,
-        city: envCity || null,
-        district: envDistrict || null,
-        multi_pet_household: envMultiPet,
-        pet_count: envPetCount,
-        has_children: envHasChildren,
-        indoor_outdoor: envIndoorOutdoor,
-        activity_level: envActivityLevel,
-      },
-    })
+    let result: { ok: boolean; error?: string }
+    try {
+      result = await onSubmit({
+        pet: {
+          name: name.trim(),
+          species,
+          breed: breed.trim() || null,
+          birth_date: birthDate || null,
+          home_date: homeDate || null,
+          pet_source: source,
+          gender,
+          neutered: neutered === "true",
+          weight_kg: weight ? Number(weight) : null,
+          stomach_health: stomach,
+        },
+        diseases: diseases
+          .filter((d) => d.name.trim())
+          .map(({ id: _id, ...rest }) => rest),
+        medications: medications
+          .filter((m) => m.name.trim())
+          .map(({ id: _id, ...rest }) => rest),
+        attachments,
+        environment: {
+          region: envProvince || null,
+          city: envCity || null,
+          district: envDistrict || null,
+          multi_pet_household: envMultiPet,
+          pet_count: envPetCount,
+          has_children: envHasChildren,
+          indoor_outdoor: envIndoorOutdoor,
+          activity_level: envActivityLevel,
+        },
+      })
+    } catch (e) {
+      result = { ok: false, error: e instanceof Error ? e.message : "未知错误" }
+    }
 
     setSubmitting(false)
     if (!result.ok) {
@@ -463,7 +468,7 @@ export function PetForm({
       {/* Right: form sections */}
       <div className="space-y-6">
         {/* Name + species row */}
-        <Section id="basic" title="基本信息" description="最基础的档案信息" icon={<PawPrint className="size-4" />}>
+        <Section id="basic" title="基本信息" description="最基础的档案信息" icon={<EmojiIcon name="PawPrint" className="size-4" />}>
           <div className="space-y-5">
             <Field label="名字" required htmlFor="pet-name">
               <Input
@@ -488,7 +493,7 @@ export function PetForm({
                     />
                   ) : (
                     <div className="flex size-full items-center justify-center text-[#9A9A95]">
-                      <PawPrint className="size-7" />
+                      <EmojiIcon name="PawPrint" className="size-7" />
                     </div>
                   )}
                   {avatarPreview && (
@@ -498,7 +503,7 @@ export function PetForm({
                       className="absolute right-0 top-0 flex size-6 items-center justify-center rounded-full bg-[#FF7A59] text-white shadow-sm hover:bg-[#E86A4A]"
                       aria-label="移除头像"
                     >
-                      <X className="size-3.5" />
+                      <EmojiIcon name="X" className="size-3.5" />
                     </button>
                   )}
                 </div>
@@ -508,7 +513,7 @@ export function PetForm({
                     "hover:border-[#FF7A59]/40 hover:bg-[#FFF6F0] hover:text-[#FF7A59]"
                   )}
                 >
-                  <Upload className="size-3.5" />
+                  <EmojiIcon name="Upload" className="size-3.5" />
                   {avatarPreview ? "更换头像" : "上传头像"}
                   <input
                     type="file"
@@ -559,7 +564,7 @@ export function PetForm({
         </Section>
 
         {/* Age + source */}
-        <Section id="age-source" title="年龄与来源" description="帮助我们做更精准的生命周期判断" icon={<Calendar className="size-4" />}>
+        <Section id="age-source" title="年龄与来源" description="帮助我们做更精准的生命周期判断" icon={<EmojiIcon name="Calendar" className="size-4" />}>
           <div className="space-y-5">
             <div>
               <p className="mb-1.5 text-[12.5px] font-medium text-[#444444]">出生日期</p>
@@ -612,7 +617,7 @@ export function PetForm({
         </Section>
 
         {/* Body */}
-        <Section id="body" title="体况" description="体重与肠胃健康度" icon={<Heart className="size-4" />}>
+        <Section id="body" title="体况" description="体重与肠胃健康度" icon={<EmojiIcon name="Heart" className="size-4" />}>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <Field label="体重" hint="kg · 精确到两位小数">
               <Input
@@ -637,7 +642,7 @@ export function PetForm({
         </Section>
 
         {/* Environment */}
-        <Section id="environment" title="生活环境" description="帮助我们了解宠物的生活环境" icon={<Home className="size-4" />}>
+        <Section id="environment" title="生活环境" description="帮助我们了解宠物的生活环境" icon={<EmojiIcon name="Home" className="size-4" />}>
           <div className="space-y-5">
             {/* 省市区三级联动 */}
             <div>
@@ -744,7 +749,7 @@ export function PetForm({
           id="diseases"
           title="疾病史"
           description="逐条记录患过的重大疾病，可附就诊单"
-          icon={<Stethoscope className="size-4" />}
+          icon={<EmojiIcon name="Stethoscope" className="size-4" />}
         >
           {diseases.length === 0 ? (
             <div className="rounded-[14px] border border-dashed border-[rgba(0,0,0,0.08)] bg-[#FBFAF7] py-8 text-center">
@@ -756,7 +761,7 @@ export function PetForm({
                 onClick={addDisease}
                 className="mt-3 rounded-full border-[rgba(0,0,0,0.08)] bg-white"
               >
-                <Plus className="mr-1 size-3.5" />添加一条
+                <EmojiIcon name="Plus" className="mr-1 size-3.5" />添加一条
               </Button>
             </div>
           ) : (
@@ -831,7 +836,7 @@ export function PetForm({
                       onClick={() => removeDisease(d.id)}
                       className="ml-auto text-[#9A9A95] hover:bg-[#FFF1EB] hover:text-[#FF7A59]"
                     >
-                      <Trash2 className="mr-1 size-3.5" />删除
+                      <EmojiIcon name="Trash2" className="mr-1 size-3.5" />删除
                     </Button>
                   </div>
                 </div>
@@ -842,7 +847,7 @@ export function PetForm({
                 onClick={addDisease}
                 className="w-full rounded-[12px] border-dashed border-[rgba(0,0,0,0.1)] bg-white text-[#6B6B6B] hover:border-[#FF7A59]/40 hover:text-[#FF7A59]"
               >
-                <Plus className="mr-1.5 size-4" />再添加一条
+                <EmojiIcon name="Plus" className="mr-1.5 size-4" />再添加一条
               </Button>
             </div>
           )}
@@ -853,7 +858,7 @@ export function PetForm({
           id="medications"
           title="用药记录"
           description="保健品、处方药、驱虫药都可记录"
-          icon={<Pill className="size-4" />}
+          icon={<EmojiIcon name="Pill" className="size-4" />}
         >
           {medications.length === 0 ? (
             <div className="rounded-[14px] border border-dashed border-[rgba(0,0,0,0.08)] bg-[#FBFAF7] py-8 text-center">
@@ -865,7 +870,7 @@ export function PetForm({
                 onClick={addMedication}
                 className="mt-3 rounded-full border-[rgba(0,0,0,0.08)] bg-white"
               >
-                <Plus className="mr-1 size-3.5" />添加一条
+                <EmojiIcon name="Plus" className="mr-1 size-3.5" />添加一条
               </Button>
             </div>
           ) : (
@@ -969,7 +974,7 @@ export function PetForm({
                       onClick={() => removeMedication(m.id)}
                       className="ml-auto text-[#9A9A95] hover:bg-[#FFF1EB] hover:text-[#FF7A59]"
                     >
-                      <Trash2 className="mr-1 size-3.5" />删除
+                      <EmojiIcon name="Trash2" className="mr-1 size-3.5" />删除
                     </Button>
                   </div>
                 </div>
@@ -980,7 +985,7 @@ export function PetForm({
                 onClick={addMedication}
                 className="w-full rounded-[12px] border-dashed border-[rgba(0,0,0,0.1)] bg-white text-[#6B6B6B] hover:border-[#FF7A59]/40 hover:text-[#FF7A59]"
               >
-                <Plus className="mr-1.5 size-4" />再添加一条
+                <EmojiIcon name="Plus" className="mr-1.5 size-4" />再添加一条
               </Button>
             </div>
           )}
@@ -991,7 +996,7 @@ export function PetForm({
           id="attachments"
           title="附件资料"
           description="采购凭证、就诊单等可在此统一管理"
-          icon={<Paperclip className="size-4" />}
+          icon={<EmojiIcon name="Paperclip" className="size-4" />}
         >
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -1002,9 +1007,16 @@ export function PetForm({
                 >
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F7F6F3] text-[#6B6B6B]">
                     {isImage(a.file_type) ? (
-                      <ImageIcon className="size-4" />
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 18 18" className="text-[#6B6B6B]">
+                        <g transform="translate(18 0) scale(-1 1)">
+                          <path d="M6.587,12.243l5.206-5.2c.391-.391,1.024-.391,1.414,0l3.043,3.043" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+                          <path d="M1.75,6.75v6.5c0,1.105,.895,2,2,2H12.25" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+                          <rect x="4.75" y="2.75" width="11.5" height="9.5" rx="2" ry="2" transform="translate(21 15) rotate(180)" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+                          <path d="M8,7c-.551,0-1-.449-1-1s.449-1,1-1,1,.449,1,1-.449,1-1,1Z" fill="currentColor" />
+                        </g>
+                      </svg>
                     ) : (
-                      <FileText className="size-4" />
+                      <EmojiIcon name="FileText" className="size-4" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -1031,7 +1043,7 @@ export function PetForm({
                     className="flex size-7 items-center justify-center rounded-full text-[#9A9A95] transition-colors hover:bg-[#FFF1EB] hover:text-[#FF7A59]"
                     aria-label="删除附件"
                   >
-                    <X className="size-4" />
+                    <EmojiIcon name="X" className="size-4" />
                   </button>
                 </div>
               ))}
@@ -1042,7 +1054,7 @@ export function PetForm({
                 "hover:border-[#FF7A59]/40 hover:bg-[#FFF6F0] hover:text-[#FF7A59]"
               )}
             >
-              <Upload className="size-4" />
+              <EmojiIcon name="Upload" className="size-4" />
               上传图片或 PDF
               <input
                 type="file"
@@ -1066,7 +1078,7 @@ export function PetForm({
             disabled={submitting}
             className="h-10 rounded-full bg-[#FF7A59] px-6 text-[14px] font-semibold text-white shadow-[0_4px_12px_rgba(255,122,89,0.25)] hover:bg-[#E86A4A]"
           >
-            {submitting && <Loader2 className="mr-2 size-4 animate-spin" />}
+            {submitting && <EmojiIcon name="Loader2" className="mr-2 size-4 animate-spin" />}
             {pet?.id ? "保存修改" : "创建档案"}
           </Button>
         </div>
@@ -1106,9 +1118,16 @@ function AttachmentChipList({
             title={a.file_name}
           >
             {isImage(a.file_type) ? (
-              <ImageIcon className="size-3 text-[#6B6B6B]" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 18 18" className="text-[#6B6B6B]">
+                <g transform="translate(18 0) scale(-1 1)">
+                  <path d="M6.587,12.243l5.206-5.2c.391-.391,1.024-.391,1.414,0l3.043,3.043" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+                  <path d="M1.75,6.75v6.5c0,1.105,.895,2,2,2H12.25" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+                  <rect x="4.75" y="2.75" width="11.5" height="9.5" rx="2" ry="2" transform="translate(21 15) rotate(180)" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+                  <path d="M8,7c-.551,0-1-.449-1-1s.449-1,1-1,1,.449,1,1-.449,1-1,1Z" fill="currentColor" />
+                </g>
+              </svg>
             ) : (
-              <FileText className="size-3 text-[#6B6B6B]" />
+              <EmojiIcon name="FileText" className="size-3 text-[#6B6B6B]" />
             )}
             <span className="max-w-[120px] truncate">{a.file_name}</span>
             <button
@@ -1117,7 +1136,7 @@ function AttachmentChipList({
               className="text-[#9A9A95] hover:text-[#FF7A59]"
               aria-label="移除"
             >
-              <X className="size-3" />
+              <EmojiIcon name="X" className="size-3" />
             </button>
           </span>
         ))

@@ -1,9 +1,10 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ThumbsUp, ThumbsDown, ExternalLink, Sparkles, ChevronDown } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { toast } from "sonner"
 
@@ -63,12 +64,18 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
       {/* Product Image + Score */}
       <div className="relative mb-3 aspect-square overflow-hidden rounded-[12px] bg-[#F7F6F3]">
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+          <Image
+            src={product.image_url}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-4xl">🐱</div>
         )}
         <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-[12px] font-semibold" style={{ color: scoreColor }}>
-          <Sparkles className="size-3" />
+          <EmojiIcon name="Sparkles" className="size-3" />
           {score}分
         </div>
       </div>
@@ -92,7 +99,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
           className="mb-3 flex w-full items-center justify-between text-[12px] text-[#6B6B6B] hover:text-[#111111]"
         >
           <span>为什么推荐？</span>
-          <ChevronDown className={`size-3.5 transition-transform ${showReason ? "rotate-180" : ""}`} />
+          <EmojiIcon name="ChevronDown" className={`size-3.5 transition-transform ${showReason ? "rotate-180" : ""}`} />
         </button>
       )}
 
@@ -126,7 +133,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
           className="flex-1 rounded-full text-[12px]"
           onClick={() => handleFeedback("accept")}
         >
-          <ThumbsUp className="mr-1 size-3.5 text-[#34C759]" />
+          <EmojiIcon name="ThumbsUp" className="mr-1 size-3.5 text-[#34C759]" />
           采纳
         </Button>
         <Button
@@ -135,7 +142,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
           className="flex-1 rounded-full text-[12px]"
           onClick={() => handleFeedback("reject")}
         >
-          <ThumbsDown className="mr-1 size-3.5 text-[#FF3B30]" />
+          <EmojiIcon name="ThumbsDown" className="mr-1 size-3.5 text-[#FF3B30]" />
           不感兴趣
         </Button>
         <Button
@@ -145,7 +152,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
           asChild
         >
           <Link href={`/products/${product.id}`}>
-            <ExternalLink className="size-3.5" />
+            <EmojiIcon name="ExternalLink" className="size-3.5" />
           </Link>
         </Button>
       </div>

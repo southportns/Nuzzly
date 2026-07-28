@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-const GATEWAY_BASE = import.meta.env.VITE_API_BASE || ''
+const GATEWAY_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 /**
  * 调用 /api/gateway/write 写入数据。

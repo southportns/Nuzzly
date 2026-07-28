@@ -1,25 +1,27 @@
 "use client"
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
+import { useState } from "react"
 import { cn } from "@/lib/utils"
-import {
-  TrendingUp,
-  ShieldCheck,
-  Heart,
-  Baby,
-  Clock,
-  Sparkles,
-  LayoutGrid,
-  Tag,
-} from "lucide-react"
+
+const OrangeCircle = ({ className }: { className?: string }) => (
+  <img
+    alt="orange circle"
+    width="14"
+    height="14"
+    className={cn("inline-block object-contain align-text-bottom shrink-0 drop-shadow-[0_1px_2px_rgba(255,122,89,0.3)]", className)}
+    loading="lazy"
+    src="/fluentui-emoji/assets/Orange circle/3D/orange_circle_3d.png"
+  />
+)
 
 const hotFilters = [
-  { slug: "high-repurchase", label: "高复购", icon: TrendingUp },
-  { slug: "low-dispute", label: "低争议", icon: ShieldCheck },
-  { slug: "stomach-friendly", label: "肠胃友好", icon: Heart },
-  { slug: "kitten", label: "幼猫适用", icon: Baby },
-  { slug: "long-term", label: "长期好评", icon: Clock },
-  { slug: "cost-effective", label: "高性价比", icon: Sparkles },
+  { slug: "high-repurchase", label: "高复购" },
+  { slug: "low-dispute", label: "低争议" },
+  { slug: "stomach-friendly", label: "肠胃友好" },
+  { slug: "kitten", label: "幼猫适用" },
+  { slug: "long-term", label: "长期好评" },
+  { slug: "cost-effective", label: "高性价比" },
 ]
 
 interface Category {
@@ -34,6 +36,7 @@ export function SidebarNav({ categories }: { categories?: Category[] }) {
   const router = useRouter()
   const activeCategory = searchParams.get("category")
   const activeHot = searchParams.get("hot")
+  const [expanded, setExpanded] = useState(!!activeCategory)
 
   function setParam(key: string, value: string | null) {
     const params = new URLSearchParams(searchParams)
@@ -45,54 +48,91 @@ export function SidebarNav({ categories }: { categories?: Category[] }) {
     router.push(`${pathname}?${params.toString()}`)
   }
 
+  const hasActiveSubCategory = categories?.some(
+    (cat) => activeCategory === cat.slug && cat.name !== "小宠食品" && cat.name !== "尿垫"
+  )
+
   return (
     <nav className="space-y-6">
       {/* Categories Section */}
       <div>
         <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
-          <LayoutGrid className="size-3.5" />
+          <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="18px" height="18px" viewBox="0 0 18 18" className="size-3.5">
+            <g data-transform-wrapper="on" transform="translate(18 0) scale(-1 1)">
+              <polygon points="10.5 14.75 7.5 16.25 7.5 9 2.75 2.75 15.25 2.75 10.5 9 10.5 14.75" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+            </g>
+          </svg>
           产品分类
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-1">
+          {/* 全部产品 - 一级分类 */}
           <button
             type="button"
-            onClick={() => setParam("category", null)}
+            onClick={() => {
+              setExpanded(!expanded)
+              if (!expanded && !hasActiveSubCategory) {
+                setParam("category", null)
+              }
+            }}
             className={cn(
               "flex w-full items-center gap-3 rounded-[12px] px-4 py-2.5 text-[14px] font-medium transition-all",
-              !activeCategory
+              !activeCategory || hasActiveSubCategory
                 ? "bg-[#F59E0B]/10 text-[#D97706] shadow-[inset_0_0_0_1.5px_rgba(245,158,11,0.3)]"
                 : "text-[#6B7280] hover:bg-[#F9FAFB] hover:text-[#1A1A1A]"
             )}
           >
             <span className={cn(
-              "flex size-7 items-center justify-center rounded-[8px] text-[14px]",
-              !activeCategory ? "bg-[#F59E0B]/20" : "bg-[#F3F4F6]"
+              "flex size-7 items-center justify-center rounded-[8px]",
+              !activeCategory || hasActiveSubCategory ? "bg-[#F59E0B]/20" : ""
             )}>
-              📦
+              <OrangeCircle className="mt-0.5" />
             </span>
-            全部产品
-          </button>
-          {categories?.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setParam("category", cat.slug)}
+            <span className="flex-1 text-left">全部产品</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
               className={cn(
-                "flex w-full items-center gap-3 rounded-[12px] px-4 py-2.5 text-[14px] font-medium transition-all",
-                activeCategory === cat.slug
-                  ? "bg-[#F59E0B]/10 text-[#D97706] shadow-[inset_0_0_0_1.5px_rgba(245,158,11,0.3)]"
-                  : "text-[#6B7280] hover:bg-[#F9FAFB] hover:text-[#1A1A1A]"
+                "transition-transform duration-200",
+                expanded && "rotate-180"
               )}
             >
-              <span className={cn(
-                "flex size-7 items-center justify-center rounded-[8px] text-[14px]",
-                activeCategory === cat.slug ? "bg-[#F59E0B]/20" : "bg-[#F3F4F6]"
-              )}>
-                {getCategoryIcon(cat.slug)}
-              </span>
-              {cat.name}
-            </button>
-          ))}
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+
+          {/* 二级分类 - 可折叠 */}
+          <div
+            className={cn(
+              "overflow-hidden transition-all duration-300 ease-in-out",
+              expanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+            )}
+          >
+            <div className="pl-4 pt-1 space-y-1">
+              {categories?.filter((cat) => cat.name !== "小宠食品" && cat.name !== "尿垫").map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setParam("category", cat.slug)}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-[10px] px-3 py-2 text-[13px] font-medium transition-all",
+                    activeCategory === cat.slug
+                      ? "bg-[#F59E0B]/10 text-[#D97706]"
+                      : "text-[#6B7280] hover:bg-[#F9FAFB] hover:text-[#1A1A1A]"
+                  )}
+                >
+                  <span className="size-1.5 rounded-full bg-[#D97706]/40" />
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -102,12 +142,17 @@ export function SidebarNav({ categories }: { categories?: Category[] }) {
       {/* Hot Filters Section */}
       <div>
         <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
-          <Tag className="size-3.5" />
+          <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="18px" height="18px" viewBox="0 0 18 18" className="size-3.5">
+            <g data-transform-wrapper="on">
+              <path d="m2.25,4.25h5.586c.265,0,.52.105.707.293l5.1065,5.1065c.781.781.781,2.047,0,2.828l-3.172,3.172c-.781.781-2.047.781-2.828,0l-5.1065-5.1065c-.188-.188-.293-.442-.293-.707v-5.586Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+              <path d="m3.75,1.25h5.586c.265,0,.52.105.707.293l5.7705,5.7705" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" data-color="color-2" />
+              <circle cx="5.75" cy="7.75" r="1.25" fill="currentColor" strokeWidth="0" data-color="color-2" />
+            </g>
+          </svg>
           热门筛选
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           {hotFilters.map((f) => {
-            const Icon = f.icon
             const isActive = activeHot === f.slug
             return (
               <button
@@ -123,9 +168,9 @@ export function SidebarNav({ categories }: { categories?: Category[] }) {
               >
                 <span className={cn(
                   "flex size-7 items-center justify-center rounded-[8px]",
-                  isActive ? "bg-[#F59E0B]/20" : "bg-[#F3F4F6]"
+                  isActive ? "bg-[#F59E0B]/20" : ""
                 )}>
-                  <Icon className="size-3.5" />
+                  <OrangeCircle className="mt-0.5" />
                 </span>
                 {f.label}
               </button>
@@ -135,15 +180,4 @@ export function SidebarNav({ categories }: { categories?: Category[] }) {
       </div>
     </nav>
   )
-}
-
-function getCategoryIcon(slug: string): string {
-  const icons: Record<string, string> = {
-    "cat-food": "🍚",
-    "cat-litter": "🧹",
-    "cat-canned": "🥫",
-    "cat-snack": "🍖",
-    "cat-health": "💊",
-  }
-  return icons[slug] || "📦"
 }

@@ -58,12 +58,15 @@ async function signUp(email, password, username) {
   if (data.user) {
     const { data: userNumber } = await supabase.rpc('get_next_user_number')
     const displayName = username || email.split('@')[0]
-    await supabase.from('profiles').upsert({
+    const { error: profileError } = await supabase.from('profiles').upsert({
       id: data.user.id,
       username: displayName,
       display_name: displayName,
       user_number: userNumber || 1
     })
+    if (profileError) {
+      console.warn('[useAuth.signUp] profile upsert 失败:', profileError.message)
+    }
   }
   return data
 }

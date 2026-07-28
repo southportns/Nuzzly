@@ -1,7 +1,7 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
-import { AlertTriangle, CheckCircle, Clock, Activity, ChevronRight } from "lucide-react"
 import Link from "next/link"
 
 interface DiseaseRecord {
@@ -25,10 +25,10 @@ const severityConfig: Record<string, { label: string; color: string; bg: string 
 }
 
 const statusConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  active: { label: "进行中", icon: <AlertTriangle className="size-3" />, color: "text-[#ff9500]" },
-  resolved: { label: "已康复", icon: <CheckCircle className="size-3" />, color: "text-[#34c759]" },
-  chronic: { label: "慢性病", icon: <Activity className="size-3" />, color: "text-[#585858]" },
-  under_treatment: { label: "治疗中", icon: <Clock className="size-3" />, color: "text-[#007AFF]" },
+  active: { label: "进行中", icon: <EmojiIcon name="AlertTriangle" className="size-3" />, color: "text-[#ff9500]" },
+  resolved: { label: "已康复", icon: <EmojiIcon name="CheckCircle" className="size-3" />, color: "text-[#34c759]" },
+  chronic: { label: "慢性病", icon: <EmojiIcon name="Activity" className="size-3" />, color: "text-[#585858]" },
+  under_treatment: { label: "治疗中", icon: <EmojiIcon name="Clock" className="size-3" />, color: "text-[#007AFF]" },
 }
 
 export function DiseaseRecordsList({ records }: Props) {
@@ -68,7 +68,6 @@ export function DiseaseRecordsList({ records }: Props) {
                   {new Date(record.diagnosed_on).toLocaleDateString("zh-CN")}
                 </span>
               )}
-              <ChevronRight className="size-4 text-[#D2D1CF]" />
             </div>
           </Link>
         )

@@ -1,7 +1,6 @@
 "use client"
 
-import { TrendingUp, TrendingDown, Minus } from "lucide-react"
-
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 interface Stats {
   totalTasks: number
   completedCount: number
@@ -38,9 +37,9 @@ export function TaskStats({ stats }: Props) {
           <p className="text-[32px] font-semibold text-[#111111]">{stats.completionRate}%</p>
           <p className="text-[12px] text-[#6B6B6B]">完成率</p>
           <div className="mt-1 flex items-center justify-center gap-1">
-            {trend === "up" && <TrendingUp className="size-3 text-[#34c759]" />}
-            {trend === "down" && <TrendingDown className="size-3 text-[#ff3b30]" />}
-            {trend === "stable" && <Minus className="size-3 text-[#6B6B6B]" />}
+            {trend === "up" && <EmojiIcon name="TrendingUp" className="size-3 text-[#34c759]" />}
+            {trend === "down" && <EmojiIcon name="TrendingDown" className="size-3 text-[#ff3b30]" />}
+            {trend === "stable" && <EmojiIcon name="Minus" className="size-3 text-[#6B6B6B]" />}
             <span className={`text-[10px] ${trend === "up" ? "text-[#34c759]" : trend === "down" ? "text-[#ff3b30]" : "text-[#6B6B6B]"}`}>
               {trend === "up" ? "↑" : trend === "down" ? "↓" : "→"}
             </span>

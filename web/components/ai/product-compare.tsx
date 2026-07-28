@@ -1,10 +1,10 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, GitCompareArrows, Plus, X } from "lucide-react"
 
 export function ProductCompare() {
   const [products, setProducts] = useState<string[]>(["", ""])
@@ -59,7 +59,12 @@ export function ProductCompare() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <GitCompareArrows className="size-4 text-[#FF7A59]" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" className="text-[#FF7A59]">
+              <circle cx="3.75" cy="5.25" r="2" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+              <circle cx="3.75" cy="12.75" r="2" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+              <line x1="8.75" y1="5.25" x2="16.25" y2="5.25" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+              <line x1="8.75" y1="12.75" x2="16.25" y2="12.75" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+            </svg>
             产品对比
           </CardTitle>
         </CardHeader>
@@ -86,7 +91,12 @@ export function ProductCompare() {
                     onClick={() => removeProduct(i)}
                     className="shrink-0 text-[#6B6B6B] hover:text-[#E85D4A]"
                   >
-                    <X className="size-4" />
+                    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="18px" height="18px" viewBox="0 0 18 18" className="size-4">
+                      <g data-transform-wrapper="on" transform="translate(18 0) scale(-1 1)">
+                        <path d="M4,14.75c-.192,0-.384-.073-.53-.22-.293-.293-.293-.768,0-1.061L13.47,3.47c.293-.293,.768-.293,1.061,0s.293,.768,0,1.061L4.53,14.53c-.146,.146-.338,.22-.53,.22Z" fill="currentColor" data-color="color-2" />
+                        <path d="M14,14.75c-.192,0-.384-.073-.53-.22L3.47,4.53c-.293-.293-.293-.768,0-1.061s.768-.293,1.061,0L14.53,13.47c.293,.293,.293,.768,0,1.061-.146,.146-.338,.22-.53,.22Z" fill="currentColor" />
+                      </g>
+                    </svg>
                   </button>
                 )}
               </div>
@@ -99,7 +109,12 @@ export function ProductCompare() {
               onClick={addProduct}
               className="flex items-center gap-1 text-sm text-[#FF7A59] hover:text-[#E86A4A]"
             >
-              <Plus className="size-3.5" /> 添加产品
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 18 18" className="text-[#FF7A59]">
+                <g transform="translate(18 0) scale(-1 1)">
+                  <line x1="9" y1="3.25" x2="9" y2="14.75" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+                  <line x1="3.25" y1="9" x2="14.75" y2="9" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+                </g>
+              </svg> 添加产品
             </button>
           )}
 
@@ -107,7 +122,7 @@ export function ProductCompare() {
             onClick={handleCompare}
             disabled={loading || products.filter((p) => p.trim()).length < 2}
           >
-            {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
+            {loading && <EmojiIcon name="Loader2" className="mr-2 size-4 animate-spin" />}
             开始对比
           </Button>
         </CardContent>

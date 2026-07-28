@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { SignupForm } from "@/components/auth/signup-form"
+import { openLoginModal } from "@/hooks/use-login-modal"
 
 export default function SignupPage() {
   return (
@@ -25,9 +26,9 @@ export default function SignupPage() {
           <SignupForm />
           <p className="mt-4 text-center text-[14px] text-[#6B6B6B]">
             已有账号？{" "}
-            <Link href="/login" className="text-[#FF7A59] hover:underline">
+            <button type="button" onClick={() => { openLoginModal() }} className="text-[#FF7A59] hover:underline">
               登录
-            </Link>
+            </button>
           </p>
         </div>
       </div>

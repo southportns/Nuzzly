@@ -139,6 +139,13 @@ export async function POST(request: Request) {
       }
     }
 
+    // 鉴权（提前，off-topic 场景也需要保存历史记录）
+    const supabase = await createClient()
+    const { user, error: userErr } = await getAuthUser(request, supabase)
+    if (userErr || !user) {
+      return NextResponse.json({ error: "未登录" }, { status: 401 })
+    }
+
     // 话题预过滤：取最后一条用户消息判断是否与宠物相关
     // 无关问题直接返回固定模板，不消耗 AI token
     const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")
@@ -146,9 +153,22 @@ export async function POST(request: Request) {
       // 流式返回固定模板，保持前端体验一致
       const encoder = new TextEncoder()
       const stream = new ReadableStream({
-        start(controller) {
+        async start(controller) {
           const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: OFF_TOPIC_RESPONSE } }] })}\n\ndata: [DONE]\n\n`
           controller.enqueue(encoder.encode(sseData))
+          // 无关问题也保存历史，方便用户查看（await 确保保存完成后再结束响应）
+          const { error: insertErr } = await supabase
+            .from("health_chat_sessions")
+            .insert({
+              profile_id: user.id,
+              user_message: lastUserMsg.content,
+              ai_response: OFF_TOPIC_RESPONSE,
+              model_used: "off-topic-filter",
+              context_snapshot: { product_context: productContext ?? null },
+            })
+          if (insertErr) {
+            console.error("[ai/chat] save off-topic history error:", insertErr)
+          }
           controller.close()
         },
       })
@@ -159,13 +179,6 @@ export async function POST(request: Request) {
           Connection: "keep-alive",
         },
       })
-    }
-
-    // 鉴权
-    const supabase = await createClient()
-    const { user, error: userErr } = await getAuthUser(request, supabase)
-    if (userErr || !user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 })
     }
 
     // 构建消息：system 仅放固定 SYSTEM_PROMPT
@@ -191,6 +204,8 @@ export async function POST(request: Request) {
       apiMessages.push({ role: msg.role, content: msg.content })
     }
 
+    const userMessageForHistory = lastUserMsg?.content ?? ""
+
     // 调用 DeepSeek 流式 API
     const response = await fetch(`${DEEPSEEK_BASE}/chat/completions`, {
       method: "POST",
@@ -213,7 +228,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "AI 服务暂时不可用" }, { status: 502 })
     }
 
-    // 流式转发 SSE
+    // 流式转发 SSE，同时累积 AI 回复用于保存历史记录
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
@@ -224,6 +239,7 @@ export async function POST(request: Request) {
         }
 
         const decoder = new TextDecoder()
+        let assistantContent = ""
         try {
           while (true) {
             const { done, value } = await reader.read()
@@ -234,11 +250,38 @@ export async function POST(request: Request) {
             const lines = chunk.split("\n").filter((l) => l.trim())
             for (const line of lines) {
               controller.enqueue(encoder.encode(`${line}\n`))
+              // 累积内容：解析 data: {...} 中的 delta.content
+              if (line.startsWith("data: ") && line !== "data: [DONE]") {
+                try {
+                  const parsed = JSON.parse(line.slice(6))
+                  const delta = parsed.choices?.[0]?.delta?.content
+                  if (typeof delta === "string") {
+                    assistantContent += delta
+                  }
+                } catch {
+                  // 解析失败时忽略，不影响流式转发
+                }
+              }
             }
           }
         } catch (e) {
           console.error("[ai/chat] stream error:", e)
         } finally {
+          // 流结束后保存历史记录（await 确保在响应返回前完成，避免服务端进程回收导致未保存）
+          if (userMessageForHistory && assistantContent) {
+            const { error: insertErr } = await supabase
+              .from("health_chat_sessions")
+              .insert({
+                profile_id: user.id,
+                user_message: userMessageForHistory,
+                ai_response: assistantContent,
+                model_used: "deepseek-chat",
+                context_snapshot: { product_context: productContext ?? null },
+              })
+            if (insertErr) {
+              console.error("[ai/chat] save history error:", insertErr)
+            }
+          }
           controller.close()
         }
       },

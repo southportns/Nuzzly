@@ -1,7 +1,7 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { requireAdmin, listProductsForAdmin } from "@/lib/supabase/query"
-import { Search, ChevronRight } from "lucide-react"
 
 export const metadata = {
   title: "产品管理 — Nuzzly毛球镇 管理员",
@@ -35,7 +35,7 @@ export default async function AdminProductsPage({
 
       <form className="flex items-center gap-3 rounded-[16px] border border-[rgba(0,0,0,0.05)] bg-white p-3">
         <label className="flex flex-1 items-center gap-2 rounded-full bg-[#F7F6F3] px-4 py-2.5">
-          <Search className="size-4 text-[#9B9A98]" />
+          <EmojiIcon name="Search" className="size-4 text-[#9B9A98]" />
           <input
             name="search"
             defaultValue={search}
@@ -80,7 +80,7 @@ export default async function AdminProductsPage({
                     {category?.name ?? "—"} · {new Date(p.created_at).toLocaleDateString("zh-CN")}
                   </p>
                 </div>
-                <ChevronRight className="size-4 shrink-0 text-[#D2D1CF] transition-transform group-hover:translate-x-0.5" />
+                <EmojiIcon name="ChevronRight" className="size-4 shrink-0 text-[#D2D1CF] transition-transform group-hover:translate-x-0.5" />
               </Link>
             )
           })

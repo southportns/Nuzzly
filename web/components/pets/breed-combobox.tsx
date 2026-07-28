@@ -1,7 +1,7 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import * as React from "react"
-import { Check, ChevronDown, Loader2, Cat, Dog, PawPrint } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   Command,
@@ -22,9 +22,9 @@ const SPECIES_LABEL: Record<BreedOption["species"], string> = {
 }
 
 const SPECIES_ICON: Record<BreedOption["species"], React.ReactNode> = {
-  cat: <Cat className="size-3.5 text-[#FF7A59]" />,
-  dog: <Dog className="size-3.5 text-[#FF7A59]" />,
-  other: <PawPrint className="size-3.5 text-[#FF7A59]" />,
+  cat: <EmojiIcon name="Cat" className="size-3.5 text-[#FF7A59]" />,
+  dog: <EmojiIcon name="Dog" className="size-3.5 text-[#FF7A59]" />,
+  other: <EmojiIcon name="PawPrint" className="size-3.5 text-[#FF7A59]" />,
 }
 
 interface BreedComboboxProps {
@@ -166,7 +166,7 @@ export function BreedCombobox({
             <span className="truncate text-[#9A9A95]">{placeholder}</span>
           )}
         </span>
-        <ChevronDown
+        <EmojiIcon name="ChevronDown"
           className={cn(
             "size-4 shrink-0 text-[#6B6B6B] transition-transform duration-200",
             open && "rotate-180 text-[#FF7A59]"
@@ -192,7 +192,7 @@ export function BreedCombobox({
           <CommandList className="max-h-[320px] overflow-y-auto overflow-x-hidden p-1">
             {loading ? (
               <div className="flex items-center justify-center gap-2 py-6 text-[13px] text-[#9A9A95]">
-                <Loader2 className="size-4 animate-spin" /> 正在加载品种库…
+                <EmojiIcon name="Loader2" className="size-4 animate-spin" /> 正在加载品种库…
               </div>
             ) : loadError ? (
               <div className="px-3 py-6 text-center text-[13px] text-[#9A9A95]">
@@ -206,7 +206,7 @@ export function BreedCombobox({
                     onSelect={() => commit(trimmed)}
                     className="flex cursor-pointer items-center gap-2 rounded-[10px] px-3 py-2.5 text-[14px] text-[#111111] data-[selected=true]:bg-[#FFF1EB] data-[selected=true]:text-[#111111]"
                   >
-                    <PawPrint className="size-4 shrink-0 text-[#9A9A95]" />
+                    <EmojiIcon name="PawPrint" className="size-4 shrink-0 text-[#9A9A95]" />
                     <span className="min-w-0 flex-1 truncate">
                       使用自定义品种 “<span className="font-medium text-[#FF7A59]">{trimmed}</span>”
                     </span>
@@ -237,7 +237,7 @@ export function BreedCombobox({
                           <span className="shrink-0">{SPECIES_ICON[opt.species]}</span>
                           <span className="flex-1 truncate font-medium">{opt.canonical}</span>
                           {isActive && (
-                            <Check className="size-4 shrink-0 text-[#FF7A59]" strokeWidth={2.5} />
+                            <EmojiIcon name="Check" className="size-4 shrink-0 text-[#FF7A59]" />
                           )}
                         </CommandItem>
                       )

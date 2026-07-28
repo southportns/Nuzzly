@@ -1,26 +1,19 @@
 "use client"
 
+import { EmojiIcon, emojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  Home,
-  Search,
-  PlusCircle,
-  Sparkles,
-  User,
-  ShieldCheck,
-} from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const mainItems = [
-  { href: "/", label: "首页", icon: Home },
-  { href: "/products", label: "产品库", icon: Search },
-  { href: "/products/review", label: "发布反馈", icon: PlusCircle },
-  { href: "/ai", label: "AI 助手", icon: Sparkles },
+  { href: "/", label: "首页", icon: emojiIcon("Home") },
+  { href: "/products", label: "产品库", icon: emojiIcon("Search") },
+  { href: "/products/review", label: "发布反馈", icon: emojiIcon("PlusCircle") },
+  { href: "/ai", label: "AI 助手", icon: emojiIcon("Sparkles") },
 ]
 
 const secondaryItems = [
-  { href: "/dashboard", label: "个人中心", icon: User },
+  { href: "/dashboard", label: "个人中心", icon: emojiIcon("User") },
 ]
 
 export function SidebarNav() {
@@ -31,7 +24,7 @@ export function SidebarNav() {
       {/* Logo */}
       <div className="flex h-14 items-center gap-2.5 border-b border-border/40 px-5">
         <div className="flex size-7 items-center justify-center rounded-lg bg-primary/20">
-          <ShieldCheck className="size-4 text-primary" />
+          <EmojiIcon name="ShieldCheck" className="size-4 text-primary" />
         </div>
         <span className="font-semibold tracking-tight">PetTrust</span>
       </div>

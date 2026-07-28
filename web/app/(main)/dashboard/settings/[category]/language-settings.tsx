@@ -1,8 +1,8 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { SettingsCard } from "@/components/settings/settings-card"
-import { Check } from "lucide-react"
 
 const languages = [
   { value: "zh-CN", label: "简体中文" },
@@ -32,7 +32,7 @@ export default function LanguageSettings() {
             >
               <span className="text-[15px] text-[#111111]">{item.label}</span>
               {lang === item.value && (
-                <Check className="size-4 text-[#FF7A59]" />
+                <EmojiIcon name="Check" className="size-4 text-[#FF7A59]" />
               )}
             </button>
           ))}

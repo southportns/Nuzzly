@@ -1,7 +1,8 @@
 "use client"
 
+import { emojiIcon } from "@/components/ui/emoji-icon"
+import { FluentEmoji } from "@/components/ui/fluent-emoji"
 import { cn } from "@/lib/utils"
-import { MessageSquare, Sparkles, FlaskConical, GitCompareArrows } from "lucide-react"
 
 export type AIMode = "chat" | "recommend" | "ingredients" | "compare"
 
@@ -10,11 +11,40 @@ interface AISidebarProps {
   onModeChange: (mode: AIMode) => void
 }
 
-const navItems: { id: AIMode; label: string; icon: typeof MessageSquare; description: string }[] = [
-  { id: "chat", label: "自由对话", icon: MessageSquare, description: "和球球聊天" },
-  { id: "recommend", label: "智能推荐", icon: Sparkles, description: "精准匹配产品" },
-  { id: "ingredients", label: "成分分析", icon: FlaskConical, description: "解读成分表" },
-  { id: "compare", label: "产品对比", icon: GitCompareArrows, description: "多维度对比" },
+const navItems: { id: AIMode; label: string; icon: ReturnType<typeof emojiIcon>; description: string }[] = [
+  { id: "chat", label: "自由对话", icon: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="18px" height="18px" viewBox="0 0 18 18">
+      <path d="M9,1.75C4.996,1.75,1.75,4.996,1.75,9c0,1.319,.358,2.552,.973,3.617,.43,.806-.053,2.712-.973,3.633,1.25,.068,2.897-.497,3.633-.973,.489,.282,1.264,.656,2.279,.848,.433,.082,.881,.125,1.338,.125,4.004,0,7.25-3.246,7.25-7.25S13.004,1.75,9,1.75Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      <path d="M9,10c-.552,0-1-.449-1-1s.448-1,1-1,1,.449,1,1-.448,1-1,1Z" fill="currentColor" opacity=".75" data-color="color-2" />
+      <path d="M5.5,10c-.552,0-1-.449-1-1s.448-1,1-1,1,.449,1,1-.448,1-1,1Z" fill="currentColor" data-color="color-2" />
+      <path d="M12.5,10c-.552,0-1-.449-1-1s.448-1,1-1,1,.449,1,1-.448,1-1,1Z" fill="currentColor" opacity=".5" data-color="color-2" />
+    </svg>
+  ), description: "和球球聊天" },
+  { id: "recommend", label: "智能推荐", icon: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+      <circle cx="9" cy="9" r="1.75" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      <path d="m10.5025,16.0509c-.4686.2906-.9744.4491-1.5025.4491-2.428,0-4.397-3.358-4.397-7.5S6.572,1.5,9,1.5s4.397,3.358,4.397,7.5c0,1.384-.22,2.681-.603,3.793" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      <path d="m8.5735,4.6109c.1413-.0046.2836-.0069.4265-.0069,4.142,0,7.5,1.968,7.5,4.397s-3.358,4.397-7.5,4.397-7.5-1.97-7.5-4.398c0-1.617,1.489-3.03,3.707-3.794" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+    </svg>
+  ), description: "精准匹配产品" },
+  { id: "ingredients", label: "成分分析", icon: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="18px" height="18px" viewBox="0 0 18 18">
+      <g data-transform-wrapper="on" transform="translate(18 0) scale(-1 1)">
+        <path d="M8.5 12.75L10.75 15L8.5 17.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <path d="M4.655 4.505C3.4774 5.6413 2.75 7.2359 2.75 9C2.75 12.452 5.55 15.25 9 15.25C9.6 15.25 10.17 15.166 10.72 15.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <path d="M9.5 5.25L7.25 3L9.5 0.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" data-color="color-2" fill="none" />
+        <path d="M13.3444 13.4937C14.5146 12.3575 15.25 10.7634 15.25 9C15.25 5.548 12.45 2.75 9.00002 2.75C8.42002 2.75 7.86002 2.82895 7.33002 2.97595" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" data-color="color-2" fill="none" />
+      </g>
+    </svg>
+  ), description: "解读成分表" },
+  { id: "compare", label: "产品对比", icon: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+      <circle cx="3.75" cy="5.25" r="2" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      <circle cx="3.75" cy="12.75" r="2" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      <line x1="8.75" y1="5.25" x2="16.25" y2="5.25" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      <line x1="8.75" y1="12.75" x2="16.25" y2="12.75" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+    </svg>
+  ), description: "多维度对比" },
 ]
 
 export function AISidebar({ activeMode, onModeChange }: AISidebarProps) {
@@ -96,36 +126,16 @@ export function AISidebar({ activeMode, onModeChange }: AISidebarProps) {
               {/* Shadow */}
               <div className="absolute inset-0 translate-y-[2px] scale-90 rounded-full bg-[#FF7A59]/20 blur-[3px]" />
               {/* Sphere */}
-              <svg viewBox="0 0 28 28" className="relative size-5 drop-shadow-[0_1px_3px_rgba(255,122,89,0.35)]">
-                <defs>
-                  <radialGradient id="orb-gradient" cx="35%" cy="30%" r="65%">
-                    <stop offset="0%" stopColor="#FFB89A" />
-                    <stop offset="45%" stopColor="#FF7A59" />
-                    <stop offset="100%" stopColor="#E85D4A" />
-                  </radialGradient>
-                  <radialGradient id="orb-highlight" cx="30%" cy="25%" r="40%">
-                    <stop offset="0%" stopColor="white" stopOpacity="0.7" />
-                    <stop offset="100%" stopColor="white" stopOpacity="0" />
-                  </radialGradient>
-                  <linearGradient id="orb-border" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="white" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#E85D4A" stopOpacity="0.3" />
-                  </linearGradient>
-                </defs>
-                {/* Border ring */}
-                <circle cx="14" cy="14" r="13" fill="url(#orb-border)" />
-                {/* Main sphere */}
-                <circle cx="14" cy="14" r="12" fill="url(#orb-gradient)" />
-                {/* Highlight reflection */}
-                <circle cx="14" cy="14" r="12" fill="url(#orb-highlight)" />
-                {/* Subtle rim light */}
-                <circle cx="14" cy="14" r="11.5" fill="none" stroke="white" strokeOpacity="0.2" strokeWidth="0.5" />
-              </svg>
+              <FluentEmoji
+                name="orange circle"
+                size={20}
+                className="relative size-5 drop-shadow-[0_1px_3px_rgba(255,122,89,0.35)]"
+              />
             </div>
             <div>
               <p className="text-[11px] font-bold text-[#8B5E46]">球球小贴士</p>
               <p className="text-[10px] text-[#A67D65] leading-tight mt-0.5">
-                推荐基于社区真实反馈数据
+                AI 基于社区真实反馈数据及大数据综合智能分析，仅作为参考建议，不构成医疗诊断或专业兽医意见。
               </p>
             </div>
           </div>

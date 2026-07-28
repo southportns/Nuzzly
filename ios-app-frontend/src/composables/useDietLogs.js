@@ -40,7 +40,9 @@ async function addDietLog(log) {
 }
 
 async function deleteDietLog(id) {
-  const { error } = await supabase.from('diet_logs').delete().eq('id', id)
+  const uid = await getUid()
+  if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'deleteDietLog')
+  const { error } = await supabase.from('diet_logs').delete().eq('id', id).eq('profile_id', uid)
   if (error) throw normalizeError(error, 'deleteDietLog')
   dietLogs.value = dietLogs.value.filter(l => l.id !== id)
 }

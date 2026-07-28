@@ -1,3 +1,4 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { notFound } from "next/navigation"
 import { formatPetAge } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { queryPet, queryDietLogs, queryWeightLogs, queryAllergies, getUser, queryProfile } from "@/lib/supabase/query"
 import Link from "next/link"
 import { DietLogForm } from "@/components/pets/diet-log-form"
+import Image from "next/image"
 import { DietLogList } from "@/components/pets/diet-log-list"
 import { WeightTracker } from "@/components/pets/weight-tracker"
 import { AllergyManager } from "@/components/pets/allergy-manager"
@@ -17,15 +19,12 @@ import { DietTrendChart } from "@/components/pets/diet-trend-chart"
 import { SymptomTracker } from "@/components/pets/symptom-tracker"
 import { RepurchaseReminder } from "@/components/pets/repurchase-reminder"
 import { generatePetCode } from "@/components/resident-book/utils"
-import { Utensils, Activity, Heart, Edit3, AlertTriangle, Clock, Stethoscope, ChevronRight, Fingerprint } from "lucide-react"
 
 const lifeStageLabels: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
   kitten: { label: "幼年", variant: "default" },
   young_adult: { label: "青年", variant: "secondary" },
   adult: { label: "壮年", variant: "outline" },
-  senior: { label: "中年", variant: "secondary" },
-  geriatric: { label: "老年", variant: "destructive" },
-  super_senior: { label: "高龄", variant: "destructive" },
+  senior: { label: "老年", variant: "destructive" },
 }
 
 export default async function DashboardPetDetailPage({ params }: { params: Promise<{ petId: string }> }) {
@@ -55,19 +54,22 @@ export default async function DashboardPetDetailPage({ params }: { params: Promi
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-[12.5px] text-[#6B6B6B]">
         <Link href="/dashboard/pets" className="transition-colors hover:text-[#111111]">我的宠物</Link>
-        <ChevronRight className="size-3" />
+        <span>/</span>
         <span className="text-[#111111]">{pet.name}</span>
       </div>
 
       {/* Pet Header */}
       <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
         <div className="flex items-center gap-4">
-          <div className="flex size-16 shrink-0 overflow-hidden rounded-2xl bg-[#FF7A59]/10">
+          <div className="relative flex size-16 shrink-0 overflow-hidden rounded-2xl bg-[#FF7A59]/10">
             {pet.photo_url ? (
-              <img src={pet.photo_url} alt={pet.name} className="size-full object-cover" />
+              <Image src={pet.photo_url} alt={pet.name} fill className="object-cover" sizes="64px" />
             ) : (
-              <div className="flex size-full items-center justify-center text-2xl">
-                {pet.species === "cat" ? "🐱" : pet.species === "dog" ? "🐶" : "🐾"}
+              <div className="flex size-full items-center justify-center">
+                <EmojiIcon
+                  name={pet.species === "cat" ? "Cat" : pet.species === "dog" ? "Dog" : "PawPrint"}
+                  size={32}
+                />
               </div>
             )}
           </div>
@@ -85,14 +87,14 @@ export default async function DashboardPetDetailPage({ params }: { params: Promi
               </Badge>
               {lifeStageInfo && <Badge variant={lifeStageInfo.variant}>{lifeStageInfo.label}</Badge>}
               <Badge variant="outline" className="gap-1 font-mono text-[11px]">
-                <Fingerprint className="size-3" />
+                <EmojiIcon name="Fingerprint" className="size-3" />
                 {petCode}
               </Badge>
             </div>
           </div>
           <Button asChild variant="outline" size="sm">
             <Link href={`/dashboard/pets/${pet.id}/edit`}>
-              <Edit3 className="mr-1 size-3.5" />编辑档案
+              <EmojiIcon name="Edit3" className="mr-1 size-3.5" />编辑档案
             </Link>
           </Button>
         </div>
@@ -104,22 +106,22 @@ export default async function DashboardPetDetailPage({ params }: { params: Promi
           <div className="overflow-x-auto scrollbar-hide">
             <TabsList className="inline-flex min-w-full justify-start gap-1 rounded-[12px] border border-[rgba(0,0,0,0.06)] bg-white p-1 shadow-sm">
               <TabsTrigger value="overview" className="rounded-[8px] px-3 py-1.5 text-[13px] font-medium transition-all data-[state=active]:bg-[#111111] data-[state=active]:text-white data-[state=active]:shadow-sm">
-                <Heart className="mr-1.5 size-3.5" />概览
+                <EmojiIcon name="Heart" className="mr-1.5 size-3.5" />概览
               </TabsTrigger>
               <TabsTrigger value="timeline" className="rounded-[8px] px-3 py-1.5 text-[13px] font-medium transition-all data-[state=active]:bg-[#111111] data-[state=active]:text-white data-[state=active]:shadow-sm">
-                <Clock className="mr-1.5 size-3.5" />健康事件
+                <EmojiIcon name="Clock" className="mr-1.5 size-3.5" />健康事件
               </TabsTrigger>
               <TabsTrigger value="health" className="rounded-[8px] px-3 py-1.5 text-[13px] font-medium transition-all data-[state=active]:bg-[#111111] data-[state=active]:text-white data-[state=active]:shadow-sm">
-                <Stethoscope className="mr-1.5 size-3.5" />健康记录
+                <EmojiIcon name="Stethoscope" className="mr-1.5 size-3.5" />健康记录
               </TabsTrigger>
               <TabsTrigger value="food" className="rounded-[8px] px-3 py-1.5 text-[13px] font-medium transition-all data-[state=active]:bg-[#111111] data-[state=active]:text-white data-[state=active]:shadow-sm">
-                <Utensils className="mr-1.5 size-3.5" />食品历史
+                <EmojiIcon name="Utensils" className="mr-1.5 size-3.5" />食品历史
               </TabsTrigger>
               <TabsTrigger value="diet" className="rounded-[8px] px-3 py-1.5 text-[13px] font-medium transition-all data-[state=active]:bg-[#111111] data-[state=active]:text-white data-[state=active]:shadow-sm">
-                <Utensils className="mr-1.5 size-3.5" />饮食记录
+                <EmojiIcon name="Utensils" className="mr-1.5 size-3.5" />饮食记录
               </TabsTrigger>
               <TabsTrigger value="weight" className="rounded-[8px] px-3 py-1.5 text-[13px] font-medium transition-all data-[state=active]:bg-[#111111] data-[state=active]:text-white data-[state=active]:shadow-sm">
-                <Activity className="mr-1.5 size-3.5" />体重趋势
+                <EmojiIcon name="Activity" className="mr-1.5 size-3.5" />体重趋势
               </TabsTrigger>
             </TabsList>
           </div>
@@ -152,7 +154,7 @@ export default async function DashboardPetDetailPage({ params }: { params: Promi
           <Card className="rounded-[20px] border-[rgba(0,0,0,0.05)] bg-white">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <AlertTriangle className="size-4 text-[#E8A87C]" />过敏信息
+                <EmojiIcon name="AlertTriangle" className="size-4 text-[#E8A87C]" />过敏信息
               </CardTitle>
             </CardHeader>
             <CardContent>

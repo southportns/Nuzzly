@@ -1,5 +1,5 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { redirect } from "next/navigation"
-import { Pill, Plus, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { getUser } from "@/lib/supabase/query"
 import { getMedicationRecords, getOngoingMedications } from "@/lib/supabase/queries/medication-queries"
@@ -44,7 +44,7 @@ export default async function MedicationRecordsPage() {
           href={`/dashboard/health/medications/new?pet=${petId}`}
           className="flex items-center gap-2 rounded-full bg-[#FF7A59] px-4 py-2 text-[14px] font-medium text-white hover:bg-[#FF6A49]"
         >
-          <Plus className="size-4" />
+          <EmojiIcon name="Plus" className="size-4" />
           添加记录
         </a>
       </div>
@@ -53,21 +53,21 @@ export default async function MedicationRecordsPage() {
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-5">
           <div className="flex items-center gap-2 mb-2">
-            <Pill className="size-4 text-[#FF7A59]" />
+            <EmojiIcon name="Pill" className="size-4 text-[#FF7A59]" />
             <span className="text-[12px] text-[#6B6B6B]">持续用药</span>
           </div>
           <span className="text-[32px] font-semibold text-[#111111]">{ongoingMedications.length}</span>
         </div>
         <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-5">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle className="size-4 text-[#34c759]" />
+            <EmojiIcon name="CheckCircle" className="size-4 text-[#34c759]" />
             <span className="text-[12px] text-[#6B6B6B]">已完成</span>
           </div>
           <span className="text-[32px] font-semibold text-[#111111]">{completedMedications.length}</span>
         </div>
         <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-5">
           <div className="flex items-center gap-2 mb-2">
-            <Clock className="size-4 text-[#6B6B6B]" />
+            <EmojiIcon name="Clock" className="size-4 text-[#6B6B6B]" />
             <span className="text-[12px] text-[#6B6B6B]">总记录</span>
           </div>
           <span className="text-[32px] font-semibold text-[#111111]">{medications.length}</span>
@@ -78,7 +78,7 @@ export default async function MedicationRecordsPage() {
       {ongoingMedications.length > 0 && (
         <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
           <div className="flex items-center gap-2 mb-4">
-            <AlertCircle className="size-5 text-[#ff9500]" />
+            <EmojiIcon name="AlertCircle" className="size-5 text-[#ff9500]" />
             <span className="text-[15px] font-semibold text-[#111111]">当前用药</span>
           </div>
           <MedicationRecordsList records={ongoingMedications} showStopButton />
@@ -88,7 +88,7 @@ export default async function MedicationRecordsPage() {
       {/* All Medications */}
       <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Pill className="size-5 text-[#FF7A59]" />
+          <EmojiIcon name="Pill" className="size-5 text-[#FF7A59]" />
           <span className="text-[15px] font-semibold text-[#111111]">用药历史</span>
         </div>
         
@@ -96,7 +96,7 @@ export default async function MedicationRecordsPage() {
           <MedicationRecordsList records={medications} />
         ) : (
           <div className="py-12 text-center">
-            <Pill className="mx-auto mb-3 size-12 text-[#e0e0e0]" />
+            <EmojiIcon name="Pill" className="mx-auto mb-3 size-12 text-[#e0e0e0]" />
             <p className="text-[14px] text-[#6B6B6B]">暂无用药记录</p>
             <p className="mt-1 text-[12px] text-[#999]">点击上方按钮添加第一条记录</p>
           </div>

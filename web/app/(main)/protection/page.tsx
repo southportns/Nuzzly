@@ -1,4 +1,4 @@
-import { ShieldCheck, AlertTriangle, Clock, FileCheck, Bell, Users, BarChart3, Ban, Lock } from "lucide-react"
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
@@ -8,37 +8,37 @@ export const metadata = {
 
 const features = [
   {
-    icon: AlertTriangle,
+    iconName: "AlertTriangle",
     title: "风险预警系统",
     description: "实时监控产品异常反馈，自动发出风险预警。",
     status: "已上线",
   },
   {
-    icon: Clock,
+    iconName: "Clock",
     title: "长期追踪机制",
     description: "7/30/90/180 天定期提醒，确保数据时间价值。",
     status: "已上线",
   },
   {
-    icon: FileCheck,
+    iconName: "FileCheck",
     title: "凭证验证体系",
     description: "AI 验证购买凭证真实性，提升评价可信度。",
     status: "开发中",
   },
   {
-    icon: Users,
+    iconName: "Users",
     title: "可信用户等级",
     description: "基于活跃度与凭证评估用户可信度。",
     status: "已上线",
   },
   {
-    icon: Bell,
+    iconName: "Bell",
     title: "配方变更追踪",
     description: "追踪产品配方变更历史，保护知情权。",
     status: "开发中",
   },
   {
-    icon: ShieldCheck,
+    iconName: "ShieldCheck",
     title: "产品透明度指数",
     description: "从成分、工厂、检测等维度评估透明度。",
     status: "规划中",
@@ -47,17 +47,17 @@ const features = [
 
 const principles = [
   {
-    icon: BarChart3,
+    iconName: "BarChart3",
     title: "不做官方定性",
     description: "展示数据与统计，让用户基于数据自行决策。",
   },
   {
-    icon: Ban,
+    iconName: "Ban",
     title: "严格打击水军",
     description: "凭证 + 信任分 + 行为分三重反作弊机制。",
   },
   {
-    icon: Lock,
+    iconName: "Lock",
     title: "保护用户隐私",
     description: "评价匿名化处理，用户数据严格保密。",
   },
@@ -86,16 +86,14 @@ export default function ProtectionPage() {
           {/* Left — Features 2-col x 3-row */}
           <div className="md:col-span-8">
             <div className="grid h-full gap-3 md:grid-cols-2 md:gap-4">
-              {features.map((f) => {
-                const Icon = f.icon
-                return (
+              {features.map((f) => (
                   <div
                     key={f.title}
                     className="rounded-[20px] bg-white p-5 shadow-[0_8px_40px_rgba(0,0,0,0.03)]"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex size-10 items-center justify-center rounded-2xl bg-[#FF7A59]/10">
-                        <Icon className="size-5 text-[#FF7A59]" />
+                        <EmojiIcon name={f.iconName} className="size-5 text-[#FF7A59]" />
                       </div>
                       <span
                         className={
@@ -115,8 +113,7 @@ export default function ProtectionPage() {
                       {f.description}
                     </p>
                   </div>
-                )
-              })}
+                ))}
             </div>
           </div>
 
@@ -135,15 +132,13 @@ export default function ProtectionPage() {
 
               {/* 3 principles evenly distributed in flex-1 space */}
               <div className="mt-5 flex flex-1 flex-col justify-between gap-3.5">
-                {principles.map((p) => {
-                  const Icon = p.icon
-                  return (
+                {principles.map((p) => (
                     <div
                       key={p.title}
                       className="group flex items-center gap-3 rounded-[14px] bg-gradient-to-br from-[#FF7A59]/[0.07] to-[#FF7A59]/[0.01] p-3 ring-1 ring-[#FF7A59]/[0.08] transition-all hover:ring-[#FF7A59]/20"
                     >
                       <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF7A59]/15 to-[#FF7A59]/4 ring-1 ring-[#FF7A59]/10 transition-transform group-hover:scale-105">
-                        <Icon className="size-[18px] text-[#FF7A59]" />
+                        <EmojiIcon name={p.iconName} className="size-[18px] text-[#FF7A59]" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="text-[12.5px] font-bold leading-[1.3] text-[#111111]">
@@ -154,8 +149,7 @@ export default function ProtectionPage() {
                         </p>
                       </div>
                     </div>
-                  )
-                })}
+                ))}
               </div>
 
               {/* CTA */}

@@ -1,10 +1,10 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { TrendingUp, Users, Calendar, Activity } from "lucide-react"
 
 interface RetentionAnalysisProps {
   userId: string
@@ -121,7 +121,7 @@ export function RetentionAnalysis({ userId }: RetentionAnalysisProps) {
     <Card className="rounded-[16px] border-[rgba(0,0,0,0.05)] bg-white">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <TrendingUp className="size-4 text-[#FF7A59]" />
+          <EmojiIcon name="TrendingUp" className="size-4 text-[#FF7A59]" />
           使用分析
         </CardTitle>
       </CardHeader>
@@ -130,14 +130,14 @@ export function RetentionAnalysis({ userId }: RetentionAnalysisProps) {
         <div className="mb-4 grid gap-3 sm:grid-cols-2">
           <div className="rounded-[12px] bg-[#F7F6F3] p-4">
             <div className="flex items-center gap-2">
-              <Calendar className="size-4 text-[#6B6B6B]" />
+              <EmojiIcon name="Calendar" className="size-4 text-[#6B6B6B]" />
               <span className="text-[13px] text-[#6B6B6B]">注册天数</span>
             </div>
             <p className="mt-2 text-[28px] font-semibold text-[#111111]">{stats.total_days}</p>
           </div>
           <div className="rounded-[12px] bg-[#F7F6F3] p-4">
             <div className="flex items-center gap-2">
-              <Activity className="size-4 text-[#6B6B6B]" />
+              <EmojiIcon name="Activity" className="size-4 text-[#6B6B6B]" />
               <span className="text-[13px] text-[#6B6B6B]">活跃天数</span>
             </div>
             <p className="mt-2 text-[28px] font-semibold text-[#111111]">{stats.active_days}</p>
@@ -153,7 +153,7 @@ export function RetentionAnalysis({ userId }: RetentionAnalysisProps) {
             </div>
             {stats.streak_days >= 7 && (
               <Badge className="rounded-full bg-[#34C759] text-white">
-                <TrendingUp className="mr-1 size-3.5" />
+                <EmojiIcon name="TrendingUp" className="mr-1 size-3.5" />
                 坚持中！
               </Badge>
             )}
@@ -191,7 +191,7 @@ export function RetentionAnalysis({ userId }: RetentionAnalysisProps) {
                 color: isHighRetention ? "#34C759" : "#FF9500",
               }}
             >
-              <Users className="mr-1 size-3.5" />
+              <EmojiIcon name="Users" className="mr-1 size-3.5" />
               {isHighRetention ? "高活跃" : "需提升"}
             </Badge>
           </div>

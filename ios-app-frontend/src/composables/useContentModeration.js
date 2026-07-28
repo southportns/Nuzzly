@@ -11,12 +11,28 @@ async function getUid() {
   return session?.session?.user?.id
 }
 
+// 前端管理员权限预检（最终防线依赖 RLS policy，此处仅为 UX 优化）
+async function requireAdmin() {
+  const uid = await getUid()
+  if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'requireAdmin')
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin, role')
+    .eq('id', uid)
+    .maybeSingle()
+  // is_admin 布尔或 role in admin/moderator 均可
+  if (!profile?.is_admin && !['admin', 'moderator'].includes(profile?.role)) {
+    throw normalizeError({ code: 'FORBIDDEN', message: '无管理员权限' }, 'requireAdmin')
+  }
+  return uid
+}
+
 async function fetchModerationQueue(status = 'pending', limit = 50) {
   loading.value = true
 
   const { data, error } = await supabase
     .from('community_posts')
-    .select('*, profiles(display_name, avatar_url)')
+    .select('*, public_profiles(display_name, avatar_url)')
     .eq('review_status', status)
     .order('created_at', { ascending: false })
     .limit(limit)
@@ -45,6 +61,7 @@ async function fetchModerationStats() {
 }
 
 async function approvePost(postId) {
+  await requireAdmin()
   const { error } = await supabase
     .from('community_posts')
     .update({ review_status: 'approved' })
@@ -57,6 +74,7 @@ async function approvePost(postId) {
 }
 
 async function rejectPost(postId, reason) {
+  await requireAdmin()
   const { error } = await supabase
     .from('community_posts')
     .update({
@@ -89,6 +107,7 @@ async function flagPost(postId, reason) {
 }
 
 async function batchModerate(postIds, action, reason) {
+  await requireAdmin()
   const updates = action === 'approve'
     ? { review_status: 'approved' }
     : { review_status: 'rejected', reject_reason: reason }

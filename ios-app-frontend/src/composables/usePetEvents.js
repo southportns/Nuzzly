@@ -96,10 +96,13 @@ async function createPetEvent({ pet_id, event_type, event_time, notes, severity,
 }
 
 async function updatePetEvent(id, updates) {
+  const uid = await getUid()
+  if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'updatePetEvent')
   const { data, error } = await supabase
     .from('pet_events')
     .update(updates)
     .eq('id', id)
+    .eq('profile_id', uid)
     .select()
     .single()
 
@@ -109,7 +112,9 @@ async function updatePetEvent(id, updates) {
 }
 
 async function deletePetEvent(id) {
-  const { error } = await supabase.from('pet_events').delete().eq('id', id)
+  const uid = await getUid()
+  if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'deletePetEvent')
+  const { error } = await supabase.from('pet_events').delete().eq('id', id).eq('profile_id', uid)
   if (error) throw normalizeError(error, 'deletePetEvent')
   petEvents.value = petEvents.value.filter(e => e.id !== id)
 }

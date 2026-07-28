@@ -1,9 +1,9 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
-import { Flag, Shield, ShieldOff, MoreHorizontal, Loader2 } from "lucide-react"
 
 interface UserRowActionsProps {
   userId: string
@@ -101,7 +101,7 @@ export function UserRowActions({
                 disabled={pending}
                 className="inline-flex items-center gap-1.5 rounded-full bg-[#ff3b30] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[#e0342a] disabled:opacity-50"
               >
-                {pending && <Loader2 className="size-3 animate-spin" />}
+                {pending && <EmojiIcon name="Loader2" className="size-3 animate-spin" />}
                 确认标记
               </button>
             </div>
@@ -120,7 +120,7 @@ export function UserRowActions({
         }`}
         title={isFlagged ? "取消标记" : "标记此用户"}
       >
-        {pending ? <Loader2 className="size-3 animate-spin" /> : <Flag className="size-3" />}
+        {pending ? <EmojiIcon name="Loader2" className="size-3 animate-spin" /> : <EmojiIcon name="Flag" className="size-3" />}
         {isFlagged ? "已标记" : "标记"}
       </button>
       <button
@@ -134,7 +134,7 @@ export function UserRowActions({
         }`}
         title={isAdmin ? "撤销管理员" : "设为管理员"}
       >
-        {isAdmin ? <ShieldOff className="size-3" /> : <Shield className="size-3" />}
+        {isAdmin ? <EmojiIcon name="ShieldOff" className="size-3" /> : <EmojiIcon name="Shield" className="size-3" />}
         {isAdmin ? "撤销管理" : "设为管理"}
       </button>
     </div>

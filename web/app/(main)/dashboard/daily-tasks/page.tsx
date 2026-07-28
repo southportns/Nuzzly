@@ -1,5 +1,5 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { redirect } from "next/navigation"
-import { CheckCircle2, Circle, Plus, Calendar, TrendingUp, Clock } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { getUser } from "@/lib/supabase/query"
 import { getDailyTasks, getDailyTaskLogs, getTaskCompletionStats } from "@/lib/supabase/queries/daily-task-queries"
@@ -45,7 +45,7 @@ export default async function DailyTasksPage() {
           href={`/dashboard/daily-tasks/new?pet=${petId}`}
           className="flex items-center gap-2 rounded-full bg-[#FF7A59] px-4 py-2 text-[14px] font-medium text-white hover:bg-[#FF6A49]"
         >
-          <Plus className="size-4" />
+          <EmojiIcon name="Plus" className="size-4" />
           新建任务
         </a>
       </div>
@@ -54,7 +54,7 @@ export default async function DailyTasksPage() {
       {stats && (
         <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="size-5 text-[#FF7A59]" />
+            <EmojiIcon name="TrendingUp" className="size-5 text-[#FF7A59]" />
             <span className="text-[15px] font-semibold text-[#111111]">本周统计</span>
           </div>
           <TaskStats stats={stats} />
@@ -65,7 +65,7 @@ export default async function DailyTasksPage() {
       <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Calendar className="size-5 text-[#FF7A59]" />
+            <EmojiIcon name="Calendar" className="size-5 text-[#FF7A59]" />
             <span className="text-[15px] font-semibold text-[#111111]">今日任务</span>
           </div>
           <span className="text-[12px] text-[#6B6B6B]">{new Date().toLocaleDateString("zh-CN", { weekday: "long", month: "long", day: "numeric" })}</span>
@@ -75,7 +75,7 @@ export default async function DailyTasksPage() {
           <DailyTasksList tasks={tasks} logs={logs} petId={petId ?? null} date={today} />
         ) : (
           <div className="py-12 text-center">
-            <Clock className="mx-auto mb-3 size-12 text-[#e0e0e0]" />
+            <EmojiIcon name="Clock" className="mx-auto mb-3 size-12 text-[#e0e0e0]" />
             <p className="text-[14px] text-[#6B6B6B]">暂无每日任务</p>
             <p className="mt-1 text-[12px] text-[#999]">点击上方按钮创建第一个任务</p>
           </div>

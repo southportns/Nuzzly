@@ -1,11 +1,11 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ChevronDown, ChevronUp, BarChart3, ShieldCheck, ThumbsUp, ThumbsDown, Check, TrendingUp, AlertTriangle } from "lucide-react"
 import { RecommendationEvidence } from "@/components/ai/recommendation-evidence"
 import { useAuth } from "@/hooks/use-auth"
 import { filterBreakdownForLevel, getAccessLevel, type ScoreBreakdown } from "@/lib/ai/explain-types"
@@ -98,7 +98,7 @@ export function RecommendationCard({ recommendation, rank, breakdown }: Props) {
           {/* L1: trust level badge */}
           {filteredBreakdown?.product_confidence != null && (
             <div className="flex items-center gap-1.5 mt-2">
-              <ShieldCheck className="size-3 text-primary" />
+              <EmojiIcon name="ShieldCheck" className="size-3 text-primary" />
               <span className="text-[10px] text-muted-foreground">
                 基于 {breakdown?.evidence_support?.[0]?.data_point ?? "数据"}，置信度 {filteredBreakdown.product_confidence}%
               </span>
@@ -108,7 +108,7 @@ export function RecommendationCard({ recommendation, rank, breakdown }: Props) {
           {r.timeline_score != null && r.timeline_score > 0 && (
             <div className="mt-3 p-2 rounded-lg bg-muted/50 border border-border/30">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <TrendingUp className="size-3 text-primary" />
+                <EmojiIcon name="TrendingUp" className="size-3 text-primary" />
                 <span className="text-[10px] font-medium text-muted-foreground">纵向评分</span>
               </div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px]">
@@ -131,7 +131,7 @@ export function RecommendationCard({ recommendation, rank, breakdown }: Props) {
                 {r.soft_stool_risk != null && r.soft_stool_risk > 0 && (
                   <div className="flex justify-between col-span-2">
                     <span className="text-muted-foreground flex items-center gap-1">
-                      <AlertTriangle className="size-2.5 text-amber-500" />
+                      <EmojiIcon name="AlertTriangle" className="size-2.5 text-amber-500" />
                       软便风险
                     </span>
                     <span className="font-semibold tabular-nums text-amber-600">{r.soft_stool_risk.toFixed(0)}%</span>
@@ -154,9 +154,9 @@ export function RecommendationCard({ recommendation, rank, breakdown }: Props) {
               data-no-navigate
               onClick={() => setExpanded(!expanded)}
             >
-              <BarChart3 className="size-3" />
+              <EmojiIcon name="BarChart3" className="size-3" />
               {expanded ? "收起依据" : level === "L1" ? "登录查看推荐依据" : "查看推荐依据"}
-              {expanded ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
+              {expanded ? <EmojiIcon name="ChevronUp" className="size-3" /> : <EmojiIcon name="ChevronDown" className="size-3" />}
             </Button>
 
             {/* Feedback actions */}
@@ -170,7 +170,7 @@ export function RecommendationCard({ recommendation, rank, breakdown }: Props) {
                   data-no-navigate
                   onClick={() => sendFeedback("accept")}
                 >
-                  {feedback === "accept" ? <Check className="size-3" /> : <ThumbsUp className="size-3" />}
+                  {feedback === "accept" ? <EmojiIcon name="Check" className="size-3" /> : <EmojiIcon name="ThumbsUp" className="size-3" />}
                   {feedback === "accept" ? "已采纳" : "采纳"}
                 </Button>
                 <Button
@@ -181,7 +181,7 @@ export function RecommendationCard({ recommendation, rank, breakdown }: Props) {
                   data-no-navigate
                   onClick={() => sendFeedback("reject")}
                 >
-                  <ThumbsDown className="size-3" />
+                  <EmojiIcon name="ThumbsDown" className="size-3" />
                 </Button>
               </span>
             )}

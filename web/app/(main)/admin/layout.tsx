@@ -1,23 +1,15 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { requireAdmin } from "@/lib/supabase/query"
 import { cn } from "@/lib/utils"
-import {
-  LayoutDashboard,
-  Users,
-  Package,
-  MessageSquareWarning,
-  Shield,
-  ChevronLeft,
-  BarChart3,
-} from "lucide-react"
 
 const adminNavItems = [
-  { href: "/admin", label: "概览", icon: LayoutDashboard },
-  { href: "/admin/users", label: "用户管理", icon: Users },
-  { href: "/admin/products", label: "产品管理", icon: Package },
-  { href: "/admin/reviews", label: "评价审核", icon: MessageSquareWarning },
-  { href: "/admin/outcomes-dashboard", label: "Outcomes Dashboard", icon: BarChart3 },
+  { href: "/admin", label: "概览", iconName: "LayoutDashboard" },
+  { href: "/admin/users", label: "用户管理", iconName: "Users" },
+  { href: "/admin/products", label: "产品管理", iconName: "Package" },
+  { href: "/admin/reviews", label: "评价审核", iconName: "MessageSquareWarning" },
+  { href: "/admin/outcomes-dashboard", label: "Outcomes Dashboard", iconName: "BarChart3" },
 ]
 
 export default async function AdminLayout({
@@ -36,7 +28,7 @@ export default async function AdminLayout({
         {/* Admin sidebar */}
         <aside className="sticky top-[88px] hidden h-fit w-[220px] shrink-0 md:block">
           <div className="mb-4 flex items-center gap-2 rounded-[16px] border border-[#7BA7BC]/25 bg-[#7BA7BC]/8 px-3 py-2.5">
-            <Shield className="size-4 text-[#4A7A91]" />
+            <EmojiIcon name="Shield" className="size-4 text-[#4A7A91]" />
             <span className="text-[12px] font-semibold text-[#4A7A91]">管理员控制台</span>
           </div>
 
@@ -44,7 +36,7 @@ export default async function AdminLayout({
             href="/dashboard"
             className="mb-3 inline-flex items-center gap-1 text-[12px] text-[#6B6B6B] transition-colors hover:text-[#111111]"
           >
-            <ChevronLeft className="size-3" />
+            <EmojiIcon name="ChevronLeft" className="size-3" />
             返回个人中心
           </Link>
 
@@ -72,7 +64,7 @@ function AdminNavLink({
   item,
   compact,
 }: {
-  item: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }
+  item: { href: string; label: string; iconName: string }
   compact?: boolean
 }) {
   // We avoid usePathname in a server component; rely on the page-level active styling.
@@ -84,7 +76,7 @@ function AdminNavLink({
         compact ? "shrink-0 px-3 py-1.5" : "px-3 py-2.5"
       )}
     >
-      <item.icon className="size-4" />
+      <EmojiIcon name={item.iconName} className="size-4" />
       {item.label}
     </Link>
   )

@@ -1,5 +1,6 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
@@ -10,7 +11,6 @@ import { Label } from "@/components/ui/label"
 import { SelectDropdown, type SelectOption } from "@/components/ui/select-dropdown"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Plus, X } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
@@ -102,7 +102,7 @@ export function AllergyManager({ petId, initialAllergies }: { petId: string; ini
             className="mt-2 text-[#FF7A59]"
             onClick={() => setShowForm(true)}
           >
-            <Plus className="mr-1 size-3.5" />添加过敏原
+            <EmojiIcon name="Plus" className="mr-1 size-3.5" />添加过敏原
           </Button>
         </div>
       ) : (
@@ -122,7 +122,7 @@ export function AllergyManager({ petId, initialAllergies }: { petId: string; ini
                     onClick={() => handleDelete(a.id, !!a.confirmed)}
                     className="text-[#D2D1CF] hover:text-[#E85D4A] transition-colors"
                   >
-                    <X className="size-3.5" />
+                    <EmojiIcon name="X" className="size-3.5" />
                   </button>
                 </div>
               )
@@ -133,7 +133,7 @@ export function AllergyManager({ petId, initialAllergies }: { petId: string; ini
                 onClick={() => setShowForm(true)}
                 className="flex items-center gap-1 rounded-full border border-dashed border-[rgba(0,0,0,0.1)] px-3 py-1 text-[13px] text-[#6B6B6B] hover:border-[#FF7A59] hover:text-[#FF7A59] transition-colors"
               >
-                <Plus className="size-3" />添加
+                <EmojiIcon name="Plus" className="size-3" />添加
               </button>
             )}
           </div>
@@ -171,7 +171,7 @@ export function AllergyManager({ petId, initialAllergies }: { petId: string; ini
           </div>
           <div className="flex gap-2">
             <Button size="sm" onClick={handleAdd} disabled={loading || !allergen.trim()}>
-              {loading && <Loader2 className="mr-1 size-3 animate-spin" />}
+              {loading && <EmojiIcon name="Loader2" className="mr-1 size-3 animate-spin" />}
               添加
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>

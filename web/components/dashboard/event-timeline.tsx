@@ -1,7 +1,5 @@
 "use client"
 
-import { Clock } from "lucide-react"
-
 interface TimelineEvent {
   id: string
   event_type: string

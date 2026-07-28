@@ -3,7 +3,8 @@
 // =============================================
 
 // Phase 1.2.2: Migrated to Write Gateway
-import { createClient as createServerClient } from "@/lib/supabase/server"
+import { createClient as createServerClient, createServiceRoleClient } from "@/lib/supabase/server"
+import { unstable_cache } from "next/cache"
 import { getWriteGateway, generateIdempotencyKey } from "@/lib/gateway/write-gateway"
 import type { Profile, Pet, PetAllergy, Notification } from "@/lib/supabase/types"
 
@@ -28,14 +29,23 @@ export async function getUser() {
 
 // ── Pets ──
 
-export async function queryTotalPetCount() {
-  const supabase = await createServerClient()
-  const { count, error } = await supabase
-    .from("pets")
-    .select("*", { count: "exact", head: true })
-    .eq("is_active", true)
-  return { count: count ?? 0, error }
-}
+/**
+ * 使用 Next.js unstable_cache 替代内存缓存
+ * 在 Serverless 环境中更可靠，支持自动失效和标签刷新
+ */
+export const queryTotalPetCount = unstable_cache(
+  async () => {
+    const supabase = createServiceRoleClient()
+    const { count, error } = await supabase
+      .from("pets")
+      .select("*", { count: "exact", head: true })
+      .eq("is_active", true)
+
+    return { count: count ?? 0, error }
+  },
+  ["total-pet-count"],
+  { revalidate: 300, tags: ["pets"] }
+)
 
 export async function queryPets(profileId: string) {
   const supabase = await createServerClient()
@@ -93,6 +103,12 @@ export async function queryDietLogs(petId: string, limit = 20) {
 
 // ── Pet Weight Logs (using health_records) ──
 
+interface WeightLogEntry {
+  id: string
+  weight_kg: number
+  logged_date: string
+}
+
 export async function queryWeightLogs(petId: string, limit = 30) {
   const supabase = await createServerClient()
   const { data, error } = await supabase
@@ -103,14 +119,14 @@ export async function queryWeightLogs(petId: string, limit = 30) {
     .not("weight_kg", "is", null)
     .order("record_time", { ascending: true })
     .limit(limit)
-  return {
-    data: data?.map(d => ({
-      id: d.id,
-      weight_kg: d.weight_kg!,
-      logged_date: d.record_time?.split('T')[0] || new Date().toISOString().split('T')[0],
-    })) || null,
-    error
-  }
+
+  const processedData: WeightLogEntry[] | null = data?.map(d => ({
+    id: d.id,
+    weight_kg: d.weight_kg ?? 0, // 安全访问，避免非空断言
+    logged_date: d.record_time?.split('T')[0] || new Date().toISOString().split('T')[0],
+  })) ?? null
+
+  return { data: processedData, error }
 }
 
 // ── Pending Follow-up Schedules ──

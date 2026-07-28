@@ -1,11 +1,11 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState, useCallback } from "react"
 import Cropper, { type Area } from "react-easy-crop"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { ZoomIn, ZoomOut, Check, X } from "lucide-react"
 
 interface AvatarCropperProps {
   imageSrc: string
@@ -86,7 +86,7 @@ export function AvatarCropper({ imageSrc, onConfirm, onCancel }: AvatarCropperPr
             onClick={onCancel}
             className="flex size-8 items-center justify-center rounded-full text-[#9A9A95] hover:bg-[#F7F6F3] hover:text-[#111111]"
           >
-            <X className="size-4" />
+            <EmojiIcon name="X" className="size-4" />
           </button>
         </div>
 
@@ -107,7 +107,7 @@ export function AvatarCropper({ imageSrc, onConfirm, onCancel }: AvatarCropperPr
 
         {/* Zoom controls */}
         <div className="mb-5 flex items-center gap-3">
-          <ZoomOut className="size-4 shrink-0 text-[#9A9A95]" />
+          <EmojiIcon name="ZoomOut" className="size-4 shrink-0 text-[#9A9A95]" />
           <Slider
             value={[zoom]}
             min={1}
@@ -116,7 +116,7 @@ export function AvatarCropper({ imageSrc, onConfirm, onCancel }: AvatarCropperPr
             onValueChange={([v]) => setZoom(v)}
             className="flex-1"
           />
-          <ZoomIn className="size-4 shrink-0 text-[#9A9A95]" />
+          <EmojiIcon name="ZoomIn" className="size-4 shrink-0 text-[#9A9A95]" />
         </div>
 
         {/* Actions */}
@@ -138,7 +138,7 @@ export function AvatarCropper({ imageSrc, onConfirm, onCancel }: AvatarCropperPr
               cropping && "opacity-60"
             )}
           >
-            <Check className="mr-1.5 size-4" />
+            <EmojiIcon name="Check" className="mr-1.5 size-4" />
             {cropping ? "处理中..." : "确认裁剪"}
           </Button>
         </div>

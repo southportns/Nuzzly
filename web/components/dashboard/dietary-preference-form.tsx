@@ -1,11 +1,11 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2, Utensils, AlertTriangle, Check, X, Plus } from "lucide-react"
 import { SelectDropdown, type SelectOption } from "@/components/ui/select-dropdown"
 import { createClient } from "@/lib/supabase/client"
 import { createPetAllergy } from "@/lib/supabase/actions/pet-form-actions"
@@ -123,7 +123,7 @@ export function DietaryPreferenceForm({ petId, petName, onComplete, onSkip }: Di
     return (
       <div className="mx-auto max-w-[480px] text-center">
         <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-[#A8C5A0]/15">
-          <Check className="size-8 text-[#A8C5A0]" />
+          <EmojiIcon name="Check" className="size-8 text-[#A8C5A0]" />
         </div>
         <h3 className="text-[18px] font-semibold text-[#111111]">设置完成！</h3>
         <p className="mt-2 text-[14px] text-[#6B6B6B]">
@@ -144,7 +144,7 @@ export function DietaryPreferenceForm({ petId, petName, onComplete, onSkip }: Di
       <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
         <div className="mb-5 flex items-start gap-3">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-[#FFE4D2] to-[#FFD2BC] text-[#FF7A59]">
-            <Utensils className="size-4" />
+            <EmojiIcon name="Utensils" className="size-4" />
           </div>
           <div>
             <h2 className="text-[16px] font-semibold text-[#111111]">饮食偏好</h2>
@@ -177,7 +177,7 @@ export function DietaryPreferenceForm({ petId, petName, onComplete, onSkip }: Di
           <div className="space-y-1.5">
             <Label className="text-[12.5px] font-medium text-[#444444]">
               <span className="flex items-center gap-1.5">
-                <AlertTriangle className="size-3.5 text-[#ff9500]" />
+                <EmojiIcon name="AlertTriangle" className="size-3.5 text-[#ff9500]" />
                 过敏原
               </span>
             </Label>
@@ -197,7 +197,7 @@ export function DietaryPreferenceForm({ petId, petName, onComplete, onSkip }: Di
                       onClick={() => removeAllergy(a.id)}
                       className="ml-0.5 text-[#9A9A95] hover:text-[#FF3B30]"
                     >
-                      <X className="size-3" />
+                      <EmojiIcon name="X" className="size-3" />
                     </button>
                   </span>
                 ))}
@@ -226,7 +226,7 @@ export function DietaryPreferenceForm({ petId, petName, onComplete, onSkip }: Di
                 disabled={!newAllergen.trim()}
                 className="h-9 rounded-[10px] border-[rgba(0,0,0,0.08)] px-3"
               >
-                <Plus className="size-3.5" />
+                <EmojiIcon name="Plus" className="size-3.5" />
               </Button>
             </div>
           </div>
@@ -250,7 +250,7 @@ export function DietaryPreferenceForm({ petId, petName, onComplete, onSkip }: Di
           disabled={submitting}
           className="h-12 rounded-full bg-[#FF7A59] text-[15px] font-semibold text-white shadow-[0_4px_16px_rgba(255,122,89,0.3)] hover:bg-[#E86A4A]"
         >
-          {submitting && <Loader2 className="mr-2 size-4 animate-spin" />}
+          {submitting && <EmojiIcon name="Loader2" className="mr-2 size-4 animate-spin" />}
           保存并获取推荐
         </Button>
         {onSkip && (

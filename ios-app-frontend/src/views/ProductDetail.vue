@@ -302,7 +302,7 @@ const speciesLabel = computed(() => {
 })
 const ageLabel = computed(() => {
   const a = product.value?.applicable_age
-  return a === 'kitten' ? '幼年' : a === 'senior' ? '老年' : '全年龄段'
+  return a === 'kitten' ? '幼年' : a === 'adult' ? '成年' : a === 'senior' ? '老年' : '全年龄段'
 })
 
 const avgRating = computed(() => {

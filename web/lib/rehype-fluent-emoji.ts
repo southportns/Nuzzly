@@ -1,4 +1,13 @@
-import { getFluentEmojiByGlyph } from "./emoji"
+import emojiIndex from "../public/fluent-emoji-index.json"
+
+const indexByGlyph = new Map<string, (typeof emojiIndex)[number]>()
+for (const item of emojiIndex) {
+  indexByGlyph.set(item.glyph, item)
+}
+
+function getFluentEmojiByGlyph(glyph: string) {
+  return indexByGlyph.get(glyph)
+}
 
 const EMOJI_PRESENTATION_REGEX = /\p{Emoji_Presentation}/gu
 

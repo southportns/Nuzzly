@@ -33,6 +33,10 @@ export default function ResidentBook({ data }: ResidentBookProps) {
   const [direction, setDirection] = useState(0);
   // 动画进行中锁定交互，避免打断 exit 动画
   const [animating, setAnimating] = useState(false);
+  // 多宠选择
+  const [selectedPetId, setSelectedPetId] = useState<string | undefined>(
+    data.pets?.[0]?.id
+  );
 
   const goTo = (target: number) => {
     if (animating) return;
@@ -63,7 +67,14 @@ export default function ResidentBook({ data }: ResidentBookProps) {
       case 2:
         return <PageGrowth growth={data.growth} />;
       case 3:
-        return <PageHealth health={data.health} />;
+        return (
+          <PageHealth
+            health={data.health}
+            pets={data.pets}
+            selectedPetId={selectedPetId}
+            onPetSelect={setSelectedPetId}
+          />
+        );
       default:
         return null;
     }
@@ -72,7 +83,7 @@ export default function ResidentBook({ data }: ResidentBookProps) {
   return (
     <div
       className="relative perspective-[2000px] w-full cursor-pointer select-none"
-      style={{ aspectRatio: "16 / 9" }}
+      style={{ aspectRatio: "16 / 9", transform: "scale(0.972)", transformOrigin: "top right" }}
       onClick={handleClick}
     >
       <AnimatePresence

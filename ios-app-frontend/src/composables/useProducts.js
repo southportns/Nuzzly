@@ -12,15 +12,12 @@ const loading = ref(false)
 // 防竞态：自增请求序列号，仅最后一次请求的结果会写入 products.value
 let fetchProductsReqId = 0
 
-// 猫相关分类 slug（与 web 端 products/page.tsx 保持一致）
-const CAT_CATEGORY_SLUGS = ['cat-food', 'cat-litter', 'cat-canned', 'cat-snack', 'cat-health']
-
-// 物种过滤：默认只展示猫相关产品（与 web 一致）
+// 物种过滤：与 web 端 products/page.tsx 一致，始终只展示猫相关产品
 function isCatProduct(p) {
   return p.applicable_species === 'cats' || p.applicable_species === 'both'
 }
 
-// 查询分类列表
+// 查询分类列表（与 web 端 queryCategories 一致：返回全部分类，按 display_order 排序）
 async function fetchCategories() {
   const { data, error } = await supabase
     .from('product_categories')
@@ -31,13 +28,11 @@ async function fetchCategories() {
     categories.value = []
     return
   }
-  // 只保留猫相关分类
-  categories.value = (data || []).filter(c =>
-    CAT_CATEGORY_SLUGS.includes(c.slug) || c.name.includes('猫')
-  )
+  categories.value = data || []
 }
 
 // 查询产品列表（支持分类 slug + 热门筛选 + 搜索关键词）
+// 与 web 端 queryProducts + products/page.tsx 对齐：limit 20、非 inner join、始终过滤猫产品
 async function fetchProducts({ categorySlug, hot, keyword } = {}) {
   const myReqId = ++fetchProductsReqId
   loading.value = true
@@ -47,7 +42,7 @@ async function fetchProducts({ categorySlug, hot, keyword } = {}) {
       id, name, brand, image_url, description, price_min, price_max,
       origin_country, applicable_species, applicable_age, transparency_score,
       is_active, category_id,
-      product_categories!inner(id, name, slug)
+      product_categories(id, name, slug)
     `)
     .eq('is_active', true)
 
@@ -55,7 +50,9 @@ async function fetchProducts({ categorySlug, hot, keyword } = {}) {
     query = query.eq('product_categories.slug', categorySlug)
   }
 
-  const { data, error } = await query.order('created_at', { ascending: false })
+  const { data, error } = await query
+    .order('created_at', { ascending: false })
+    .limit(20)
 
   // 竞态守卫：若期间已有新请求，丢弃本次结果
   if (myReqId !== fetchProductsReqId) return
@@ -68,8 +65,8 @@ async function fetchProducts({ categorySlug, hot, keyword } = {}) {
   }
 
   let filtered = data || []
-  // 非分类筛选时，过滤只保留猫产品
-  if (!categorySlug) filtered = filtered.filter(isCatProduct)
+  // 与 web 端一致：始终过滤只保留猫产品（cats/both）
+  filtered = filtered.filter(isCatProduct)
   // 热门筛选：取有透明度评分或指标较好的（这里简化为按 transparency_score 排序前 20）
   if (hot === '1') {
     filtered = filtered

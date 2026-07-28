@@ -1,8 +1,9 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ChevronRight, LogOut } from "lucide-react"
+import { openLoginModal } from "@/hooks/use-login-modal"
 import { useAuth } from "@/hooks/use-auth"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
@@ -62,7 +63,8 @@ export default function SettingsClient() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    router.push("/login")
+    // Open global login modal after logout
+    openLoginModal()
     router.refresh()
   }
 
@@ -96,7 +98,6 @@ export default function SettingsClient() {
                     )}
                   >
                     <span className="text-[15px] text-[#111111]">{item.label}</span>
-                    <ChevronRight className="size-4 text-[#D2D1CF]" />
                   </div>
                 )
 
@@ -119,7 +120,7 @@ export default function SettingsClient() {
         onClick={handleLogout}
         className="flex w-full items-center justify-center gap-2 rounded-[16px] border border-[rgba(0,0,0,0.06)] bg-white py-3.5 text-[15px] font-medium text-[#FF3B30] transition-colors hover:bg-[#FF3B30]/5"
       >
-        <LogOut className="size-4" />
+        <EmojiIcon name="LogOut" className="size-4" />
         退出登录
       </button>
     </div>

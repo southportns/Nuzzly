@@ -1,9 +1,10 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState, useEffect, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { preprocessImage } from "@/lib/image"
 import { toast } from "sonner"
-import { X, ImagePlus } from "lucide-react"
 import type { User } from "@supabase/supabase-js"
 
 interface CreatePostDialogProps {
@@ -19,11 +20,22 @@ const PET_TYPES = [
   { value: "dog", label: "狗狗" },
 ]
 
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"]
+const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"]
+const ALL_MEDIA_TYPES = [...IMAGE_TYPES, ...VIDEO_TYPES].join(",")
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024  // 5MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024 // 50MB
+
+interface MediaFile {
+  file: File
+  type: "image" | "video"
+  previewUrl: string
+}
+
 export function CreatePostDialog({ open, onOpenChange, user, onPosted }: CreatePostDialogProps) {
   const [content, setContent] = useState("")
   const [petType, setPetType] = useState("")
-  const [imageFiles, setImageFiles] = useState<File[]>([])
-  const [previewUrls, setPreviewUrls] = useState<string[]>([])
+  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([])
   const [agreed, setAgreed] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -34,9 +46,8 @@ export function CreatePostDialog({ open, onOpenChange, user, onPosted }: CreateP
     const t = setTimeout(() => {
       setContent("")
       setPetType("")
-      previewUrls.forEach(u => URL.revokeObjectURL(u))
-      setImageFiles([])
-      setPreviewUrls([])
+      mediaFiles.forEach(m => URL.revokeObjectURL(m.previewUrl))
+      setMediaFiles([])
       setAgreed(false)
     }, 200)
     return () => clearTimeout(t)
@@ -45,25 +56,38 @@ export function CreatePostDialog({ open, onOpenChange, user, onPosted }: CreateP
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || [])
-    const remaining = 9 - imageFiles.length
+    const remaining = 9 - mediaFiles.length
     const valid = files.slice(0, remaining).filter(f => {
-      if (f.size > 5 * 1024 * 1024) {
+      const isImage = IMAGE_TYPES.includes(f.type)
+      const isVideo = VIDEO_TYPES.includes(f.type)
+      if (!isImage && !isVideo) {
+        toast.warning("仅支持图片和视频格式")
+        return false
+      }
+      if (isImage && f.size > MAX_IMAGE_SIZE) {
         toast.warning("图片大小不能超过5MB")
+        return false
+      }
+      if (isVideo && f.size > MAX_VIDEO_SIZE) {
+        toast.warning("视频大小不能超过50MB")
         return false
       }
       return true
     })
     if (valid.length > 0) {
-      setImageFiles(prev => [...prev, ...valid])
-      setPreviewUrls(prev => [...prev, ...valid.map(f => URL.createObjectURL(f))])
+      const newMedia: MediaFile[] = valid.map(f => ({
+        file: f,
+        type: IMAGE_TYPES.includes(f.type) ? "image" : "video",
+        previewUrl: URL.createObjectURL(f),
+      }))
+      setMediaFiles(prev => [...prev, ...newMedia])
     }
     e.target.value = ""
   }
 
-  function removeImage(index: number) {
-    URL.revokeObjectURL(previewUrls[index])
-    setImageFiles(prev => prev.filter((_, i) => i !== index))
-    setPreviewUrls(prev => prev.filter((_, i) => i !== index))
+  function removeMedia(index: number) {
+    URL.revokeObjectURL(mediaFiles[index].previewUrl)
+    setMediaFiles(prev => prev.filter((_, i) => i !== index))
   }
 
   async function handleSubmit() {
@@ -84,7 +108,7 @@ export function CreatePostDialog({ open, onOpenChange, user, onPosted }: CreateP
     const supabase = createClient()
 
     try {
-      // 1. 文本审核（复用已有审核接口，UX 预检）
+      // 1. 文本审核(获取 audit_token + client_ip,后端 RPC 强制校验)
       const auditRes = await fetch("/api/community/audit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -97,29 +121,60 @@ export function CreatePostDialog({ open, onOpenChange, user, onPosted }: CreateP
         return
       }
 
-      // 2. 上传图片到 Supabase Storage
-      const imageUrls: string[] = []
-      for (const file of imageFiles) {
-        const ext = file.name.split(".").pop() || "jpg"
-        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
-        const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from("community-posts")
-          .upload(path, file, { contentType: file.type, upsert: false })
-        if (uploadErr) {
-          console.warn("[create-post] 图片上传失败:", uploadErr.message)
-          continue
-        }
-        const { data: urlData } = supabase.storage.from("community-posts").getPublicUrl(uploadData.path)
-        imageUrls.push(urlData.publicUrl)
+      const auditToken = auditData.audit_token
+      const clientIp = auditData.client_ip
+      if (!auditToken) {
+        toast.error("审核凭证缺失，请重试")
+        setSubmitting(false)
+        return
       }
 
-      // 3. 通过 RPC 发布（SECURITY DEFINER，后端强制审核）
+      // 2. 上传媒体文件到 Supabase Storage
+      //    图片:先经 preprocessImage 剥离 EXIF + 压缩
+      //    视频:直接上传(暂不支持 EXIF 剥离,需 ffmpeg 服务端处理)
+      const mediaUrls: string[] = []
+      for (const media of mediaFiles) {
+        try {
+          let uploadFile: File = media.file
+          let contentType: string = media.file.type
+
+          if (media.type === "image") {
+            const processed = await preprocessImage(media.file, {
+              maxWidth: 1280,
+              maxHeight: 1280,
+              quality: 0.85,
+              type: media.file.type === "image/png" ? "image/png" : "image/jpeg",
+            })
+            uploadFile = processed
+            contentType = processed.type
+          }
+
+          const ext = media.type === "video"
+            ? (media.file.name.split(".").pop() || "mp4")
+            : (contentType === "image/png" ? "png" : "jpg")
+          const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+          const { data: uploadData, error: uploadErr } = await supabase.storage
+            .from("community-posts")
+            .upload(path, uploadFile, { contentType, upsert: false })
+          if (uploadErr) {
+            console.warn("[create-post] 媒体上传失败:", uploadErr.message)
+            continue
+          }
+          const { data: urlData } = supabase.storage.from("community-posts").getPublicUrl(uploadData.path)
+          mediaUrls.push(urlData.publicUrl)
+        } catch (processErr) {
+          console.warn("[create-post] 媒体处理失败:", processErr)
+        }
+      }
+
+      // 3. 通过 RPC 发布(SECURITY DEFINER,后端强制校验 audit_token + IP)
       const { error } = await supabase.rpc("create_community_post", {
         p_content: content,
-        p_images: imageUrls,
+        p_images: mediaUrls,
         p_pet_type: petType || null,
         p_breed: null,
-        p_ip_address: null,
+        p_audit_token: auditToken,
+        p_ip_address: clientIp,
       } as never)
 
       if (error) {
@@ -155,7 +210,7 @@ export function CreatePostDialog({ open, onOpenChange, user, onPosted }: CreateP
             onClick={() => onOpenChange(false)}
             className="flex size-8 items-center justify-center rounded-full bg-[#F5F5F5] hover:bg-[#EEE]"
           >
-            <X className="size-4 text-[#6B6B6B]" />
+            <EmojiIcon name="X" className="size-4 text-[#6B6B6B]" />
           </button>
           <span className="text-[16px] font-semibold text-[#1A1A1A]">发布动态</span>
           <button
@@ -179,26 +234,43 @@ export function CreatePostDialog({ open, onOpenChange, user, onPosted }: CreateP
           />
           <div className="text-right text-[12px] text-[#AAA]">{content.length}/2000</div>
 
-          {/* 图片 */}
-          {previewUrls.length > 0 ? (
+          {/* 媒体预览 */}
+          {mediaFiles.length > 0 ? (
             <div className="mt-3 grid grid-cols-3 gap-2">
-              {previewUrls.map((url, i) => (
-                <div key={i} className="relative aspect-square overflow-hidden rounded-lg">
-                  <img src={url} alt="" className="size-full object-cover" />
+              {mediaFiles.map((media, i) => (
+                <div key={i} className="relative aspect-square overflow-hidden rounded-lg bg-black">
+                  {media.type === "video" ? (
+                    <video
+                      src={media.previewUrl}
+                      className="size-full object-cover"
+                      muted
+                      playsInline
+                    />
+                  ) : (
+                    <img src={media.previewUrl} alt="" className="size-full object-cover" />
+                  )}
+                  {/* 视频标识 */}
+                  {media.type === "video" && (
+                    <div className="absolute left-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/50">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="white">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                    </div>
+                  )}
                   <button
-                    onClick={() => removeImage(i)}
+                    onClick={() => removeMedia(i)}
                     className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-black/50"
                   >
-                    <X className="size-3 text-white" />
+                    <EmojiIcon name="X" className="size-3 text-white" />
                   </button>
                 </div>
               ))}
-              {previewUrls.length < 9 && (
+              {mediaFiles.length < 9 && (
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-[#E0E0E0] hover:border-[#8B5E46]"
                 >
-                  <ImagePlus className="size-6 text-[#BBB]" />
+                  <EmojiIcon name="ImagePlus" className="size-6 text-[#BBB]" />
                 </button>
               )}
             </div>
@@ -207,14 +279,14 @@ export function CreatePostDialog({ open, onOpenChange, user, onPosted }: CreateP
               onClick={() => fileInputRef.current?.click()}
               className="mt-3 flex w-full items-center gap-2 rounded-xl border border-dashed border-[#E0E0E0] px-4 py-3 text-[13px] text-[#999] hover:border-[#8B5E46]"
             >
-              <ImagePlus className="size-5" />
-              <span>添加图片</span>
+              <EmojiIcon name="ImagePlus" className="size-5" />
+              <span>添加图片或视频</span>
             </button>
           )}
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept={ALL_MEDIA_TYPES}
             multiple
             className="hidden"
             onChange={handleFileSelect}
@@ -255,3 +327,5 @@ export function CreatePostDialog({ open, onOpenChange, user, onPosted }: CreateP
     </div>
   )
 }
+
+export default CreatePostDialog

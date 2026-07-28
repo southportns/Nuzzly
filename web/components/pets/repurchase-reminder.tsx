@@ -1,11 +1,11 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useEffect, useState } from "react"
 import { createIntentEvent } from "@/lib/supabase/queries/intent-event-queries"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Bell, Clock, Calendar, Check } from "lucide-react"
 import { toast } from "sonner"
 
 interface RepurchaseReminderProps {
@@ -92,7 +92,7 @@ export function RepurchaseReminder({ petId, userId }: RepurchaseReminderProps) {
     <Card className="rounded-[16px] border-[#FF9500]/20 bg-[#FF9500]/5">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Bell className="size-4 text-[#FF9500]" />
+          <EmojiIcon name="Bell" className="size-4 text-[#FF9500]" />
           补货提醒
         </CardTitle>
       </CardHeader>
@@ -100,7 +100,7 @@ export function RepurchaseReminder({ petId, userId }: RepurchaseReminderProps) {
         <div className="rounded-[12px] bg-white p-4">
           <div className="flex items-start gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#FF9500]/10">
-              <Calendar className="size-5 text-[#FF9500]" />
+              <EmojiIcon name="Calendar" className="size-5 text-[#FF9500]" />
             </div>
             <div className="flex-1">
               <p className="text-[14px] font-semibold text-[#111111]">{foodName}</p>
@@ -109,7 +109,7 @@ export function RepurchaseReminder({ petId, userId }: RepurchaseReminderProps) {
               </p>
               <div className="mt-3 flex items-center gap-2">
                 <Badge variant="outline" className="rounded-full text-[11px] border-[#FF9500] text-[#FF9500]">
-                  <Clock className="mr-1 size-3" />
+                  <EmojiIcon name="Clock" className="mr-1 size-3" />
                   建议补货
                 </Badge>
               </div>
@@ -120,7 +120,7 @@ export function RepurchaseReminder({ petId, userId }: RepurchaseReminderProps) {
               去选购
             </Button>
             <Button size="sm" variant="outline" className="rounded-full text-[13px]" onClick={handleDismiss}>
-              <Check className="mr-1 size-3.5" />
+              <EmojiIcon name="Check" className="mr-1 size-3.5" />
               已补货
             </Button>
           </div>

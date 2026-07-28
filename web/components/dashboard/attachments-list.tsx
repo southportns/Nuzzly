@@ -1,7 +1,7 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
-import { Image, FileText, Download, Trash2, Eye, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 interface Attachment {
@@ -83,7 +83,7 @@ export function AttachmentsList({ attachments }: Props) {
               </div>
             ) : (
               <div className="aspect-square flex items-center justify-center bg-[#E8E8E8]">
-                <FileText className="size-12 text-[#999]" />
+                <EmojiIcon name="FileText" className="size-12 text-[#999]" />
               </div>
             )}
 
@@ -95,21 +95,21 @@ export function AttachmentsList({ attachments }: Props) {
                 rel="noopener noreferrer"
                 className="rounded-full bg-white p-2 text-[#111111] hover:bg-[#F7F6F3]"
               >
-                <Eye className="size-4" />
+                <EmojiIcon name="Eye" className="size-4" />
               </a>
               <a
                 href={attachment.file_url}
                 download={attachment.file_name}
                 className="rounded-full bg-white p-2 text-[#111111] hover:bg-[#F7F6F3]"
               >
-                <Download className="size-4" />
+                <EmojiIcon name="Download" className="size-4" />
               </a>
               <button
                 onClick={() => handleDelete(attachment.id)}
                 disabled={isDeleting}
                 className="rounded-full bg-white p-2 text-[#ff3b30] hover:bg-[#F7F6F3]"
               >
-                {isDeleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                {isDeleting ? <EmojiIcon name="Loader2" className="size-4 animate-spin" /> : <EmojiIcon name="Trash2" className="size-4" />}
               </button>
             </div>
 

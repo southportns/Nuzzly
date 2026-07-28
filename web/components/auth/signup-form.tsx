@@ -1,9 +1,10 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { openLoginModal } from "@/hooks/use-login-modal"
 import { createClient } from "@/lib/supabase/client"
-import { Loader2 } from "lucide-react"
 
 export function SignupForm() {
   const [email, setEmail] = useState("")
@@ -32,7 +33,8 @@ export function SignupForm() {
       return
     }
 
-    router.push("/login?registered=true")
+    // Open global login modal to continue
+    openLoginModal()
   }
 
   return (
@@ -78,7 +80,7 @@ export function SignupForm() {
         disabled={loading}
         className="flex h-11 w-full items-center justify-center rounded-full bg-[#FF7A59] text-[17px] font-normal text-white transition-colors hover:bg-[#E86A4A] active:scale-[0.98] disabled:opacity-50"
       >
-        {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
+        {loading && <EmojiIcon name="Loader2" className="mr-2 size-4 animate-spin" />}
         注册
       </button>
     </form>

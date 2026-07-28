@@ -79,6 +79,14 @@ async function addHealthMetric({ pet_id, date, appetite_score, activity_score, s
 }
 
 async function updateHealthMetric(id, updates) {
+  const uid = await getUid()
+  if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'updateHealthMetric')
+  // health_metrics 通过 pet_id 关联，先查记录的 pet_id 再验证 pet 属于当前用户
+  const { data: metric } = await supabase.from('health_metrics').select('pet_id').eq('id', id).maybeSingle()
+  if (metric) {
+    const { data: pet } = await supabase.from('pets').select('profile_id').eq('id', metric.pet_id).maybeSingle()
+    if (pet?.profile_id !== uid) throw normalizeError({ code: 'FORBIDDEN', message: '无权操作他人的宠物数据' }, 'updateHealthMetric')
+  }
   const { data, error } = await supabase
     .from('health_metrics')
     .update(updates)

@@ -1,5 +1,6 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
@@ -8,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, TrendingUp, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 interface WeightLog {
@@ -110,7 +110,7 @@ export function WeightTracker({ petId, currentWeight, weightLogs }: {
       <Card className="rounded-[20px] border-[rgba(0,0,0,0.05)] bg-white">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="size-4 text-[#FF7A59]" />
+            <EmojiIcon name="TrendingUp" className="size-4 text-[#FF7A59]" />
             记录体重
           </CardTitle>
         </CardHeader>
@@ -131,7 +131,7 @@ export function WeightTracker({ petId, currentWeight, weightLogs }: {
               />
             </div>
             <Button type="submit" size="sm" disabled={loading} className="rounded-[12px] bg-[#111111] hover:bg-[#333333]">
-              {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {loading && <EmojiIcon name="Loader2" className="mr-2 size-4 animate-spin" />}
               记录
             </Button>
           </form>
@@ -228,7 +228,7 @@ export function WeightTracker({ petId, currentWeight, weightLogs }: {
                     onClick={() => handleDeleteWeight(log.id)}
                     disabled={deletingId === log.id}
                   >
-                    <Trash2 className="size-3.5" />
+                    <EmojiIcon name="Trash2" className="size-3.5" />
                   </Button>
                 </div>
               ))}
@@ -239,7 +239,7 @@ export function WeightTracker({ petId, currentWeight, weightLogs }: {
 
       {logs.length === 0 && (
         <div className="rounded-[20px] border-2 border-dashed border-[rgba(0,0,0,0.06)] p-8 text-center">
-          <TrendingUp className="mx-auto size-8 text-[#D2D1CF]" />
+          <EmojiIcon name="TrendingUp" className="mx-auto size-8 text-[#D2D1CF]" />
           <p className="mt-2 text-sm text-[#6B6B6B]">暂无体重记录</p>
           <p className="text-xs text-[#6B6B6B]/60">定期记录体重，追踪健康变化趋势</p>
         </div>

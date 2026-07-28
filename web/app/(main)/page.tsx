@@ -3,9 +3,19 @@ import { Button } from "@/components/ui/button"
 import { HotCatFoodSection } from "@/components/home/hot-cat-food-section"
 import { HeroVideo } from "@/components/home/hero-video"
 import { queryTotalPetCount } from "@/lib/supabase/queries/profile-queries"
+import { queryTopCatFood } from "@/lib/supabase/queries/product-queries"
 
-// ---------- Mock feedback data ----------
+export const revalidate = 300 // ISR: 5分钟重新验证
 
+/**
+ * TODO: 替换为真实的用户评价数据
+ * 来源: product_reviews 表
+ * 条件: is_verified = true AND rating >= 4
+ *
+ * 建议实现方式：
+ * import { queryRecentReviews } from "@/lib/supabase/queries/review-queries"
+ * 在 HomePage 中并行调用 queryRecentReviews(3) 获取最新3条真实评价
+ */
 const feedbacks = [
   { quote: "吃了两个月后明显稳定很多。", user: "布偶猫家长", days: 90 },
   { quote: "软便情况减少了，毛发也更亮。", user: "三花妈妈", days: 60 },
@@ -15,7 +25,11 @@ const feedbacks = [
 // ---------- Page ----------
 
 export default async function HomePage() {
-  const { count: petCount } = await queryTotalPetCount()
+  const [petCountResult, productsResult] = await Promise.all([
+    queryTotalPetCount(),
+    queryTopCatFood(10),
+  ])
+  const { count: petCount } = petCountResult
   return (
     <div className="bg-[#F7F6F3] overflow-x-hidden">
       {/* ========== Hero Section ========== */}
@@ -126,7 +140,7 @@ export default async function HomePage() {
 
       {/* ========== Product Carousel — Hot Cat Food ========== */}
       <div>
-        <HotCatFoodSection />
+        <HotCatFoodSection initialProducts={productsResult} />
       </div>
 
       {/* ========== Footer ========== */}

@@ -1,10 +1,10 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Activity, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react"
 
 interface SymptomTrackerProps {
   petId: string
@@ -14,20 +14,20 @@ interface SymptomEvent {
   id: string
   event_time: string
   symptom_code: string
-  severity: string | null
+  severity: number | null
   notes: string | null
 }
 
-const severityColors: Record<string, string> = {
-  mild: "#34C759",
-  moderate: "#FF9500",
-  severe: "#FF3B30",
+const severityColors: Record<number, string> = {
+  1: "#34C759",
+  2: "#FF9500",
+  3: "#FF3B30",
 }
 
-const severityLabels: Record<string, string> = {
-  mild: "轻微",
-  moderate: "中等",
-  severe: "严重",
+const severityLabels: Record<number, string> = {
+  1: "轻微",
+  2: "中等",
+  3: "严重",
 }
 
 export function SymptomTracker({ petId }: SymptomTrackerProps) {
@@ -42,7 +42,7 @@ export function SymptomTracker({ petId }: SymptomTrackerProps) {
         .from("pet_events")
         .select("id, event_time, symptom_code, severity, notes")
         .eq("pet_id", petId)
-        .eq("event_type", "symptom")
+        .eq("event_type", "symptom_observed")
         .order("event_time", { ascending: false })
         .limit(20)
 
@@ -81,14 +81,14 @@ export function SymptomTracker({ petId }: SymptomTrackerProps) {
     return d >= new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000) && d < new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   })
 
-  const trendIcon = last7Days.length > prev7Days.length ? <TrendingUp className="size-4 text-[#FF3B30]" /> : last7Days.length < prev7Days.length ? <TrendingDown className="size-4 text-[#34C759]" /> : <Activity className="size-4 text-[#FF9500]" />
+  const trendIcon = last7Days.length > prev7Days.length ? <EmojiIcon name="TrendingUp" className="size-4 text-[#FF3B30]" /> : last7Days.length < prev7Days.length ? <EmojiIcon name="TrendingDown" className="size-4 text-[#34C759]" /> : <EmojiIcon name="Activity" className="size-4 text-[#FF9500]" />
   const trendLabel = last7Days.length > prev7Days.length ? "症状增加" : last7Days.length < prev7Days.length ? "症状减少" : "持平"
 
   return (
     <Card className="rounded-[16px] border-[rgba(0,0,0,0.05)] bg-white">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Activity className="size-4 text-[#FF7A59]" />
+          <EmojiIcon name="Activity" className="size-4 text-[#FF7A59]" />
           症状追踪
         </CardTitle>
       </CardHeader>
@@ -133,7 +133,7 @@ export function SymptomTracker({ petId }: SymptomTrackerProps) {
             {symptoms.slice(0, 5).map((s) => (
               <div key={s.id} className="flex items-center justify-between rounded-[10px] bg-[#F7F6F3] p-3">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="size-4 text-[#FF9500]" />
+                  <EmojiIcon name="AlertTriangle" className="size-4 text-[#FF9500]" />
                   <span className="text-[13px] font-medium text-[#111111]">{s.symptom_code}</span>
                 </div>
                 <div className="flex items-center gap-2">

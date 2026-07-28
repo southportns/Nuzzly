@@ -1,5 +1,6 @@
 "use client"
 
+import { EmojiIcon, emojiIcon } from "@/components/ui/emoji-icon"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
@@ -10,7 +11,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Stethoscope, Pill, Syringe, Weight, Calendar, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import type { HealthRecord, HealthRecordType } from "@/lib/supabase/types"
 
@@ -18,13 +18,13 @@ interface HealthRecordsProps {
   petId: string
 }
 
-const recordTypeConfig: Record<HealthRecordType, { icon: typeof Stethoscope; label: string; color: string }> = {
-  weight: { icon: Weight, label: "体重", color: "bg-purple-100 text-purple-700" },
-  symptom: { icon: Stethoscope, label: "症状", color: "bg-red-100 text-red-700" },
-  diagnosis: { icon: Stethoscope, label: "诊断", color: "bg-orange-100 text-orange-700" },
-  medication: { icon: Pill, label: "用药", color: "bg-blue-100 text-blue-700" },
-  vaccination: { icon: Syringe, label: "疫苗", color: "bg-green-100 text-green-700" },
-  checkup: { icon: Stethoscope, label: "体检", color: "bg-gray-100 text-gray-700" },
+const recordTypeConfig: Record<HealthRecordType, { icon: ReturnType<typeof emojiIcon>; label: string; color: string }> = {
+  weight: { icon: emojiIcon("Weight"), label: "体重", color: "bg-purple-100 text-purple-700" },
+  symptom: { icon: emojiIcon("Stethoscope"), label: "症状", color: "bg-red-100 text-red-700" },
+  diagnosis: { icon: emojiIcon("Stethoscope"), label: "诊断", color: "bg-orange-100 text-orange-700" },
+  medication: { icon: emojiIcon("Pill"), label: "用药", color: "bg-blue-100 text-blue-700" },
+  vaccination: { icon: emojiIcon("Syringe"), label: "疫苗", color: "bg-green-100 text-green-700" },
+  checkup: { icon: emojiIcon("Stethoscope"), label: "体检", color: "bg-gray-100 text-gray-700" },
 }
 
 function formatDate(dateStr: string) {
@@ -110,7 +110,7 @@ export function HealthRecords({ petId }: HealthRecordsProps) {
       <CardHeader>
         <CardTitle className="flex items-center justify-between text-base">
           <span className="flex items-center gap-2">
-            <Stethoscope className="h-4 w-4" />
+            <EmojiIcon name="Stethoscope" className="h-4 w-4" />
             健康记录
           </span>
           <Badge variant="outline">{records.length} 条记录</Badge>
@@ -136,7 +136,7 @@ export function HealthRecords({ petId }: HealthRecordsProps) {
           <TabsContent value={activeTab} className="mt-4">
             {filteredRecords.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                <Stethoscope className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <EmojiIcon name="Stethoscope" className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>暂无健康记录</p>
                 <p className="text-sm mt-1">记录宠物的诊断、用药、疫苗等信息</p>
               </div>
@@ -158,7 +158,7 @@ export function HealthRecords({ petId }: HealthRecordsProps) {
                               {config.label}
                             </Badge>
                             <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
+                              <EmojiIcon name="Calendar" className="h-3 w-3" />
                               {formatDate(record.record_time)}
                             </span>
                           </div>
@@ -169,7 +169,7 @@ export function HealthRecords({ petId }: HealthRecordsProps) {
                             onClick={() => handleDelete(record.id)}
                             disabled={deletingId === record.id}
                           >
-                            <Trash2 className="size-3.5" />
+                            <EmojiIcon name="Trash2" className="size-3.5" />
                           </Button>
                         </div>
 

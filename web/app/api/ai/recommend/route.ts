@@ -143,9 +143,10 @@ function matchesBreed(product: Product, breed: string | null): boolean {
 function matchesLifeStage(product: Product, pet: Pet): boolean {
   const totalMonths = pet.age_years * 12 + pet.age_months
   if (product.applicable_age === "all") return true
-  if (product.applicable_age === "kitten" && totalMonths < 12) return true
-  if (product.applicable_age === "adult" && totalMonths >= 12 && totalMonths < 84) return true
-  if (product.applicable_age === "senior" && totalMonths >= 84) return true
+  if (product.applicable_age === "kitten" && totalMonths < 7) return true
+  if (product.applicable_age === "young_adult" && totalMonths >= 7 && totalMonths < 36) return true
+  if (product.applicable_age === "adult" && totalMonths >= 36 && totalMonths < 132) return true
+  if (product.applicable_age === "senior" && totalMonths >= 132) return true
   return false
 }
 

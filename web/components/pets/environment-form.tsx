@@ -1,5 +1,6 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useMemo, useState, useTransition } from "react"
 import { upsertEnvironmentProfile } from "@/lib/supabase/actions/pet-form-actions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { SelectDropdown, type SelectOption } from "@/components/ui/select-dropdown"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
-import { Loader2, MapPin, Home, Activity } from "lucide-react"
 import type { EnvironmentProfile, ClimateType, ActivityLevel } from "@/lib/supabase/types"
 import { getProvinces, getCities, getDistricts } from "@/lib/china-regions"
 import { toast } from "sonner"
@@ -95,7 +95,7 @@ export function EnvironmentForm({ petId, profileId, initialData, onSuccess }: En
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Home className="h-4 w-4" />
+          <EmojiIcon name="Home" className="h-4 w-4" />
           环境档案
         </CardTitle>
       </CardHeader>
@@ -105,7 +105,7 @@ export function EnvironmentForm({ petId, profileId, initialData, onSuccess }: En
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <Label className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
+                <EmojiIcon name="MapPin" className="h-3 w-3" />
                 省份
               </Label>
               <SelectDropdown
@@ -204,7 +204,7 @@ export function EnvironmentForm({ petId, profileId, initialData, onSuccess }: En
           {/* 活跃度 */}
           <div className="space-y-2">
             <Label className="flex items-center gap-1">
-              <Activity className="h-3 w-3" />
+              <EmojiIcon name="Activity" className="h-3 w-3" />
               活跃度
             </Label>
             <SelectDropdown
@@ -217,7 +217,7 @@ export function EnvironmentForm({ petId, profileId, initialData, onSuccess }: En
           <Button type="submit" disabled={isPending} className="w-full">
             {isPending ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <EmojiIcon name="Loader2" className="mr-2 h-4 w-4 animate-spin" />
                 保存中...
               </>
             ) : (

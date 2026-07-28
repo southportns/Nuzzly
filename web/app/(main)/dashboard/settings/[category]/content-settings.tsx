@@ -1,6 +1,6 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { SettingsCard } from "@/components/settings/settings-card"
-import { ChevronRight } from "lucide-react"
 
 export default function ContentSettings() {
   return (
@@ -19,21 +19,18 @@ export default function ContentSettings() {
             className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-[#F7F6F3]"
           >
             <span className="text-[15px] text-[#111111]">我的评价</span>
-            <ChevronRight className="size-4 text-[#D2D1CF]" />
           </Link>
           <Link
             href="/dashboard/followups"
             className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-[#F7F6F3]"
           >
             <span className="text-[15px] text-[#111111]">长期追踪</span>
-            <ChevronRight className="size-4 text-[#D2D1CF]" />
           </Link>
           <Link
             href="/dashboard/bookmarks"
             className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-[#F7F6F3]"
           >
             <span className="text-[15px] text-[#111111]">收藏的产品</span>
-            <ChevronRight className="size-4 text-[#D2D1CF]" />
           </Link>
         </div>
       </SettingsCard>

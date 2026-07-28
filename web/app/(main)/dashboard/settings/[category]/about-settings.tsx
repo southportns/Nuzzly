@@ -1,5 +1,5 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { SettingsCard } from "@/components/settings/settings-card"
-import { ChevronRight } from "lucide-react"
 
 export default function AboutSettings() {
   return (
@@ -25,7 +25,6 @@ export default function AboutSettings() {
               className="flex cursor-pointer items-center justify-between px-4 py-3.5 transition-colors hover:bg-[#F7F6F3]"
             >
               <span className="text-[15px] text-[#111111]">{item}</span>
-              <ChevronRight className="size-4 text-[#D2D1CF]" />
             </div>
           ))}
         </div>

@@ -73,8 +73,17 @@ export async function deleteFile(
   return { error: error?.message ?? null }
 }
 
-export async function uploadPetAvatar(file: File, petId: string): Promise<UploadResult> {
-  return uploadFile(BUCKETS.petAvatars, file, petId)
+export async function uploadPetAvatar(
+  file: File,
+  userId: string,
+  petId: string
+): Promise<UploadResult> {
+  const result = await uploadFile(BUCKETS.petAvatars, file, `${userId}/${petId}`)
+  // 添加缓存破坏参数，防止 Next.js Image 组件缓存旧图片
+  if (result.url) {
+    result.url = `${result.url}?t=${Date.now()}`
+  }
+  return result
 }
 
 export async function uploadPetAttachment(
@@ -85,10 +94,34 @@ export async function uploadPetAttachment(
 }
 
 export async function deletePetAvatar(
-  petId: string,
+  userId: string,
   path: string
 ): Promise<{ error: string | null }> {
-  return deleteFile(BUCKETS.petAvatars, `${petId}/${path.split("/").pop()}`)
+  // 移除可能存在的缓存破坏参数
+  const cleanPath = path.split("?")[0]
+
+  // 如果是完整 URL，提取路径部分
+  if (cleanPath.startsWith("http")) {
+    try {
+      const url = new URL(cleanPath)
+      // 路径格式: /storage/v1/object/public/pet-avatars/userId/petId/filename.jpg
+      const pathMatch = url.pathname.match(/\/pet-avatars\/(.+)$/)
+      if (pathMatch) {
+        return deleteFile(BUCKETS.petAvatars, pathMatch[1])
+      }
+    } catch {
+      // URL 解析失败，尝试其他方式
+    }
+  }
+
+  // 如果是相对路径，格式: userId/petId/filename.jpg 或 userId/petId/filename.jpg?t=xxx
+  const parts = cleanPath.split("/")
+  if (parts.length >= 3) {
+    return deleteFile(BUCKETS.petAvatars, `${parts[parts.length - 3]}/${parts[parts.length - 2]}/${parts[parts.length - 1]}`)
+  }
+
+  // 如果只有 filename，使用 userId 作为前缀
+  return deleteFile(BUCKETS.petAvatars, `${userId}/${parts[parts.length - 1]}`)
 }
 
 export async function deletePetAttachment(

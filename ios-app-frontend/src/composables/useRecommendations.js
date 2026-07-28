@@ -1,6 +1,7 @@
 import { ref, shallowRef } from 'vue'
 import { supabase } from '../lib/supabase'
 import { writeGateway } from '../lib/gateway'
+import { api } from '../lib/api'
 import { normalizeError, ERROR_CODES } from '../lib/error-handling'
 
 const recommendations = shallowRef([])
@@ -39,23 +40,15 @@ async function generateRecommendations(petId, petProfile) {
   if (!uid) throw normalizeError({ code: ERROR_CODES.UNAUTHENTICATED, message: '未登录' }, 'generateRecommendations')
 
   try {
-    // 调用推荐API
-    const response = await fetch('/api/ai/recommend', {
+    // 对齐 web 端 /api/ai/recommend：字段名 petId（camelCase），通过 api() 携带 Bearer token
+    const data = await api('/api/ai/recommend', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        pet_id: petId,
-        pet_profile: petProfile
-      })
+      body: JSON.stringify({ petId, query: '' })
     })
-
-    if (!response.ok) {
-      throw new Error('生成推荐失败')
-    }
-
-    const data = await response.json()
-    recommendations.value = data.recommendations || []
+    recommendations.value = data.recommendations || data.recommendationContexts || []
     return data
+  } catch (e) {
+    throw normalizeError(e, 'generateRecommendations')
   } finally {
     generating.value = false
   }

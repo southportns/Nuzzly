@@ -1,5 +1,6 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
@@ -9,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
-import { ChevronLeft, Loader2, CheckCircle2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const steps = ["排便", "毛发", "精神", "喂食", "复购"]
@@ -80,7 +80,7 @@ export function FollowupWizard({
               key={label}
               className={cn("text-xs", i + 1 === step ? "text-primary font-medium" : i + 1 < step ? "text-muted-foreground" : "text-muted-foreground/50")}
             >
-              {i + 1 < step ? <CheckCircle2 className="size-3 inline mr-0.5" /> : null}
+              {i + 1 < step ? <EmojiIcon name="CheckCircle2" className="size-3 inline mr-0.5" /> : null}
               {label}
             </span>
           ))}
@@ -167,7 +167,7 @@ export function FollowupWizard({
               跳过此问题
             </button>
             <Button variant="ghost" size="sm" onClick={() => setStep(1)}>
-              <ChevronLeft className="size-4 mr-1" />上一步
+              <EmojiIcon name="ChevronLeft" className="size-4 mr-1" />上一步
             </Button>
           </CardContent>
         </Card>
@@ -208,7 +208,7 @@ export function FollowupWizard({
               跳过此问题
             </button>
             <Button variant="ghost" size="sm" onClick={() => setStep(2)}>
-              <ChevronLeft className="size-4 mr-1" />上一步
+              <EmojiIcon name="ChevronLeft" className="size-4 mr-1" />上一步
             </Button>
           </CardContent>
         </Card>
@@ -239,7 +239,7 @@ export function FollowupWizard({
               </button>
             ))}
             <Button variant="ghost" size="sm" onClick={() => setStep(3)}>
-              <ChevronLeft className="size-4 mr-1" />上一步
+              <EmojiIcon name="ChevronLeft" className="size-4 mr-1" />上一步
             </Button>
           </CardContent>
         </Card>
@@ -282,11 +282,11 @@ export function FollowupWizard({
                 rows={2}
               />
               <Button className="w-full" onClick={handleSubmit} disabled={loading}>
-                {loading && <Loader2 className="size-4 mr-2 animate-spin" />}
+                {loading && <EmojiIcon name="Loader2" className="size-4 mr-2 animate-spin" />}
                 提交追踪反馈
               </Button>
               <Button variant="ghost" size="sm" className="w-full" onClick={() => setStep(4)}>
-                <ChevronLeft className="size-4 mr-1" />上一步
+                <EmojiIcon name="ChevronLeft" className="size-4 mr-1" />上一步
               </Button>
             </div>
           </CardContent>

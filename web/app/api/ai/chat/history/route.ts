@@ -1,4 +1,4 @@
-// GET /api/ai/chat/history — 获取当前用户的聊天历史
+// GET/DELETE /api/ai/chat/history — 聊天历史管理
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
@@ -34,6 +34,33 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
     return NextResponse.json({ sessions: data ?? [] })
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    )
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const supabase = await createClient()
+    const { user } = await getAuthUser(request, supabase)
+    if (!user) return NextResponse.json({ error: "未登录" }, { status: 401 })
+
+    const { id } = await request.json()
+    if (!id) return NextResponse.json({ error: "缺少 id" }, { status: 400 })
+
+    const { error } = await supabase
+      .from("health_chat_sessions")
+      .delete()
+      .eq("id", id)
+      .eq("profile_id", user.id)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    return NextResponse.json({ ok: true })
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : String(err) },

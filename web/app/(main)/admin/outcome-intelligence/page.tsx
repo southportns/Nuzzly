@@ -1,10 +1,10 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { TrendingUp, TrendingDown, AlertTriangle, Shield, RefreshCw, BarChart3 } from "lucide-react"
 
 interface TimelineMetrics {
   product_id: string
@@ -64,7 +64,7 @@ export default function OutcomeIntelligencePage() {
           <Card className="border-red-200 bg-red-50">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-red-500" />
+                <EmojiIcon name="AlertTriangle" className="h-5 w-5 text-red-500" />
                 <CardTitle>加载失败</CardTitle>
               </div>
             </CardHeader>
@@ -110,17 +110,17 @@ export default function OutcomeIntelligencePage() {
         {/* Summary Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <StatCard
-            icon={<TrendingUp className="size-4 text-emerald-600" />}
+            icon={<EmojiIcon name="TrendingUp" className="size-4 text-emerald-600" />}
             label="Timeline Groups"
             value={data?.timeline_growth.groups_over_time.length ?? 0}
           />
           <StatCard
-            icon={<BarChart3 className="size-4 text-blue-600" />}
+            icon={<EmojiIcon name="BarChart3" className="size-4 text-blue-600" />}
             label="Timeline Events"
             value={data?.timeline_growth.events_count ?? 0}
           />
           <StatCard
-            icon={<Shield className="size-4 text-purple-600" />}
+            icon={<EmojiIcon name="Shield" className="size-4 text-purple-600" />}
             label="Avg Stability (90d)"
             value={
               data?.stable_foods.length
@@ -129,7 +129,7 @@ export default function OutcomeIntelligencePage() {
             }
           />
           <StatCard
-            icon={<RefreshCw className="size-4 text-amber-600" />}
+            icon={<EmojiIcon name="RefreshCw" className="size-4 text-amber-600" />}
             label="Avg Repurchase Rate"
             value={
               data?.repurchase_rank.length
@@ -144,7 +144,7 @@ export default function OutcomeIntelligencePage() {
           {/* 1. Long-Term Stability Rank */}
           <RankCard
             title="Top Stable Foods"
-            icon={<TrendingUp className="size-4 text-emerald-600" />}
+            icon={<EmojiIcon name="TrendingUp" className="size-4 text-emerald-600" />}
             items={data?.stable_foods ?? []}
             valueKey="day90_stability_rate"
             valueLabel="90d 稳定率"
@@ -154,7 +154,7 @@ export default function OutcomeIntelligencePage() {
           {/* 2. Soft Stool Risk Rank */}
           <RankCard
             title="Highest Soft Stool Risk"
-            icon={<AlertTriangle className="size-4 text-amber-600" />}
+            icon={<EmojiIcon name="AlertTriangle" className="size-4 text-amber-600" />}
             items={data?.soft_stool_risk ?? []}
             valueKey="soft_stool_rate"
             valueLabel="软便率"
@@ -164,7 +164,7 @@ export default function OutcomeIntelligencePage() {
           {/* 3. Black Chin Risk Rank */}
           <RankCard
             title="Highest Black Chin Risk"
-            icon={<AlertTriangle className="size-4 text-red-600" />}
+            icon={<EmojiIcon name="AlertTriangle" className="size-4 text-red-600" />}
             items={data?.black_chin_risk ?? []}
             valueKey="black_chin_rate"
             valueLabel="黑下巴率"
@@ -174,7 +174,7 @@ export default function OutcomeIntelligencePage() {
           {/* 4. Repurchase Rank */}
           <RankCard
             title="Highest Repurchase Foods"
-            icon={<RefreshCw className="size-4 text-blue-600" />}
+            icon={<EmojiIcon name="RefreshCw" className="size-4 text-blue-600" />}
             items={data?.repurchase_rank ?? []}
             valueKey="repurchase_rate"
             valueLabel="复购率"

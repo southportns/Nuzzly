@@ -1,12 +1,15 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
+import { NuzzlyLogo } from "@/components/ui/nuzzly-logo"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
-import { Menu, X, PawPrint } from "lucide-react"
 import { UserMenu } from "@/components/layout/user-menu"
+import { LoginModal } from "@/components/auth/login-modal"
+import { useLoginModal } from "@/hooks/use-login-modal"
 
 const leftNavItems = [
   { href: "/", label: "首页" },
@@ -23,6 +26,7 @@ export function Header() {
   const { user } = useAuth()
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [loginModalOpen, setLoginModalOpen] = useLoginModal()
 
   return (
     <>
@@ -71,12 +75,8 @@ export function Header() {
           </div>
 
           {/* Logo - 固定宽度，居中，点击进入社区 */}
-          <Link href="/community" className="flex items-center justify-center px-6 flex-shrink-0 -ml-[3px]" title="进入社区">
-            <img
-              src="/nuzzly-zuhe.png"
-              alt="Nuzzly毛球镇"
-              className="h-16 w-auto"
-            />
+          <Link href="/community" className="group relative flex items-center justify-center px-6 flex-shrink-0 -ml-[3px] transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-105" title="进入社区">
+            <NuzzlyLogo className="h-16" />
           </Link>
 
           {/* 右侧导航 - flex:1 占40%，按钮均布 */}
@@ -111,12 +111,13 @@ export function Header() {
                 <UserMenu />
               </div>
             ) : (
-              <Link
-                href="/login"
-                className="px-6 py-2 w-28 rounded-full text-[15px] font-semibold text-white bg-gradient-to-r from-[#8B5E46] to-[#A67D65] shadow-[0_2px_8px_rgba(139,94,70,0.25)] transition-all hover:shadow-[0_4px_12px_rgba(139,94,70,0.35)] no-underline text-center"
+              <button
+                type="button"
+                onClick={() => setLoginModalOpen(true)}
+                className="px-6 py-2 w-28 rounded-full text-[15px] font-semibold text-white bg-gradient-to-r from-[#8B5E46] to-[#A67D65] shadow-[0_2px_8px_rgba(139,94,70,0.25)] transition-all hover:shadow-[0_4px_12px_rgba(139,94,70,0.35)] text-center"
               >
                 登录
-              </Link>
+              </button>
             )}
           </div>
         </nav>
@@ -124,14 +125,14 @@ export function Header() {
         {/* Mobile hamburger */}
         <div className="flex w-full items-center justify-between px-4 md:hidden">
           <Link href="/community" className="flex items-center" title="进入社区">
-            <img src="/nuzzly-zuhe.png" alt="Nuzzly毛球镇 Logo" className="h-8 w-auto" />
+            <NuzzlyLogo mobile className="h-8" />
           </Link>
           <button
             type="button"
             className="flex items-center justify-center w-10 h-10 rounded-full bg-white/60 backdrop-blur-lg border border-white/20 text-[#6B6B6B] shadow-sm"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
-            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            {mobileOpen ? <EmojiIcon name="X" className="size-5" /> : <EmojiIcon name="Menu" className="size-5" />}
           </button>
         </div>
       </header>
@@ -165,22 +166,34 @@ export function Header() {
                 onClick={() => setMobileOpen(false)}
                 className="mt-2 flex h-[48px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FFB89A] via-[#FF9A7A] to-[#FF7A59] px-6 text-[14px] font-semibold text-white shadow-[0_4px_16px_rgba(255,122,89,0.3)]"
               >
-                <PawPrint className="size-4" />
+                <span
+                  className="inline-block size-2.5 rounded-full"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.6)",
+                    boxShadow: "0 1px 3px rgba(255, 255, 255, 0.3), inset 0 0.5px 1px rgba(255, 255, 255, 0.8)",
+                    backdropFilter: "blur(4px)",
+                  }}
+                />
                 我在这儿 · 个人中心
               </Link>
             ) : (
-              <Link
-                href="/login"
-                onClick={() => setMobileOpen(false)}
-                className="mt-2 flex h-[48px] items-center justify-center rounded-2xl bg-gradient-to-r from-[#8B5E46] to-[#A67D65] px-6 text-[14px] font-semibold text-white shadow-[0_4px_12px_rgba(139,94,70,0.3)]"
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false)
+                  setLoginModalOpen(true)
+                }}
+                className="mt-2 flex h-[48px] w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#8B5E46] to-[#A67D65] px-6 text-[14px] font-semibold text-white shadow-[0_4px_12px_rgba(139,94,70,0.3)]"
               >
                 登录 / 注册
-              </Link>
+              </button>
             )}
 
           </nav>
         </div>
       )}
+
+      <LoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
     </>
   )
 }

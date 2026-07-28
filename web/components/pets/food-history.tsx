@@ -1,11 +1,11 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Utensils } from "lucide-react"
 
 interface FoodHistoryProps {
   petId: string
@@ -115,7 +115,7 @@ export function FoodHistory({ petId }: FoodHistoryProps) {
       <CardHeader>
         <CardTitle className="flex items-center justify-between text-base">
           <span className="flex items-center gap-2">
-            <Utensils className="h-4 w-4" />
+            <EmojiIcon name="Utensils" className="h-4 w-4" />
             食品使用历史
           </span>
           <Badge variant="outline">{sortedProducts.length + (noProductEntries.length > 0 ? 1 : 0)} 款产品</Badge>
@@ -147,7 +147,7 @@ export function FoodHistory({ petId }: FoodHistoryProps) {
                     />
                   ) : (
                     <div className="w-10 h-10 bg-muted rounded flex items-center justify-center shrink-0">
-                      <Utensils className="h-5 w-5 text-muted-foreground" />
+                      <EmojiIcon name="Utensils" className="h-5 w-5 text-muted-foreground" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -172,7 +172,7 @@ export function FoodHistory({ petId }: FoodHistoryProps) {
             {noProductEntries.slice(0, 10).map((entry) => (
               <div key={entry.id} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
                 <div className="w-10 h-10 bg-muted rounded flex items-center justify-center shrink-0">
-                  <Utensils className="h-5 w-5 text-muted-foreground" />
+                  <EmojiIcon name="Utensils" className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-sm truncate">{entry.food_name}</h4>
@@ -191,7 +191,7 @@ export function FoodHistory({ petId }: FoodHistoryProps) {
         {/* Empty State */}
         {entries.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
-            <Utensils className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <EmojiIcon name="Utensils" className="h-12 w-12 mx-auto mb-2 opacity-50" />
             <p>暂无食品使用记录</p>
             <p className="text-sm mt-1">记录宠物的饮食信息，追踪长期效果</p>
           </div>

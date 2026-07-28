@@ -1,5 +1,6 @@
 "use client"
 
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
@@ -9,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { SelectDropdown, type SelectOption } from "@/components/ui/select-dropdown"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Sparkles, Search, Loader2, PawPrint } from "lucide-react"
 
 interface Pet {
   id: string
@@ -57,7 +57,11 @@ export function RecommendationInput({ onRecommend, loading }: Props) {
     <Card className="border-primary/20 bg-gradient-to-br from-primary/3 to-transparent mb-8">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Sparkles className="size-5 text-primary" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" className="text-primary">
+            <circle cx="9" cy="9" r="1.75" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+            <path d="m10.5025,16.0509c-.4686.2906-.9744.4491-1.5025.4491-2.428,0-4.397-3.358-4.397-7.5S6.572,1.5,9,1.5s4.397,3.358,4.397,7.5c0,1.384-.22,2.681-.603,3.793" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+            <path d="m8.5735,4.6109c.1413-.0046.2836-.0069.4265-.0069,4.142,0,7.5,1.968,7.5,4.397s-3.358,4.397-7.5,4.397-7.5-1.97-7.5-4.398c0-1.617,1.489-3.03,3.707-3.794" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+          </svg>
           AI 智能产品推荐
         </CardTitle>
         <p className="text-xs text-muted-foreground">
@@ -84,7 +88,6 @@ export function RecommendationInput({ onRecommend, loading }: Props) {
                   options={pets.map<SelectOption>((pet) => ({
                     value: pet.id,
                     label: `${pet.name} · ${pet.breed ?? "未知品种"}${pet.stomach_health === "sensitive" ? " · 肠胃敏感" : ""}`,
-                    icon: <PawPrint className="size-4 text-[#FF7A59]" />,
                   }))}
                   placeholder="选择要推荐的宠物…"
                 />
@@ -103,9 +106,9 @@ export function RecommendationInput({ onRecommend, loading }: Props) {
 
               <Button type="submit" className="w-full gap-2" disabled={loading || !selectedPetId}>
                 {loading ? (
-                  <Loader2 className="size-4 animate-spin" />
+                  <EmojiIcon name="Loader2" className="size-4 animate-spin" />
                 ) : (
-                  <Search className="size-4" />
+                  <EmojiIcon name="Search" className="size-4" />
                 )}
                 {loading ? "正在分析数据…" : "获取智能推荐"}
               </Button>

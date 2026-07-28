@@ -1,7 +1,8 @@
+import { EmojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Heart, Activity, AlertTriangle, ChevronRight, Stethoscope, Utensils } from "lucide-react"
+import Image from "next/image"
 import { formatPetAge } from "@/lib/utils"
 
 interface HealthOverviewProps {
@@ -31,11 +32,11 @@ export function HealthOverview({ pets }: HealthOverviewProps) {
     <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Heart className="size-5 text-[#FF7A59]" />
+          <EmojiIcon name="Heart" className="size-5 text-[#FF7A59]" />
           <span className="text-[15px] font-semibold text-[#111111]">宠物健康概览</span>
         </div>
-        <Link href="/dashboard/pets" className="flex items-center gap-1 text-[12.5px] text-[#FF7A59] hover:underline">
-          详情 <ChevronRight className="size-3" />
+        <Link href="/dashboard/pets" className="text-[12.5px] text-[#FF7A59] hover:underline">
+          详情
         </Link>
       </div>
 
@@ -52,9 +53,9 @@ export function HealthOverview({ pets }: HealthOverviewProps) {
             >
               {/* Pet Header */}
               <div className="mb-3 flex items-center gap-3">
-                <div className="flex size-10 shrink-0 overflow-hidden rounded-xl bg-[#FF7A59]/10">
+                <div className="relative flex size-10 shrink-0 overflow-hidden rounded-xl bg-[#FF7A59]/10">
                   {pet.photo_url ? (
-                    <img src={pet.photo_url} alt={pet.name} className="size-full object-cover" />
+                    <Image src={pet.photo_url} alt={pet.name} fill className="object-cover" sizes="40px" />
                   ) : (
                     <div className="flex size-full items-center justify-center text-lg">
                       {pet.species === "cat" ? "🐱" : pet.species === "dog" ? "🐶" : "🐾"}
@@ -74,7 +75,7 @@ export function HealthOverview({ pets }: HealthOverviewProps) {
                 {/* Stomach Health */}
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
-                    <Utensils className="size-3.5" />
+                    <EmojiIcon name="Utensils" className="size-3.5" />
                     肠胃状况
                   </span>
                   <Badge
@@ -90,7 +91,7 @@ export function HealthOverview({ pets }: HealthOverviewProps) {
                 {pet.weight_kg && (
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
-                      <Activity className="size-3.5" />
+                      <EmojiIcon name="Activity" className="size-3.5" />
                       体重
                     </span>
                     <span className="text-[12px] font-medium text-[#111111]">{Number(pet.weight_kg).toFixed(2)} kg</span>
@@ -101,11 +102,11 @@ export function HealthOverview({ pets }: HealthOverviewProps) {
                 {hasDisease && (
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
-                      <Stethoscope className="size-3.5" />
+                      <EmojiIcon name="Stethoscope" className="size-3.5" />
                       疾病史
                     </span>
                     <Badge variant="destructive" className="rounded-full text-[11px]">
-                      <AlertTriangle className="mr-1 size-3" />
+                      <EmojiIcon name="AlertTriangle" className="mr-1 size-3" />
                       有记录
                     </Badge>
                   </div>
