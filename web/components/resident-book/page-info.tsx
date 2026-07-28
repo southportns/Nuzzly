@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import type { ResidentInfo, FamilyMember } from "./types";
 import CssFrame from "./css-frame";
 
@@ -30,8 +32,33 @@ const tagGradients = [
 ];
 
 export default function PageInfo({ info, residentId, family }: PageInfoProps) {
-  const owner = family.find((m) => m.role === "owner");
+  const [owner, setOwner] = useState(family.find((m) => m.role === "owner"));
   const members = family.filter((m) => m.role === "member");
+
+  // 在客户端按需拉取并覆盖户主资料（如果 profileId 可用）——不要使用当前 auth user 来覆盖正在查看的户主
+  useEffect(() => {
+    const fetchOwner = async () => {
+      try {
+        if (!owner || !owner.profileId) return;
+        const supabase = createClient();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name, avatar_url")
+          .eq("id", owner.profileId)
+          .single();
+        if (profile) {
+          setOwner((prev) => prev ? {
+            ...prev,
+            nickname: profile.display_name ?? prev.nickname,
+            avatarUrl: profile.avatar_url ?? prev.avatarUrl,
+          } : prev);
+        }
+      } catch (e) {
+        // 静默失败，使用 props 中的数据
+      }
+    };
+    fetchOwner();
+  }, [owner?.profileId]);
 
   return (
     <CssFrame>
@@ -51,11 +78,11 @@ export default function PageInfo({ info, residentId, family }: PageInfoProps) {
             flex: 1.2,
             background: "url(/resident-book/hukoubu2.png) center/98% no-repeat",
             padding: "1rem 1.5rem",
-            height: "180px",
-            minHeight: "180px",
-            maxHeight: "180px",
-            width: "817px",
-            left: "-8px",
+            height: "148px",
+            minHeight: "148px",
+            maxHeight: "148px",
+            width: "1090px",
+            left: "-11px",
           }}
         >
           {/* 装饰气泡 - 对应 CSS ::before */}
@@ -434,18 +461,21 @@ export default function PageInfo({ info, residentId, family }: PageInfoProps) {
 
             {/* 宠物图标 */}
             <div
-              className="flex items-center justify-center rounded-full"
+              className="flex items-center justify-center rounded-full overflow-hidden"
               style={{
                 width: "36px",
                 height: "36px",
-                background: "linear-gradient(135deg,#feeede,#fff5eb)",
-                fontSize: "1.1rem",
+                background: member.avatarUrl ? "transparent" : "linear-gradient(135deg,#feeede,#fff5eb)",
                 flexShrink: 0,
                 border: "2px solid rgba(255,255,255,0.8)",
                 boxShadow: "0 2px 8px rgba(245,150,98,0.1)",
               }}
             >
-              {member.icon || "🐾"}
+              {member.avatarUrl ? (
+                <img src={member.avatarUrl} alt={member.nickname} className="w-full h-full object-cover" />
+              ) : (
+                <span style={{ fontSize: "1.1rem" }}>{member.icon || "🐾"}</span>
+              )}
             </div>
 
             {/* 名字 + 品种 */}

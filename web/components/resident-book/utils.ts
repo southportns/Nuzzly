@@ -6,6 +6,9 @@ import type {
   ResidentGrowthItem,
   ResidentMedicationItem,
   FamilyMember,
+  PetSelectorItem,
+  ResidentDiseaseItem,
+  ResidentVaccinationItem,
 } from "./types"
 
 /**
@@ -228,13 +231,31 @@ export function generatePetCode(
   return `8004${entityCode}${individualCode}`
 }
 
+interface DiseaseRecordLike {
+  id: string
+  disease_name: string
+  diagnosed_on: string | null
+  status: string
+  notes: string | null
+}
+
+interface VaccinationRecordLike {
+  id: string
+  vaccine_name: string
+  administered_on: string | null
+  next_due_date: string | null
+  notes: string | null
+}
+
 /** 构建单一户口簿：户主=用户本人，成员=所有宠物 */
 export function buildResidentBookData(
-  profile: { display_name: string | null; avatar_url: string | null; user_number: number | null; created_at: string | null; birth_date?: string | null } | null,
+  profile: { id?: string; display_name: string | null; avatar_url: string | null; user_number: number | null; created_at: string | null; birth_date?: string | null } | null,
   pets: Pet[],
   allergiesMap: Record<string, PetAllergy[]>,
   medsMap: Record<string, MedicationLike[]>,
   weightLogsMap: Record<string, WeightLogLike[]>,
+  diseasesMap?: Record<string, DiseaseRecordLike[]>,
+  vaccinationsMap?: Record<string, VaccinationRecordLike[]>,
 ): ResidentBookData {
   const year = profile?.created_at
     ? new Date(profile.created_at).getFullYear()
@@ -244,33 +265,53 @@ export function buildResidentBookData(
     ? `Nuzzmily-${year}-${userNumber}`
     : `NZLY-${year}-${(pets[0]?.id ?? "").slice(-4).toUpperCase()}`
 
-  // 成长时间线：合并所有宠物的成长事件
+  // 成长时间线：生日祝贺 + 入住周年
   const growth: ResidentGrowthItem[] = []
+  const now = new Date()
+  const thisYear = now.getFullYear()
+
   for (const pet of pets) {
+    // 生日：从出生年到今年，每年都生成一条祝贺
     if (pet.birth_date) {
-      growth.push({
-        date: formatDotDate(pet.birth_date)!,
-        title: `${pet.name} 出生`,
-        desc: `${pet.name} 来到这个世界的第一天。`,
-      })
-    }
-    if (pet.home_date) {
-      growth.push({
-        date: formatDotDate(pet.home_date)!,
-        title: `${pet.name} 第一次回家`,
-        desc: `${pet.name} 正式加入毛球镇大家庭，开启幸福新生活。`,
-      })
-    }
-    const meds = medsMap[pet.id] ?? []
-    meds.slice(0, 3).forEach((m) => {
-      if (m.started_on) {
-        growth.push({
-          date: formatDotDate(m.started_on)!,
-          title: `${pet.name} 开始用药：${m.name}`,
-          desc: m.notes ?? "按医嘱进行健康管理。",
-        })
+      const birthDate = new Date(pet.birth_date)
+      if (!isNaN(birthDate.getTime())) {
+        const birthYear = birthDate.getFullYear()
+        for (let y = birthYear; y <= thisYear; y++) {
+          const age = y - birthYear
+          const dateStr = `${y}.${String(birthDate.getMonth() + 1).padStart(2, "0")}.${String(birthDate.getDate()).padStart(2, "0")}`
+          growth.push({
+            date: dateStr,
+            title: age === 0
+              ? `${pet.name} 出生`
+              : `🎂 ${pet.name} ${age}岁啦`,
+            desc: age === 0
+              ? `${pet.name} 来到这个世界的第一天。`
+              : `恭喜你，${pet.name} ${age}岁啦，又是一年破壳日，我们要相伴更久。`,
+          })
+        }
       }
-    })
+    }
+
+    // 入住周年：从入住年到今年，每年都生成一条记录
+    if (pet.home_date) {
+      const homeDate = new Date(pet.home_date)
+      if (!isNaN(homeDate.getTime())) {
+        const homeYear = homeDate.getFullYear()
+        for (let y = homeYear; y <= thisYear; y++) {
+          const yearNum = y - homeYear
+          const dateStr = `${y}.${String(homeDate.getMonth() + 1).padStart(2, "0")}.${String(homeDate.getDate()).padStart(2, "0")}`
+          growth.push({
+            date: dateStr,
+            title: yearNum === 0
+              ? `${pet.name} 第一次回家`
+              : `🏠 ${pet.name} 回家第${yearNum}年`,
+            desc: yearNum === 0
+              ? `${pet.name} 正式加入毛球镇大家庭，开启幸福新生活。`
+              : `感恩相遇，${pet.name} 已经陪伴我们${yearNum}年了。`,
+          })
+        }
+      }
+    }
   }
   // 按日期排序
   growth.sort((a, b) => {
@@ -309,7 +350,8 @@ export function buildResidentBookData(
       : null
     familyMembers.push({
       id: `owner-${profile.user_number ?? "0"}`,
-      profileId: "",
+      // 保存 profile.id 以便客户端组件可以按需拉取最新的户主资料
+      profileId: profile.id ?? "",
       nickname: profile.display_name ?? "户主",
       role: "owner",
       age: ownerAge,
@@ -356,6 +398,61 @@ export function buildResidentBookData(
   const firstPet = pets[0]
   const photoUrl = firstPet?.photo_url ?? firstPet?.avatar_url ?? null
 
+  // 构建宠物选择器数据
+  const petSelectorItems: PetSelectorItem[] = pets.map((pet) => ({
+    id: pet.id,
+    name: pet.name,
+    avatarUrl: pet.photo_url ?? pet.avatar_url ?? null,
+    species: pet.species,
+  }))
+
+  // 构建所有宠物的健康数据
+  const allPetsWeightLogs: Record<string, { date: string; weight: number }[]> = {}
+  const allPetsDiseases: Record<string, ResidentDiseaseItem[]> = {}
+  const allPetsVaccinations: Record<string, ResidentVaccinationItem[]> = {}
+  const allPetsWeightKg: Record<string, number | null> = {}
+
+  for (const pet of pets) {
+    // 体重日志
+    allPetsWeightLogs[pet.id] = weightLogsMap[pet.id]
+      ? weightLogsMap[pet.id].map((log) => ({
+          date: log.logged_date,
+          weight: log.weight_kg,
+        }))
+      : []
+
+    // 当前体重
+    const petWeightLogs = weightLogsMap[pet.id] ?? []
+    allPetsWeightKg[pet.id] = petWeightLogs.length > 0
+      ? petWeightLogs[petWeightLogs.length - 1].weight_kg
+      : pet.weight_kg
+
+    // 疾病记录
+    allPetsDiseases[pet.id] = diseasesMap?.[pet.id]
+      ? diseasesMap[pet.id].map((d) => ({
+          id: d.id,
+          name: d.disease_name,
+          diagnosedOn: d.diagnosed_on ?? "",
+          status: d.status,
+          notes: d.notes ?? undefined,
+        }))
+      : []
+
+    // 疫苗记录
+    allPetsVaccinations[pet.id] = vaccinationsMap?.[pet.id]
+      ? vaccinationsMap[pet.id].map((v) => ({
+          id: v.id,
+          name: v.vaccine_name,
+          administeredOn: v.administered_on ?? "",
+          nextDueDate: v.next_due_date ?? undefined,
+          notes: v.notes ?? undefined,
+        }))
+      : []
+  }
+
+  // 用第一只宠物的信息作为默认健康数据
+  const firstPetId = firstPet?.id
+
   return {
     residentId,
     petName: firstPet?.name ?? "毛球镇",
@@ -389,7 +486,15 @@ export function buildResidentBookData(
       weightTrend: null,
       allergyNote,
       medications,
+      weightLogs: firstPetId ? allPetsWeightLogs[firstPetId] : [],
+      diseases: firstPetId ? allPetsDiseases[firstPetId] : [],
+      vaccinations: firstPetId ? allPetsVaccinations[firstPetId] : [],
+      allPetsWeightLogs,
+      allPetsDiseases,
+      allPetsVaccinations,
+      allPetsWeightKg,
     },
     family: familyMembers,
+    pets: petSelectorItems,
   }
 }
