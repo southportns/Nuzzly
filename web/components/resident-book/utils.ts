@@ -352,7 +352,7 @@ export function buildResidentBookData(
       id: `owner-${profile.user_number ?? "0"}`,
       // 保存 profile.id 以便客户端组件可以按需拉取最新的户主资料
       profileId: profile.id ?? "",
-      nickname: profile.display_name ?? "户主",
+      nickname: profile.display_name ?? (profile as any).username ?? "户主",
       role: "owner",
       age: ownerAge,
       ageText: profile.birth_date ? formatAgeText(profile.birth_date) : null,

@@ -43,13 +43,14 @@ export default function PageInfo({ info, residentId, family }: PageInfoProps) {
         const supabase = createClient();
         const { data: profile } = await supabase
           .from("profiles")
-          .select("display_name, avatar_url")
+          .select("display_name, avatar_url, username")
           .eq("id", owner.profileId)
           .single();
         if (profile) {
           setOwner((prev) => prev ? {
             ...prev,
-            nickname: profile.display_name ?? prev.nickname,
+            // 优先使用 display_name，未设置时回退到 username
+            nickname: (profile.display_name ?? (profile as any).username) ?? prev.nickname,
             avatarUrl: profile.avatar_url ?? prev.avatarUrl,
           } : prev);
         }
