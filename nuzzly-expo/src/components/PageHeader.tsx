@@ -47,7 +47,7 @@ export default function PageHeader({
           style={styles.actionBtn}
         >
           <Text style={[styles.actionText, (actionDisabled || actionLoading) && styles.actionDisabled]}>
-            {actionLoading ? '保存中' : actionText}
+            {actionLoading ? 'Saving...' : actionText}
           </Text>
         </TouchableOpacity>
       ) : (

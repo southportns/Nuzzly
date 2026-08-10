@@ -7,7 +7,7 @@ export interface Pet {
   name: string;
   species: 'cat' | 'dog' | string;
   breed?: string;
-  age_years?: number;
+  age_Y?: number;
   age_months?: number;
   gender?: string;
   weight_kg?: number | null;
@@ -17,6 +17,9 @@ export interface Pet {
   avatar_url?: string;
   is_active?: boolean;
   life_stage?: string;
+  birth_date?: string | null;
+  home_date?: string | null;
+  pet_source?: string | null;
 }
 
 export function usePets() {
@@ -38,7 +41,7 @@ export function usePets() {
     }
     const { data, error } = await supabase
       .from('pets')
-      .select('id, name, species, breed, age_years, age_months, gender, weight_kg, neutered, stomach_health, photo_url, avatar_url, is_active, life_stage')
+      .select('id, name, species, breed, age_Y, age_months, gender, weight_kg, neutered, stomach_health, photo_url, avatar_url, is_active, life_stage, birth_date, home_date, pet_source')
       .eq('profile_id', uid)
       .eq('is_active', true)
       .order('created_at');
@@ -53,7 +56,7 @@ export function usePets() {
 
   const createPet = useCallback(async (pet: Partial<Pet>) => {
     const uid = await getUid();
-    if (!uid) throw new Error('未登录');
+    if (!uid) throw new Error('Not Sign In');
     const data = await writeGateway('CREATE_PET', { ...pet });
     setPets((prev) => [...prev, data as Pet]);
     return data;

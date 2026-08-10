@@ -16,35 +16,35 @@ export interface EnvironmentProfile {
 }
 
 const CLIMATE_LABELS: Record<string, string> = {
-  tropical: '热带',
-  subtropical: '亚热带',
-  temperate: '温带',
-  continental: '大陆性',
-  arid: '干旱',
-  mediterranean: '地中海',
-  oceanic: '海洋性',
-  cold: '寒冷',
+  tropical: 'Tropical',
+  subtropical: 'Subtropical',
+  temperate: 'Temperate',
+  continental: 'Continental',
+  arid: 'Arid',
+  mediterranean: 'Mediterranean',
+  oceanic: 'Oceanic',
+  cold: 'Cold',
 };
 
 const ACTIVITY_LABELS: Record<string, string> = {
-  low: '低活动量',
-  moderate: '中等活动量',
-  high: '高活动量',
-  very_high: '非常高活动量',
+  low: 'Low',
+  moderate: 'Moderate',
+  high: 'High',
+  very_high: 'Very High',
 };
 
 const INDOOR_OUTDOOR_LABELS: Record<string, string> = {
-  indoor: '纯室内',
-  outdoor: '纯室外',
-  mixed: '室内外混合',
+  indoor: 'Indoor Only',
+  outdoor: 'Outdoor Only',
+  mixed: 'Indoor/Outdoor Mix',
 };
 
 const WATER_SOURCE_LABELS: Record<string, string> = {
-  tap: '自来水',
-  filtered: '过滤水',
-  bottled: '瓶装水',
-  spring: '山泉水',
-  other: '其他',
+  tap: 'Tap Water',
+  filtered: 'Filtered',
+  bottled: 'Bottled',
+  spring: 'Spring Water',
+  other: 'Other',
 };
 
 export function useEnvironmentProfiles() {
@@ -59,13 +59,7 @@ export function useEnvironmentProfiles() {
   const fetchEnvironmentProfile = useCallback(async (petId: string) => {
     setLoading(true);
     const uid = await getUid();
-    let query = supabase
-      .from('environment_profiles')
-      .select('*')
-      .eq('pet_id', petId)
-      .single();
-
-    if (uid) query = query.eq('profile_id', uid);
+    let query = supabase.from('environment_profiles').select('*').eq('pet_id', petId).single();
 
     const { data, error } = await query;
     if (error && error.code !== 'PGRST116') {
@@ -79,7 +73,7 @@ export function useEnvironmentProfiles() {
 
   const createOrUpdateEnvironmentProfile = useCallback(async (petId: string, profileData: Partial<EnvironmentProfile>) => {
     const uid = await getUid();
-    if (!uid) throw new Error('未登录');
+    if (!uid) throw new Error('Not signed in');
 
     const dataToUpsert = {
       pet_id: petId,
@@ -90,20 +84,11 @@ export function useEnvironmentProfiles() {
 
     let result;
     if (environmentProfile?.id) {
-      const { data, error } = await supabase
-        .from('environment_profiles')
-        .update(dataToUpsert)
-        .eq('id', environmentProfile.id)
-        .select()
-        .single();
+      const { data, error } = await supabase.from('environment_profiles').update(dataToUpsert).eq('id', environmentProfile.id).select().single();
       if (error) throw new Error(error.message);
       result = data;
     } else {
-      const { data, error } = await supabase
-        .from('environment_profiles')
-        .insert(dataToUpsert)
-        .select()
-        .single();
+      const { data, error } = await supabase.from('environment_profiles').insert(dataToUpsert).select().single();
       if (error) throw new Error(error.message);
       result = data;
     }
@@ -112,10 +97,10 @@ export function useEnvironmentProfiles() {
     return result;
   }, [environmentProfile, getUid]);
 
-  const getClimateTypeLabel = useCallback((type?: string) => CLIMATE_LABELS[type || ''] || type || '未知', []);
-  const getActivityLevelLabel = useCallback((level?: string) => ACTIVITY_LABELS[level || ''] || level || '未知', []);
-  const getIndoorOutdoorLabel = useCallback((val?: string) => INDOOR_OUTDOOR_LABELS[val || ''] || val || '未知', []);
-  const getWaterSourceLabel = useCallback((source?: string) => WATER_SOURCE_LABELS[source || ''] || source || '未知', []);
+  const getClimateTypeLabel = useCallback((type?: string) => CLIMATE_LABELS[type || ''] || type || 'Unknown', []);
+  const getActivityLevelLabel = useCallback((level?: string) => ACTIVITY_LABELS[level || ''] || level || 'Unknown', []);
+  const getIndoorOutdoorLabel = useCallback((val?: string) => INDOOR_OUTDOOR_LABELS[val || ''] || val || 'Unknown', []);
+  const getWaterSourceLabel = useCallback((source?: string) => WATER_SOURCE_LABELS[source || ''] || source || 'Unknown', []);
 
   const calculateEnvironmentScore = useCallback((profile?: EnvironmentProfile | null) => {
     if (!profile) return null;

@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { writeGateway } from '../lib/gateway';
 
-export interface PetEvent {
+export interface Petevent {
   id?: string;
   pet_id: string;
   profile_id?: string;
@@ -22,11 +22,11 @@ async function getUid() {
   return session?.session?.user?.id;
 }
 
-export function usePetEvents() {
-  const [petEvents, setPetEvents] = useState<PetEvent[]>([]);
+export function usePetevents() {
+  const [petevents, setPetevents] = useState<Petevent[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchPetEvents = useCallback(async (petId: string, limit = 50) => {
+  const fetchPetevents = useCallback(async (petId: string, limit = 50) => {
     setLoading(true);
     const uid = await getUid();
     let query = supabase
@@ -38,22 +38,22 @@ export function usePetEvents() {
     if (uid) query = query.eq('profile_id', uid);
     const { data, error } = await query;
     if (error) {
-      console.warn('[usePetEvents] fetch error:', error.message);
-      setPetEvents([]);
+      console.warn('[usePetevents] fetch error:', error.message);
+      setPetevents([]);
     } else {
-      setPetEvents((data || []) as PetEvent[]);
+      setPetevents((data || []) as Petevent[]);
     }
     setLoading(false);
   }, []);
 
-  const createPetEvent = useCallback(async (event: Partial<PetEvent>) => {
+  const createPetevent = useCallback(async (event: Partial<Petevent>) => {
     const uid = await getUid();
-    if (!uid) throw new Error('未登录');
-    const finalEventTime = event.event_time || new Date().toISOString();
+    if (!uid) throw new Error('Not Sign In');
+    const finaleventTime = event.event_time || new Date().toISOString();
     await writeGateway('CREATE_PET_EVENT', {
       pet_id: event.pet_id,
       event_type: event.event_type,
-      event_time: finalEventTime,
+      event_time: finaleventTime,
       notes: event.notes,
       severity: event.severity,
       product_id: event.product_id,
@@ -61,11 +61,11 @@ export function usePetEvents() {
       metadata: event.metadata,
       source_type: event.source_type || 'manual',
     });
-    const optimistic: PetEvent = {
+    const optimistic: Petevent = {
       pet_id: event.pet_id || '',
       profile_id: uid,
       event_type: event.event_type || 'other',
-      event_time: finalEventTime,
+      event_time: finaleventTime,
       notes: event.notes,
       severity: event.severity,
       product_id: event.product_id,
@@ -74,26 +74,26 @@ export function usePetEvents() {
       source_type: event.source_type || 'manual',
       created_at: new Date().toISOString(),
     };
-    setPetEvents((prev) => [optimistic, ...prev]);
+    setPetevents((prev) => [optimistic, ...prev]);
     return optimistic;
   }, []);
 
-  const getEventTypeLabel = useCallback((type: string) => {
+  const geteventTypeLabel = useCallback((type: string) => {
     const labels: Record<string, string> = {
-      symptom: '症状',
-      medication: '用药',
-      vet_visit: '就诊',
-      vaccination: '疫苗',
-      weight_change: '体重变化',
-      diet_change: '饮食变更',
-      behavior: '行为',
-      other: '其他',
+      symptom: 'Symptom',
+      medication: 'Medication',
+      vet_visit: 'Vet Visit',
+      vaccination: 'Vaccine',
+      weight_change: 'WeightChange',
+      diet_change: 'Diet Change',
+      behavior: 'Behavior',
+      other: 'Other',
     };
-    return labels[type] || type || '事件';
+    return labels[type] || type || 'event';
   }, []);
 
-  const groupEventsByDate = useCallback((events: PetEvent[]) => {
-    const groups: Record<string, PetEvent[]> = {};
+  const groupeventsByDate = useCallback((events: Petevent[]) => {
+    const groups: Record<string, Petevent[]> = {};
     for (const event of events) {
       const date = event.event_time?.slice(0, 10) || 'unknown';
       if (!groups[date]) groups[date] = [];
@@ -102,5 +102,5 @@ export function usePetEvents() {
     return groups;
   }, []);
 
-  return { petEvents, loading, fetchPetEvents, createPetEvent, getEventTypeLabel, groupEventsByDate };
+  return { petevents, loading, fetchPetevents, createPetevent, geteventTypeLabel, groupeventsByDate };
 }

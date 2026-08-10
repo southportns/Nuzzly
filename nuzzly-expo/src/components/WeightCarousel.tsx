@@ -30,9 +30,9 @@ export default function WeightCarousel({ items, onRecord }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>体重记录</Text>
+        <Text style={styles.title}>WeightRecord</Text>
         <TouchableOpacity activeOpacity={0.7} onPress={onRecord}>
-          <Text style={styles.recordLink}>记录体重</Text>
+          <Text style={styles.recordLink}>RecordWeight</Text>
         </TouchableOpacity>
       </View>
       <ScrollView
@@ -42,7 +42,7 @@ export default function WeightCarousel({ items, onRecord }: Props) {
       >
         {items.length === 0 ? (
           <View style={[styles.card, styles.emptyCard]}>
-            <Text style={styles.emptyText}>暂无宠物体重数据</Text>
+            <Text style={styles.emptyText}>NonePetWeightData</Text>
           </View>
         ) : (
           items.map((item) => (

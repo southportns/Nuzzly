@@ -16,7 +16,7 @@ interface Props {
 
 export default function ToastContainer({ toasts }: Props) {
   return (
-    <View style={styles.container} pointerEvents="none">
+    <View style={[styles.container, { pointerevents: 'none' }]}>
       {toasts.map((toast, index) => (
         <Animated.View
           key={toast.id}

@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
-export interface PostProfile {
+export interface Postprofile {
   display_name?: string;
   avatar_url?: string;
   username?: string;
@@ -20,7 +20,7 @@ export interface Post {
   favorites_count: number;
   review_status: string;
   created_at: string;
-  public_profiles?: PostProfile | PostProfile[];
+  public_profiles?: Postprofile | Postprofile[];
 }
 
 const PAGE_SIZE = 20;
@@ -65,7 +65,7 @@ export function useCommunity() {
         .limit(PAGE_SIZE);
 
       if (options.petType) query = query.eq('pet_type', options.petType);
-      if (options.breed && options.breed !== '全部品种') query = query.eq('breed', options.breed);
+      if (options.breed && options.breed !== 'All Breeds') query = query.eq('breed', options.breed);
       if (options.cursor) query = query.lt('created_at', options.cursor);
 
       const { data, error } = await query;
@@ -107,7 +107,7 @@ export function useCommunity() {
       breed?: string;
     }) => {
       const uid = await getUid();
-      if (!uid) return { data: null, error: { code: 'UNAUTHENTICATED', message: '请先登录' } };
+      if (!uid) return { data: null, error: { code: 'UNAUTHENTICATED', message: 'Please firstSign In' } };
 
       const imageUrls: string[] = [];
       for (const file of payload.imageFiles?.slice(0, 9) || []) {
@@ -173,7 +173,7 @@ export function useCommunity() {
 
   const reportPost = useCallback(async (postId: string, reason: string, category = 'other') => {
     const uid = await getUid();
-    if (!uid) return { data: null, error: { code: 'UNAUTHENTICATED', message: '请先登录' } };
+    if (!uid) return { data: null, error: { code: 'UNAUTHENTICATED', message: 'Please firstSign In' } };
     try {
       const { data, error } = await supabase
         .from('community_reports')
@@ -203,7 +203,7 @@ export function useCommunity() {
     }
   }, []);
 
-  const checkVerification = useCallback(async () => {
+  const checkVerify = useCallback(async () => {
     const uid = await getUid();
     if (!uid) return { verified: false, hasBirthDate: false };
     const { data } = await supabase.from('profiles').select('phone_verified_at, birth_date').eq('id', uid).single();
@@ -223,6 +223,6 @@ export function useCommunity() {
     toggleLike,
     reportPost,
     deletePost,
-    checkVerification,
+    checkVerify,
   };
 }

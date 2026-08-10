@@ -44,7 +44,7 @@ export function useRecommendations() {
       setRecommendations(list);
       return data;
     } catch (e: any) {
-      throw new Error(e.message || '生成失败');
+      throw new Error(e.message || 'Generation failed');
     } finally {
       setGenerating(false);
     }

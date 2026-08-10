@@ -25,11 +25,11 @@ export async function ssePost(path: string, body: any, options: SSEOptions = {})
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(text || `请求失败 ${res.status}`);
+    throw new Error(text || `Request failed ${res.status}`);
   }
 
   if (!res.body) {
-    throw new Error('响应流为空');
+    throw new Error('Response stream is empty');
   }
 
   const reader = res.body.getReader();
@@ -87,6 +87,6 @@ export async function ssePost(path: string, body: any, options: SSEOptions = {})
     reader.releaseLock();
   }
 
-  options.onDone?.(full || '完成');
+  options.onDone?.(full || 'Done');
   return full;
 }

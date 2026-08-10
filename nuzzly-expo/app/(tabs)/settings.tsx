@@ -25,43 +25,43 @@ interface SettingGroup {
 
 const GROUPS: SettingGroup[] = [
   {
-    title: '账号与资料',
+    title: 'Account & profile',
     items: [
-      { label: '账号与安全', path: '/settings/sub/account' },
-      { label: '宠物档案', path: '/settings/sub/pets' },
+      { label: 'Account & Security', path: '/settings/sub/account' },
+      { label: 'Pet profiles', path: '/settings/sub/pets' },
     ],
   },
   {
-    title: '会员',
-    items: [{ label: '会员', path: '/settings/sub/membership' }],
+    title: 'Membership',
+    items: [{ label: 'Membership', path: '/settings/sub/membership' }],
   },
   {
-    title: '显示与语言',
+    title: 'Display & Language',
     items: [
-      { label: '语言', path: '/settings/sub/language' },
-      { label: '文字大小', path: '/settings/sub/fontsize' },
+      { label: 'Language', path: '/settings/sub/language' },
+      { label: 'Font Size', path: '/settings/sub/fontsize' },
     ],
   },
   {
-    title: '基础',
+    title: 'General',
     items: [
-      { label: '通知', path: '/settings/sub/notification' },
-      { label: '通用', path: '/settings/sub/general' },
-      { label: '隐私', path: '/settings/sub/privacy' },
+      { label: 'Notifications', path: '/settings/sub/notification' },
+      { label: 'General', path: '/settings/sub/general' },
+      { label: 'Privacy', path: '/settings/sub/privacy' },
     ],
   },
   {
-    title: '内容与社交',
+    title: 'Content & Social',
     items: [
-      { label: '我的内容', path: '/settings/sub/content' },
-      { label: '互动设置', path: '/settings/sub/interaction' },
+      { label: 'My Content', path: '/settings/sub/content' },
+      { label: 'Interaction Settings', path: '/settings/sub/interaction' },
     ],
   },
   {
-    title: '其他',
+    title: 'Other',
     items: [
-      { label: '关于我们', path: '/settings/sub/about' },
-      { label: '帮助与反馈', path: '/settings/sub/feedback' },
+      { label: 'About Us', path: '/settings/sub/about' },
+      { label: 'Help & Feedback', path: '/settings/sub/feedback' },
     ],
   },
 ];
@@ -73,12 +73,12 @@ export default function Settings() {
 
   async function handleLogout() {
     Alert.alert(
-      '退出登录',
-      '确定要退出当前账号吗？',
+      'Sign Out',
+      'Are you sure you want to sign out of this account?',
       [
-        { text: '取消', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: '退出',
+          text: 'Sign Out',
           style: 'destructive',
           onPress: async () => {
             await signOut();
@@ -92,7 +92,7 @@ export default function Settings() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: 12 + insets.top, paddingBottom: 12 }]}>
+      <View style={[styles.header, { paddingTop: 12, paddingBottom: 12 }]}>
         <TouchableOpacity
           activeOpacity={0.8}
           style={styles.backBtn}
@@ -100,7 +100,7 @@ export default function Settings() {
         >
           <ChevronLeftIcon size={20} color={colors.fg} />
         </TouchableOpacity>
-        <Text style={styles.title}>设置</Text>
+        <Text style={styles.title}>Settings</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -135,7 +135,7 @@ export default function Settings() {
           style={styles.logoutBtn}
           onPress={handleLogout}
         >
-          <Text style={styles.logoutText}>退出登录</Text>
+          <Text style={styles.logoutText}>Sign Out</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
