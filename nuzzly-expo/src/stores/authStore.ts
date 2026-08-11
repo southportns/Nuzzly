@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { writeGateway } from '../lib/gateway';
 
-interface profile {
+interface Profile {
   id: string;
   username: string;
   display_name: string;
@@ -12,18 +12,18 @@ interface profile {
 
 interface AuthState {
   session: any | null;
-  profile: profile | null;
+  profile: Profile | null;
   loading: boolean;
   initialized: boolean;
   setSession: (session: any) => void;
-  setprofile: (profile: profile | null) => void;
+  setProfile: (profile: Profile | null) => void;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string) => Promise<any>;
   signInWithOtp: (phone: string) => Promise<any>;
   verifyOtp: (phone: string, token: string) => Promise<any>;
   signOut: () => Promise<void>;
-  fetchprofile: () => Promise<void>;
-  createprofile: (userId: string, username: string, displayName: string) => Promise<void>;
+  fetchProfile: () => Promise<void>;
+  createProfile: (userId: string, username: string, displayName: string) => Promise<void>;
   init: () => Promise<void>;
 }
 
@@ -34,20 +34,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialized: false,
 
   setSession: (session) => set({ session }),
-  setprofile: (profile) => set({ profile }),
+  setProfile: (profile) => set({ profile }),
 
   init: async () => {
     const { data: { session } } = await supabase.auth.getSession();
     set({ session, initialized: true });
     if (session?.user) {
-      await get().fetchprofile();
+      await get().fetchProfile();
     }
     set({ loading: false });
 
     supabase.auth.onAuthStateChange((_event, session) => {
       set({ session });
       if (session?.user) {
-        get().fetchprofile();
+        get().fetchProfile();
       } else {
         set({ profile: null });
       }
@@ -58,7 +58,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     set({ session: data.session });
-    await get().fetchprofile();
+    await get().fetchProfile();
     return data;
   },
 
@@ -78,9 +78,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw error;
     set({ session: data.session });
     if (data.user) {
-      await get().fetchprofile();
+      await get().fetchProfile();
       if (!get().profile) {
-        await get().createprofile(data.user.id, phone.slice(-4), `User${phone.slice(-4)}`);
+        await get().createProfile(data.user.id, phone.slice(-4), `用户${phone.slice(-4)}`);
       }
     }
     return data;
@@ -91,7 +91,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ session: null, profile: null });
   },
 
-  fetchprofile: async () => {
+  fetchProfile: async () => {
     const userId = get().session?.user?.id;
     if (!userId) return;
     const { data, error } = await supabase
@@ -104,12 +104,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  createprofile: async (userId, username, displayName) => {
+  createProfile: async (userId, username, displayName) => {
     await writeGateway('CREATE_PROFILE', {
       id: userId,
       username,
       display_name: displayName,
     });
-    await get().fetchprofile();
+    await get().fetchProfile();
   },
 }));

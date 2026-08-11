@@ -40,7 +40,7 @@ export function useDietLogs() {
 
   const addDietLog = useCallback(async (log: Partial<DietLog>) => {
     const uid = await getUid();
-    if (!uid) throw new Error('Not Sign In');
+    if (!uid) throw new Error('未登录');
     const { data, error } = await writeGateway('CREATE_DIET_LOG', { ...log });
     if (error) throw new Error(error);
     setDietLogs((prev) => [data as DietLog, ...prev]);
@@ -49,7 +49,7 @@ export function useDietLogs() {
 
   const deleteDietLog = useCallback(async (id: string) => {
     const uid = await getUid();
-    if (!uid) throw new Error('Not Sign In');
+    if (!uid) throw new Error('未登录');
     const { error } = await supabase.from('diet_logs').delete().eq('id', id).eq('profile_id', uid);
     if (error) throw error;
     setDietLogs((prev) => prev.filter((l) => l.id !== id));

@@ -2,14 +2,14 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Dimensions } from 'react-native';
 import { colors, spacing, radius, shadows, typography } from '../theme/tokens';
 import { Pet } from '../hooks/usePets';
-import { Environmentprofile } from '../hooks/useEnvironmentprofiles';
-import { Health Records } from '../hooks/useHealth Recordss';
+import { EnvironmentProfile } from '../hooks/useEnvironmentProfiles';
+import { HealthRecord } from '../hooks/useHealthRecords';
 import { HealthReminder } from '../hooks/useHealthReminders';
 import { ChevronRightIcon } from './Icons';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-// ── Label maps (mirrors web side) ──
+// 鈹鈹 Label maps (mirrors web side) 鈹鈹
 const speciesLabels: Record<string, string> = { cat: 'Cat', dog: 'Dog', other: 'Other' };
 const sourceLabels: Record<string, string> = {
  purchased: 'Purchased',
@@ -37,7 +37,7 @@ const activityLabels: Record<string, string> = {
  very_high: 'Very premium',
 };
 
-// ── Age formatter (mirrors web formatAgeFromDate) ──
+// 鈹鈹 Age formatter (mirrors web formatAgeFromDate) 鈹鈹
 function formatAgeFromDate(birthDate: string | null | undefined): string | null {
  if (!birthDate) return null;
  const birth = new Date(birthDate);
@@ -90,7 +90,7 @@ function fmtDue(d: string | null | undefined): string | null {
  return fmtDate(d);
 }
 
-// ── Sub-components ──
+// 鈹鈹 Sub-components 鈹鈹
 
 function SectionTitle({ icon, title, desc }: { icon: string; title: string; desc?: string }) {
  return (<View style={styles.sectionHeader}>
@@ -126,13 +126,13 @@ function Badge({ text, color }: { text: string; color?: string }) {
  </View>);
 }
 
-// ── Main component ──
+// 鈹鈹 Main component 鈹鈹
 
 export interface PetOverviewData {
  pet: Pet;
- envprofile?: Environmentprofile | null;
- latestVaccine?: Health Records | null;
- latestMed?: Health Records | null;
+ envprofile?: EnvironmentProfile | null;
+  latestVaccine?: HealthRecord | null;
+  latestMed?: HealthRecord | null;
  nextVaccineReminder?: HealthReminder | null;
  nextMedReminder?: HealthReminder | null;
 }
@@ -150,13 +150,13 @@ export default function PetOverviewCard({
  nextMedReminder,
  onPress,
 }: Props) {
- const petEmoji = pet.species === 'cat'? '🐱': pet.species === 'dog'? '🐕': '🐾';
+ const petEmoji = pet.species === 'cat'? '馃惐': pet.species === 'dog'? '馃悤': '馃惥';
  const ageText = formatPetAge(pet);
  const birthDays = calcDays(pet.birth_date);
  const homeDays = calcDays(pet.home_date);
 
  const locationParts = [envprofile?.region, envprofile?.climate_type].filter(Boolean);
- const locationStr = locationParts.length > 0? locationParts.join(' · '): null;
+ const locationStr = locationParts.length > 0? locationParts.join(' 路 '): null;
 
  return (<View style={styles.container}>
  {/* Section header with "ViewDetails" link */}
@@ -168,7 +168,7 @@ export default function PetOverviewCard({
  </TouchableOpacity>)}
  </View>
 
- {/* ── Pet Hero ── */}
+ {/* 鈹鈹 Pet Hero 鈹鈹 */}
  <View style={styles.heroCard}>
  <View style={styles.heroAvatarWrap}>
  {pet.photo_url || pet.avatar_url? (<Image
@@ -181,7 +181,7 @@ export default function PetOverviewCard({
  <View style={styles.heroInfo}>
  <Text style={styles.heroName}>{pet.name}</Text>
  <Text style={styles.heroSubtitle}>
- {pet.breed?? 'Unknown Breed'} · {ageText}
+ {pet.breed?? 'Unknown Breed'} 路 {ageText}
  </Text>
  <View style={styles.heroBadges}>
  <Badge text={pet.gender === 'male'? 'Male': pet.gender === 'female'? 'Female': 'Unknown'} />
@@ -196,9 +196,9 @@ export default function PetOverviewCard({
  </View>
  </View>
 
- {/* ── Basic Info ── */}
+ {/* 鈹鈹 Basic Info 鈹鈹 */}
  <View style={styles.sectionCard}>
- <SectionTitle icon="🐾" title="Basic Info" desc="Pet Generalprofile" />
+ <SectionTitle icon="馃惥" title="Basic Info" desc="Pet Generalprofile" />
  <View style={styles.infoRows}>
  <InfoRow label="Name" value={pet.name} />
  <InfoRow label=" " value={speciesLabels[pet.species?? '']?? pet.species} />
@@ -211,9 +211,9 @@ export default function PetOverviewCard({
  </View>
  </View>
 
- {/* ── Age & Source ── */}
+ {/* 鈹鈹 Age & Source 鈹鈹 */}
  <View style={styles.sectionCard}>
- <SectionTitle icon="📅" title="Age & Source" desc="Life stage and origin" />
+ <SectionTitle icon="馃搮" title="Age & Source" desc="Life stage and origin" />
  <View style={styles.infoRows}>
  <InfoRow label="Birthdayterm" value={fmtDate(pet.birth_date)} />
  {birthDays!= null && <InfoRow label=" days" value={` ${birthDays} days`} />}
@@ -226,12 +226,12 @@ export default function PetOverviewCard({
  </View>
  </View>
 
- {/* ── VaccineDeworming ── */}
+ {/* 鈹鈹 VaccineDeworming 鈹鈹 */}
  <View style={styles.sectionCard}>
- <SectionTitle icon="💉" title="VaccineDeworming" desc="Vaccine and DewormingMedication" />
+ <SectionTitle icon="馃拤" title="VaccineDeworming" desc="Vaccine and DewormingMedication" />
  {/* Vaccine */}
  <View style={styles.vaccineGroup}>
- <Text style={styles.vaccineGroupTitle}>🩺 Vaccine</Text>
+ <Text style={styles.vaccineGroupTitle}>馃┖ Vaccine</Text>
  <VaccineRow label="most " value={fmtDate(latestVaccine?.record_time)} />
  <VaccineRow
  label="Next "
@@ -241,7 +241,7 @@ export default function PetOverviewCard({
  </View>
  {/* Deworming */}
  <View style={styles.vaccineGroup}>
- <Text style={styles.vaccineGroupTitle}>🐛 Deworming</Text>
+ <Text style={styles.vaccineGroupTitle}>馃悰 Deworming</Text>
  <VaccineRow label="mostDeworming" value={fmtDate(latestMed?.record_time)} />
  <VaccineRow
  label="NextDeworming"
@@ -251,9 +251,9 @@ export default function PetOverviewCard({
  </View>
  </View>
 
- {/* ── environment ── */}
+ {/* 鈹鈹 environment 鈹鈹 */}
  <View style={styles.sectionCard}>
- <SectionTitle icon="🏠" title="environment" desc="environmentand " />
+ <SectionTitle icon="馃彔" title="environment" desc="environmentand " />
  <View style={styles.infoRows}>
  <InfoRow label="all " value={locationStr} />
  <InfoRow
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
  color: colors.primary,
  },
 
- // ── Hero ──
+ // 鈹鈹 Hero 鈹鈹
  heroCard: {
  flexDirection: 'row',
  alignItems: 'center',
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
  color: '#555',
  },
 
- // ── Section card ──
+ // 鈹鈹 Section card 鈹鈹
  sectionCard: {
  backgroundColor: colors.card,
  borderRadius: radius['2xl'],...shadows.sm,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
  marginTop: 1,
  },
 
- // ── Info rows ──
+ // 鈹鈹 Info rows 鈹鈹
  infoRows: {
  // -y equivalent: each row has a bottom border except the last
  },
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
  textAlign: 'right',
  },
 
- // ── Vaccine / deworming ──
+ // 鈹鈹 Vaccine / deworming 鈹鈹
  vaccineGroup: {
  marginTop: spacing.sm,
  },

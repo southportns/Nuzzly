@@ -4,7 +4,7 @@ import {
  Text,
  ScrollView,
  TouchableOpacity,
- TextIn,
+ TextInput,
  Image,
  StyleSheet,
  KeyboardAvoidingView,
@@ -20,9 +20,9 @@ import { colors, spacing, radius, shadows, sizes, typography } from '../src/them
 
 const SPECIES_EMOJI: Record<string, string> = { cat: '🐱', dog: '🐶' };
 
-const QUICK_PROMPTS = [{ text: 'How is my pet's health today?', label: '🩺 Health Status' },
+const QUICK_PROMPTS = [{ text: "How is my pet's health today?", label: '🩺 Health Status' },
  { text: 'Recommend suitable cat food', label: '🍖 Diet Recommendation' },
- { text: 'Help me book next week's vaccination ', label: '💉 Book Vaccine' },
+ { text: "Help me book next week's vaccination ", label: '💉 Book Vaccine' },
  { text: 'How is the weight trend recently?', label: '📊 Weight Trend' },];
 
 interface Message {
@@ -244,7 +244,7 @@ export default function ButlerScreen() {
  {/* In Bar */}
  <View style={[styles.inBar, { paddingBottom: insets.bottom + 16 }]}>
  <View style={styles.inWrap}>
- <TextIn
+ <TextInput
  style={styles.inField}
  value={inText}
  onChangeText={setInText}

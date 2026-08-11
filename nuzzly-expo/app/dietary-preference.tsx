@@ -4,7 +4,7 @@ import {
  Text,
  ScrollView,
  TouchableOpacity,
- TextIn,
+ TextInput,
  Alert,
  StyleSheet,
 } from 'react-native';
@@ -44,7 +44,7 @@ export default function DietaryPreferenceScreen() {
  const petName = rawPetName || 'Pet';
 
  const [currentFood, setCurrentFood] = useState('');
- const [stomachHealth, setStomach Health] = useState('normal');
+ const [stomachHealth, setStomachHealth] = useState('normal');
  const [allergies, setAllergies] = useState<AllergyItem[]>([]);
  const [newAllergen, setNewAllergen] = useState('');
  const [newSeverity, setNewSeverity] = useState('mild');
@@ -123,7 +123,7 @@ export default function DietaryPreferenceScreen() {
  <PageHeader title={completed? 'SettingsDone': 'Dietgood'} />
 
  {completed? (<View style={styles.completeBody}>
- <Text style={styles.completeIcon}>✅</Text>
+ <Text style={styles.completeIcon}>鉁</Text>
  <Text style={styles.completeTitle}>SettingsDone!</Text>
  <Text style={styles.completeDesc}>
  {petName} Dietgood Record, on thismore Recommendations
@@ -143,38 +143,38 @@ export default function DietaryPreferenceScreen() {
 
  <FormField
  label="agoeat Cat Food/Dog Food"
- type="in"
+ type="input"
  value={currentFood}
  onChange={setCurrentFood}
  placeholder="if: hopeCat Food"
  />
 
  <FormField label="Stomach">
- <ChipGroup options={STOMACH} value={stomachHealth} onChange={setStomach Health} />
+ <ChipGroup options={STOMACH} value={stomachHealth} onChange={setStomachHealth} />
  </FormField>
 
  <View style={styles.allergySection}>
  <View style={styles.allergyHeader}>
- <Text style={styles.allergyLabel}>⚠️ Allergy</Text>
+ <Text style={styles.allergyLabel}>鈿狅笍 Allergy</Text>
  </View>
 
  {allergies.length > 0 && (<View style={styles.allergyTags}>
  {allergies.map((a) => (<View key={a.id} style={styles.allergyTag}>
  <Text style={styles.allergyTagText}>
- {a.allergen} · {a.severityLabel}
+ {a.allergen} 路 {a.severityLabel}
  </Text>
  <TouchableOpacity
  activeOpacity={0.6}
  onPress={() => removeAllergy(a.id)}
  style={styles.allergyDel}
  >
- <Text style={styles.allergyDelText}>×</Text>
+ <Text style={styles.allergyDelText}>脳</Text>
  </TouchableOpacity>
  </View>))}
  </View>)}
 
  <View style={styles.allergyAddRow}>
- <TextIn
+ <TextInput
  style={styles.allergyIn}
  value={newAllergen}
  onChangeText={setNewAllergen}

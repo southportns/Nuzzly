@@ -17,12 +17,12 @@ export interface MedicationRecord {
 }
 
 const FREQUENCY_LABELS: Record<string, string> = {
-  once_daily: 'Once daily',
-  twice_daily: 'Twice daily',
-  three_times_daily: 'Three times daily',
-  weekly: 'Once weekly',
-  as_needed: 'As needed',
-  other: 'Other',
+  once_daily: '每日一次',
+  twice_daily: '每日两次',
+  three_times_daily: '每日三次',
+  weekly: '每周一次',
+  as_needed: '按需服用',
+  other: '其他',
 };
 
 export function useMedicationRecords() {
@@ -60,7 +60,7 @@ export function useMedicationRecords() {
     };
     await writeGateway('CREATE_MEDICATION_RECORD', payload);
     const optimistic: MedicationRecord = {
-      ...payload as MedicationRecord,
+      ...payload,
       created_at: new Date().toISOString(),
     };
     setMedicationRecords((prev) => [optimistic, ...prev]);
@@ -88,7 +88,7 @@ export function useMedicationRecords() {
   }, [updateMedicationRecord]);
 
   const getFrequencyLabel = useCallback((frequency?: string) => {
-    return FREQUENCY_LABELS[frequency || ''] || frequency || 'Unknown';
+    return FREQUENCY_LABELS[frequency || ''] || frequency || '未知';
   }, []);
 
   const calculateDuration = useCallback((record: MedicationRecord) => {

@@ -1,6 +1,7 @@
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { useEffect } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TabBar from '../../src/components/TabBar';
 import { useAuthStore } from '../../src/stores/authStore';
 import { colors } from '../../src/theme/tokens';
@@ -10,6 +11,7 @@ export default function TabsLayout() {
   const initialized = useAuthStore((s) => s.initialized);
   const router = useRouter();
   const segments = useSegments();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (!initialized) return;
@@ -23,7 +25,7 @@ export default function TabsLayout() {
   }, [session, initialized, segments]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.content}>
         <Slot />
       </View>

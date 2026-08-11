@@ -8,9 +8,9 @@ import React, {
 } from 'react';
 import {
  View,
- TextIn,
+ TextInput,
  TouchableOpacity,
- LayoutChangeevent,
+ LayoutChangeEvent,
  StyleSheet,
 } from 'react-native';
 import Svg, { Path, Defs, TextPath, Text, G, ClipPath, Line, Circle } from 'react-native-svg';
@@ -207,7 +207,7 @@ export const CurvedIn = forwardRef<CurvedInHandle, CurvedInProps>(
 
  const [w, setW] = useState(0);
  const [focused, setFocused] = useState(false);
- const inRef = useRef<TextIn>(null);
+ const inRef = useRef<TextInput>(null);
 
  // Unique IDs for SVG path references
  const uid = useMemo(() => `ci${++_idCounter}`, []);
@@ -220,8 +220,8 @@ export const CurvedIn = forwardRef<CurvedInHandle, CurvedInProps>(
  blur: () => inRef.current?.blur(),
  }));
 
- const onLayout = (e: LayoutChangeevent) => {
- setW(e.nativeevent.layout.width);
+  const onLayout = (e: LayoutChangeEvent) => {
+ setW(e.nativeEvent.layout.width);
  };
 
  useEffect(() => {
@@ -392,8 +392,8 @@ export const CurvedIn = forwardRef<CurvedInHandle, CurvedInProps>(
  )}
  </Svg>
 
- {/* Transparent TextIn overlay for keyboard interaction */}
- <TextIn
+ {/* Transparent TextInput overlay for keyboard interaction */}
+ <TextInput
  ref={inRef}
  style={[
  styles.in,
@@ -422,7 +422,6 @@ export const CurvedIn = forwardRef<CurvedInHandle, CurvedInProps>(
  autoCorrect={false}
  returnKeyType={returnKeyType}
  blurOnSubmit={blurOnSubmit}
- caretColor="transparent"
  />
 
  {/* Transparent button touch area */}

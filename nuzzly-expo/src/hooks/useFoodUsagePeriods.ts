@@ -18,10 +18,6 @@ export interface FoodUsagePeriod {
   daily_amount?: string;
   feeding_frequency?: string;
   is_current?: boolean;
-  outcome_summary?: string;
-  switch_reason?: string;
-  would_continue?: boolean;
-  stability_score?: number;
   products?: Product;
   product_versions?: any;
   created_at?: string;
@@ -63,7 +59,7 @@ export function useFoodUsagePeriods() {
 
   const startFoodUsagePeriod = useCallback(async (payload: Partial<FoodUsagePeriod>) => {
     const uid = await getUid();
-    if (!uid) throw new Error('Not Sign In');
+    if (!uid) throw new Error('未登录');
 
     if (currentPeriod?.id) {
       await supabase

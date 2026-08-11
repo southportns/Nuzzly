@@ -7,7 +7,7 @@ export async function compressImage(uri: string, maxSide = 1280, quality = 0.85)
     { compress: quality, format: SaveFormat.JPEG, base64: true }
   );
   if (!manipulated.base64) {
-    throw new Error('Image compression failed');
+    throw new Error('图片压缩失败');
   }
   return `data:image/jpeg;base64,${manipulated.base64}`;
 }

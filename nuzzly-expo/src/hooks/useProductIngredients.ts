@@ -36,14 +36,14 @@ export interface NutritionSummary {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  protein: 'Protein',
-  carbohydrate: 'Carbohydrates',
-  fat: 'Fat',
-  fiber: 'Fiber',
-  vitamin: 'Vitamins',
-  mineral: 'Minerals',
-  preservative: 'Preservatives',
-  additive: 'Additives',
+  protein: '蛋白质',
+  carbohydrate: '碳水化合物',
+  fat: '脂肪',
+  fiber: '纤维',
+  vitamin: '维生素',
+  mineral: '矿物质',
+  preservative: '防腐剂',
+  additive: '添加剂',
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -93,7 +93,7 @@ export function useProductIngredients() {
   }, []);
 
   const getIngredientTypeLabel = useCallback((type?: string) => {
-    return TYPE_LABELS[type || ''] || type || 'Other';
+    return TYPE_LABELS[type || ''] || type || '其他';
   }, []);
 
   const getIngredientTypeColor = useCallback((type?: string) => {

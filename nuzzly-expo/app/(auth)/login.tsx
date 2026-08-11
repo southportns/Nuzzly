@@ -1,836 +1,797 @@
 import React, { useState, useRef } from 'react';
-import { CurvedIn, type CurvedInHandle } from '../../src/components/CurvedIn';
 import {
- View,
- Text,
- Image,
- TouchableOpacity,
- Modal,
- ScrollView,
- StyleSheet,
- KeyboardAvoidingView,
- Platform,
- ActivityIndicator,
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { colors, radius, shadows } from '../../src/theme/tokens';
+import { colors, spacing, radius, shadows, typography } from '../../src/theme/tokens';
 import { useAuthStore } from '../../src/stores/authStore';
 import { supabase } from '../../src/lib/supabase';
 import { writeGateway } from '../../src/lib/gateway';
 import { useToast } from '../../src/hooks/useToast';
 import ToastContainer from '../../src/components/ToastContainer';
 import {
- PhoneIcon,
- MailIcon,
- CloseIcon,
- WechatIcon,
- AppleIcon,
- ChevronLeftIcon,
+  PhoneIcon,
+  MailIcon,
+  LockIcon,
+  EyeIcon,
+  EyeOffIcon,
+  CloseIcon,
+  WechatIcon,
+  QQIcon,
 } from '../../src/components/Icons';
 
-// ── Arc layout comation (matches web's comeArcPositions) ──
-
-const BTN_SIZE = 44;
-const BTN_GAP = 20;
-const BTN_BEND = -12;
-
-type LoginMethod = 'phone' | 'wechat' | 'apple' | 'email';
-
-interface MethodInfo {
- id: LoginMethod;
- icon: React.FC<{ size?: number; color?: string; fill?: string }>;
- size: number;
-}
-
-const METHODS: MethodInfo[] = [{ id: 'phone', icon: PhoneIcon, size: 22 },
- { id: 'wechat', icon: WechatIcon, size: 26 },
- { id: 'apple', icon: AppleIcon, size: 30 },
- { id: 'email', icon: MailIcon, size: 22 },];
-
-function comeArcPositions(count: number, size: number, gap: number, bend: number) {
- const span = (count - 1) * (size + gap);
- const a = Math.max(0.1, Math.abs(bend));
- const R = (span * span * 0.25 + a * a) / (2 * a);
- const phi = Math.asin(Math.min(1, span / (2 * R)));
- const dir = bend >= 0? 1: -1;
- const raw = Array.from({ length: count }, (_, i) => {
- const t = count === 1? 0: (i / (count - 1)) * 2 - 1;
- const theta = t * phi;
- const x = R * Math.sin(theta);
- const y = dir * (-R + R * Math.cos(theta));
- return { x, y };
- });
- const minY = Math.min(...raw.map((p) => p.y));
- return raw.map((p) => ({ x: p.x, y: p.y - minY }));
-}
-
-const ARC_POSITIONS = comeArcPositions(METHODS.length, BTN_SIZE, BTN_GAP, BTN_BEND);
-const ARC_HEIGHT = BTN_SIZE + Math.max(...ARC_POSITIONS.map((p) => p.y));
-
 export default function Login() {
- const router = useRouter();
- const insets = useSafeAreaInsets();
- const { toasts, show } = useToast();
- const verifyOtp = useAuthStore((s) => s.verifyOtp);
- const signInWithOtp = useAuthStore((s) => s.signInWithOtp);
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { toasts, show } = useToast();
+  const verifyOtp = useAuthStore((s) => s.verifyOtp);
+  const signInWithOtp = useAuthStore((s) => s.signInWithOtp);
 
- // ── Agreement ──
- const [agreed, setAgreed] = useState(false);
- const [showTerms, setShowTerms] = useState(false);
- const [showPrivacy, setShowPrivacy] = useState(false);
- const [termsScrolled, setTermsScrolled] = useState(false);
- const [privacyScrolled, setPrivacyScrolled] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [showPhoneLogin, setShowPhoneLogin] = useState(false);
+  const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [termsScrolled, setTermsScrolled] = useState(false);
+  const [privacyScrolled, setPrivacyScrolled] = useState(false);
 
- // ── Phone OTP (inline, integrated into login flow) ──
- const [phone, setPhone] = useState('');
- const [code, setCode] = useState('');
- const [countdown, setCountdown] = useState(0);
- const [phoneSending, setPhoneSending] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('');
+  const [countdown, setCountdown] = useState(0);
+  const [sending, setSending] = useState(false);
 
- // ── Email login (inline, matching web) ──
- const [loginMethod, setLoginMethod] = useState<LoginMethod>('email');
- const [email, setEmail] = useState('');
- const [password, setPassword] = useState('');
- const [step, setStep] = useState<'email' | 'password'>('email');
- const [Mode, setMode] = useState<'login' | 'signup'>('login');
- const [error, setError] = useState('');
- const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [emailPwd, setEmailPwd] = useState('');
+  const [showEmailPwd, setShowEmailPwd] = useState(false);
 
- const termsRef = useRef<ScrollView>(null);
- const privacyRef = useRef<ScrollView>(null);
- const inRef = useRef<CurvedInHandle>(null);
+  const termsRef = useRef<ScrollView>(null);
+  const privacyRef = useRef<ScrollView>(null);
 
- // ── Method selection (matches web's selectMethod) ──
- function selectMethod(method: LoginMethod) {
- setError('');
- if (method === 'wechat') {
- if (!requireAgreement()) return;
- show('WeChat sign-in is not yet available', 'warning');
- return;
- }
- if (method === 'apple') {
- if (!requireAgreement()) return;
- show('Apple account sign-in is not yet available', 'warning');
- return;
- }
- // phone and email both use inline step flow
- setLoginMethod(method);
- setStep('email');
- setPhone('');
- setCode('');
- setEmail('');
- setPassword('');
- }
+  function requireAgreement() {
+    if (!agreed) {
+      show('请先阅读并同意用户协议和隐私政策', 'warning');
+      return false;
+    }
+    return true;
+  }
 
- function requireAgreement() {
- if (!agreed) {
- show('Please read and agree to the Terms of Service and Privacy Policy first', 'warning');
- return false;
- }
- return true;
- }
+  async function handleOneClickLogin() {
+    if (!requireAgreement()) return;
+    setShowPhoneLogin(true);
+  }
 
- // ── Account validation ──
- function validateAccount(value: string) {
- if (loginMethod === 'phone') {
- return /^1\d{10}$/.test(value);
- }
- return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
- }
+  function handleWechatLogin() {
+    if (!requireAgreement()) return;
+    show('微信登录暂未开放', 'warning');
+  }
 
- // ── Account submit (step 1 → step 2) ──
- function handleAccountSubmit() {
- if (loginMethod === 'phone') {
- // Phone: send OTP code, then go to code step
- if (!validateAccount(phone)) {
- setError('Please enter a valid phone number');
- return;
- }
- setError('');
- sendCode();
- return;
- }
- // Email: validate, then go to password step
- if (!validateAccount(email)) {
- setError('Please enter a valid email address');
- return;
- }
- setError('');
- setStep('password');
- setTimeout(() => inRef.current?.focus(), 100);
- }
+  function handleQqLogin() {
+    if (!requireAgreement()) return;
+    show('QQ登录暂未开放', 'warning');
+  }
 
- // ── Password submit (matches web's handlePasswordSubmit) ──
- async function handlePasswordSubmit() {
- if (!password) return;
- setError('');
- setLoading(true);
+  async function sendCode() {
+    if (!/^1\d{10}$/.test(phone)) {
+      show('请输入正确的手机号', 'warning');
+      return;
+    }
+    try {
+      await signInWithOtp(`+86${phone}`);
+      setCountdown(60);
+      const timer = setInterval(() => {
+        setCountdown((c) => {
+          if (c <= 1) clearInterval(timer);
+          return Math.max(0, c - 1);
+        });
+      }, 1000);
+      show('验证码已发送', 'success');
+    } catch (e: any) {
+      show(e.message || '验证码发送失败', 'error');
+    }
+  }
 
- try {
- if (Mode === 'login') {
- const { error: signInError } = await supabase.auth.signInWithPassword({
- email: email.trim(),
- password,
- });
- if (signInError) {
- // If invalid credentials, try signup
- if (signInError.message.includes('Invalid login credentials')) {
- const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
- email: email.trim(),
- password,
- });
- if (signUpError) throw signUpError;
- if (signUpData.user) {
- const { error: signInAgainError } = await supabase.auth.signInWithPassword({
- email: email.trim(),
- password,
- });
- if (signInAgainError) throw signInAgainError;
- const { error: profileErr } = await writeGateway('CREATE_PROFILE', {
- id: signUpData.user.id,
- username: email.split('@')[0],
- display_name: email.split('@')[0],
- });
- if (profileErr) console.error('[Login] create profile failed:', profileErr);
- }
- } else {
- throw signInError;
- }
- }
- } else {
- const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
- email: email.trim(),
- password,
- });
- if (signUpError) throw signUpError;
- if (signUpData.user) {
- const { error: signInAgainError } = await supabase.auth.signInWithPassword({
- email: email.trim(),
- password,
- });
- if (signInAgainError) throw signInAgainError;
- const { error: profileErr } = await writeGateway('CREATE_PROFILE', {
- id: signUpData.user.id,
- username: email.split('@')[0],
- display_name: email.split('@')[0],
- });
- if (profileErr) console.error('[Login] create profile failed:', profileErr);
- }
- }
- show('Sign In Successful', 'success');
- router.replace('/');
- } catch (e: any) {
- setError(e.message || 'Sign In Failed');
- } finally {
- setLoading(false);
- }
- }
+  async function handlePhoneLogin() {
+    if (!phone || !code) return;
+    setSending(true);
+    try {
+      await verifyOtp(`+86${phone}`, code);
+      show('登录成功', 'success');
+      setShowPhoneLogin(false);
+      router.replace('/');
+    } catch (e: any) {
+      show(e.message || '登录失败', 'error');
+    } finally {
+      setSending(false);
+    }
+  }
 
- // ── Back to account step ──
- function handleBack() {
- setStep('email');
- if (loginMethod === 'phone') {
- setCode('');
- } else {
- setPassword('');
- }
- setError('');
- setTimeout(() => inRef.current?.focus(), 100);
- }
+  async function handleEmailLogin() {
+    if (!email || !emailPwd) return;
+    setSending(true);
+    try {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: emailPwd,
+      });
+      if (signInError) {
+        if (signInError.message.includes('Invalid login credentials')) {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: email.trim(),
+            password: emailPwd,
+          });
+          if (signUpError) throw signUpError;
+          if (signUpData.user) {
+            const { error: signInAgainError } = await supabase.auth.signInWithPassword({
+              email: email.trim(),
+              password: emailPwd,
+            });
+            if (signInAgainError) throw signInAgainError;
+            const { error: profileErr } = await writeGateway('CREATE_PROFILE', {
+              id: signUpData.user.id,
+              username: email.split('@')[0],
+              display_name: email.split('@')[0],
+            });
+            if (profileErr) console.error('[Login] create profile failed:', profileErr);
+          }
+        } else {
+          throw signInError;
+        }
+      }
+      show('登录成功', 'success');
+      setShowEmailLogin(false);
+      router.replace('/');
+    } catch (e: any) {
+      show(e.message || '登录失败', 'error');
+    } finally {
+      setSending(false);
+    }
+  }
 
- // ── Phone OTP functions ──
- async function sendCode() {
- if (!/^1\d{10}$/.test(phone)) {
- show('Please enter a valid phone number', 'warning');
- return;
- }
- try {
- await signInWithOtp(`+86${phone}`);
- setCountdown(60);
- const timer = setInterval(() => {
- setCountdown((c) => {
- if (c <= 1) clearInterval(timer);
- return Math.max(0, c - 1);
- });
- }, 1000);
- show('Verification code sent', 'success');
- setStep('password');
- setTimeout(() => inRef.current?.focus(), 100);
- } catch (e: any) {
- setError(e.message || 'Failed to send verification code');
- }
- }
+  function checkTermsScroll(event: any) {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 10) {
+      setTermsScrolled(true);
+    }
+  }
 
- async function handlePhoneLogin() {
- if (!phone ||!code) return;
- setPhoneSending(true);
- try {
- await verifyOtp(`+86${phone}`, code);
- show('Sign In Successful', 'success');
- router.replace('/');
- } catch (e: any) {
- setError(e.message || 'Sign In Failed');
- } finally {
- setPhoneSending(false);
- }
- }
+  function checkPrivacyScroll(event: any) {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 10) {
+      setPrivacyScrolled(true);
+    }
+  }
 
- // ── Agreement scroll handlers ──
- function checkTermsScroll(event: any) {
- const { layoutMeasurement, contentOffset, contentSize } = event.nativeevent;
- if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 10) {
- setTermsScrolled(true);
- }
- }
+  function agreeTerms() {
+    setShowTerms(false);
+    setTermsScrolled(false);
+    setAgreed(true);
+  }
 
- function checkPrivacyScroll(event: any) {
- const { layoutMeasurement, contentOffset, contentSize } = event.nativeevent;
- if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 10) {
- setPrivacyScrolled(true);
- }
- }
+  function agreePrivacy() {
+    setShowPrivacy(false);
+    setPrivacyScrolled(false);
+    setAgreed(true);
+  }
 
- function agreeTerms() {
- setShowTerms(false);
- setTermsScrolled(false);
- setAgreed(true);
- }
+  const renderPhoneModal = () => (
+    <Modal visible={showPhoneLogin} transparent animationType="slide" onRequestClose={() => setShowPhoneLogin(false)}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
+        <TouchableOpacity style={styles.modalOverlayHit} activeOpacity={1} onPress={() => setShowPhoneLogin(false)} />
+        <View style={[styles.modalContent, { paddingBottom: 12 + insets.bottom }]}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity style={styles.modalClose} onPress={() => setShowPhoneLogin(false)}>
+              <CloseIcon size={16} color={colors.muted} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>手机号登录</Text>
+            <View style={{ width: 32 }} />
+          </View>
+          <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>手机号</Text>
+              <View style={styles.inputWrap}>
+                <PhoneIcon size={18} color={colors.muted} />
+                <TextInput
+                  style={styles.formInput}
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="请输入手机号"
+                  keyboardType="phone-pad"
+                  maxLength={11}
+                  placeholderTextColor="rgba(123,123,123,0.5)"
+                />
+              </View>
+            </View>
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>验证码</Text>
+              <View style={styles.inputWrap}>
+                <LockIcon size={18} color={colors.muted} />
+                <TextInput
+                  style={[styles.formInput, styles.codeInput]}
+                  value={code}
+                  onChangeText={setCode}
+                  placeholder="请输入验证码"
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  placeholderTextColor="rgba(123,123,123,0.5)"
+                />
+                <TouchableOpacity
+                  style={[styles.codeBtn, countdown > 0 && styles.codeBtnDisabled]}
+                  disabled={countdown > 0}
+                  onPress={sendCode}
+                >
+                  <Text style={styles.codeBtnText}>{countdown > 0 ? `${countdown}s` : '获取验证码'}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={[styles.authSubmit, (!phone || !code || sending) && styles.authSubmitDisabled]}
+              disabled={!phone || !code || sending}
+              onPress={handlePhoneLogin}
+            >
+              <Text style={styles.authSubmitText}>{sending ? '登录中...' : '登录 / 注册'}</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 
- function agreePrivacy() {
- setShowPrivacy(false);
- setPrivacyScrolled(false);
- setAgreed(true);
- }
+  const renderEmailModal = () => (
+    <Modal visible={showEmailLogin} transparent animationType="slide" onRequestClose={() => setShowEmailLogin(false)}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
+        <TouchableOpacity style={styles.modalOverlayHit} activeOpacity={1} onPress={() => setShowEmailLogin(false)} />
+        <View style={[styles.modalContent, { paddingBottom: 12 + insets.bottom }]}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity style={styles.modalClose} onPress={() => setShowEmailLogin(false)}>
+              <CloseIcon size={16} color={colors.muted} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>邮箱登录</Text>
+            <View style={{ width: 32 }} />
+          </View>
+          <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>邮箱</Text>
+              <View style={styles.inputWrap}>
+                <MailIcon size={18} color={colors.muted} />
+                <TextInput
+                  style={styles.formInput}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="请输入邮箱"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  placeholderTextColor="rgba(123,123,123,0.5)"
+                />
+              </View>
+            </View>
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>密码</Text>
+              <View style={styles.inputWrap}>
+                <LockIcon size={18} color={colors.muted} />
+                <TextInput
+                  style={[styles.formInput, { paddingRight: 50 }]}
+                  value={emailPwd}
+                  onChangeText={setEmailPwd}
+                  placeholder="请输入密码"
+                  secureTextEntry={!showEmailPwd}
+                  placeholderTextColor="rgba(123,123,123,0.5)"
+                />
+                <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowEmailPwd((v) => !v)}>
+                  {showEmailPwd ? <EyeOffIcon size={18} color={colors.muted} /> : <EyeIcon size={18} color={colors.muted} />}
+                </TouchableOpacity>
+              </View>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={[styles.authSubmit, (!email || !emailPwd || sending) && styles.authSubmitDisabled]}
+              disabled={!email || !emailPwd || sending}
+              onPress={handleEmailLogin}
+            >
+              <Text style={styles.authSubmitText}>{sending ? '登录中...' : '登录 / 注册'}</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 
- // ── Toggle login/signup (matches web) ──
- function toggleMode() {
- const newMode = Mode === 'login'? 'signup': 'login';
- setMode(newMode);
- setError('');
- setStep('email');
- setPassword('');
- }
+  const termsBody = (
+    <>
+      <Text style={styles.agreementH3}>一、服务条款</Text>
+      <Text style={styles.agreementP}>欢迎使用 Nuzzly 毛球镇。本应用为宠物主人提供社区交流、产品评测、健康管理等服务。</Text>
+      <Text style={styles.agreementP}>您在使用本应用时，应遵守本协议的各项条款。如果您不同意本协议的任何条款，请停止使用本应用。</Text>
+      <Text style={styles.agreementH3}>二、账号注册</Text>
+      <Text style={styles.agreementP}>您可以通过手机号注册账号。注册成功后，您将获得本应用的使用权。请妥善保管您的账号信息。</Text>
+      <Text style={styles.agreementP}>您应对账号下的所有活动负责。如发现异常登录，请及时联系我们。</Text>
+      <Text style={styles.agreementH3}>三、用户行为</Text>
+      <Text style={styles.agreementP}>用户应遵守中华人民共和国法律法规，不得发布违法违规内容。</Text>
+      <Text style={styles.agreementP}>用户不得发布虚假信息、广告、垃圾内容、色情暴力等违规内容。</Text>
+      <Text style={styles.agreementP}>用户不得恶意攻击、骚扰其他用户，不得侵犯他人合法权益。</Text>
+      <Text style={styles.agreementH3}>四、内容规范</Text>
+      <Text style={styles.agreementP}>用户发布的内容应真实、客观、有价值。产品评测应基于真实使用体验。</Text>
+      <Text style={styles.agreementP}>用户发布的内容版权归原作者所有，本应用有权在合理范围内使用。</Text>
+      <Text style={styles.agreementP}>如用户发布的内容违反本协议，本应用有权删除相关内容并封禁账号。</Text>
+      <Text style={styles.agreementH3}>五、知识产权</Text>
+      <Text style={styles.agreementP}>本应用的界面设计、图标、文字、软件等均为本应用的知识产权，受法律保护。</Text>
+      <Text style={styles.agreementP}>未经授权，任何人不得复制、修改、传播本应用的任何内容。</Text>
+      <Text style={styles.agreementH3}>六、免责声明</Text>
+      <Text style={styles.agreementP}>本应用不对用户发布的内容承担责任。用户应自行判断内容的真实性和可靠性。</Text>
+      <Text style={styles.agreementP}>本应用保留随时修改本协议的权利。修改后的协议将在应用内公布。</Text>
+      <View style={styles.agreementSpacer} />
+    </>
+  );
 
- // ── Come CurvedIn props (single instance, no remounting) ──
- const isPhone = loginMethod === 'phone';
- const isAccountStep = step === 'email';
+  const privacyBody = (
+    <>
+      <Text style={styles.agreementH3}>一、信息收集</Text>
+      <Text style={styles.agreementP}>我们收集以下信息以提供服务：</Text>
+      <Text style={styles.agreementP}>1. 手机号码：用于登录验证和账号安全。</Text>
+      <Text style={styles.agreementP}>2. 设备信息：包括设备型号、操作系统版本，用于优化应用体验。</Text>
+      <Text style={styles.agreementP}>3. 发布内容：您发布的文字、图片等内容。</Text>
+      <Text style={styles.agreementH3}>二、信息使用</Text>
+      <Text style={styles.agreementP}>我们收集的信息将用于：</Text>
+      <Text style={styles.agreementP}>1. 提供、维护和改进我们的服务。</Text>
+      <Text style={styles.agreementP}>2. 验证您的身份，保障账号安全。</Text>
+      <Text style={styles.agreementP}>3. 向您发送服务通知和验证码。</Text>
+      <Text style={styles.agreementP}>4. 根据《网络安全法》要求留存相关内容6个月。</Text>
+      <Text style={styles.agreementH3}>三、信息保护</Text>
+      <Text style={styles.agreementP}>我们采用行业标准的加密技术保护您的个人信息安全。</Text>
+      <Text style={styles.agreementP}>我们不会向第三方出售、出租或交易您的个人信息。</Text>
+      <Text style={styles.agreementP}>我们仅在法律要求或必要情况下披露您的个人信息。</Text>
+      <Text style={styles.agreementH3}>四、信息存储</Text>
+      <Text style={styles.agreementP}>您的个人信息存储在中华人民共和国境内的服务器中。</Text>
+      <Text style={styles.agreementP}>我们将按照法律法规要求的期限保存您的个人信息。</Text>
+      <Text style={styles.agreementH3}>五、您的权利</Text>
+      <Text style={styles.agreementP}>您有权查看、修改、删除您的个人信息。</Text>
+      <Text style={styles.agreementP}>您有权注销账号。账号注销后，我们将停止提供服务并删除您的个人信息。</Text>
+      <Text style={styles.agreementP}>您有权撤回同意。但撤回同意可能导致部分服务无法使用。</Text>
+      <Text style={styles.agreementH3}>六、未成年人保护</Text>
+      <Text style={styles.agreementP}>我们非常重视未成年人个人信息的保护。如您为未成年人，请在监护人指导下使用本应用。</Text>
+      <Text style={styles.agreementH3}>七、政策更新</Text>
+      <Text style={styles.agreementP}>我们可能会不时更新本隐私政策。更新后的政策将在应用内公布。</Text>
+      <View style={styles.agreementSpacer} />
+    </>
+  );
 
- const inValue = isAccountStep? (isPhone? phone: email): (isPhone? code: password);
+  const renderAgreementModal = (
+    visible: boolean,
+    title: string,
+    body: React.ReactNode,
+    scrolled: boolean,
+    onClose: () => void,
+    onAgree: () => void,
+    ref: React.RefObject<ScrollView | null>
+  ) => (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity style={styles.modalOverlayHit} activeOpacity={1} onPress={onClose} />
+        <View style={[styles.modalContent, { paddingBottom: 12 + insets.bottom }]}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity style={styles.modalClose} onPress={onClose}>
+              <CloseIcon size={16} color={colors.muted} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>{title}</Text>
+            <View style={{ width: 32 }} />
+          </View>
+          <ScrollView
+            ref={ref}
+            style={styles.modalBody}
+            onScroll={title === '用户协议' ? checkTermsScroll : checkPrivacyScroll}
+            scrollEventThrottle={16}
+          >
+            {body}
+          </ScrollView>
+          <View style={[styles.modalFooter, { paddingBottom: insets.bottom ? 0 : 12 }]}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={[styles.modalBtn, !scrolled && styles.modalBtnDisabled]}
+              disabled={!scrolled}
+              onPress={onAgree}
+            >
+              <Text style={[styles.modalBtnText, !scrolled && styles.modalBtnTextDisabled]}>
+                {scrolled ? '同意并继续' : '请阅读到底部'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
 
- const inPlaceholder = isAccountStep? (isPhone? 'Enter phone number': 'your@email.com'): (isPhone? 'Enter verification code': 'Enter password');
+  return (
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <ToastContainer toasts={toasts} />
+      <Image source={require('../../assets/images/mqpyqgao-logo.png')} style={styles.watermark} />
 
- const inButtonText = isAccountStep? (isPhone? (countdown > 0? `${countdown}s`: 'Get Code'): 'Next'): (isPhone? (phoneSending? 'Signing in...': 'Sign In'): (Mode === 'login'? 'Sign In': 'Sign Up'));
+      <View style={styles.content}>
+        <View style={styles.logo}>
+          <Image source={require('../../assets/images/hero.png')} style={styles.logoImg} />
+        </View>
+        <Text style={styles.subtitle}>让每一次选择都值得信赖</Text>
 
- const inButtonDisabled = isAccountStep? (isPhone? countdown > 0: false): (isPhone? (!phone ||!code || phoneSending): false);
+        <View style={styles.loginMain}>
+          <TouchableOpacity activeOpacity={0.9} style={styles.btnPrimaryPhone} onPress={handleOneClickLogin}>
+            <PhoneIcon size={18} color="#fff" />
+            <Text style={styles.btnPrimaryPhoneText}>本机号码一键登录</Text>
+          </TouchableOpacity>
 
- const inKeyboardType = isAccountStep? (isPhone? 'phone-pad': 'email-address'): (isPhone? 'number-pad': 'default');
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>其他登录方式</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
- const inMaxLength: number | undefined = isAccountStep? (isPhone? 11: undefined): (isPhone? 6: undefined);
+          <View style={styles.socialRow}>
+            <TouchableOpacity activeOpacity={0.8} style={styles.socialBtn} onPress={handleWechatLogin}>
+              <WechatIcon size={26} />
+            </TouchableOpacity>
+            <TouchableOpacity activeOpacity={0.8} style={styles.socialBtn} onPress={handleQqLogin}>
+              <QQIcon size={26} />
+            </TouchableOpacity>
+          </View>
+        </View>
 
- const inSecureTextEntry =!isAccountStep &&!isPhone;
+        <View style={styles.loginAlt}>
+          <TouchableOpacity onPress={() => setShowPhoneLogin(true)}>
+            <Text style={styles.btnText}>手机号登录</Text>
+          </TouchableOpacity>
+          <Text style={styles.loginAltDot}>·</Text>
+          <TouchableOpacity onPress={() => setShowEmailLogin(true)}>
+            <Text style={styles.btnText}>邮箱登录</Text>
+          </TouchableOpacity>
+        </View>
 
- const inButtonColor = isAccountStep? '#FF7A59': '#8B5E46';
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={styles.agreement}
+          onPress={() => setAgreed((v) => !v)}
+        >
+          <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
+            {agreed && <Text style={styles.checkMark}>✓</Text>}
+          </View>
+          <Text style={styles.agreementText}>
+            登录即同意
+            <Text style={styles.agreementLink} onPress={() => setShowTerms(true)}>
+              《用户协议》
+            </Text>
+            和
+            <Text style={styles.agreementLink} onPress={() => setShowPrivacy(true)}>
+              《隐私政策》
+            </Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
 
- const handleSubmit = () => {
- if (isAccountStep) {
- handleAccountSubmit();
- } else if (isPhone) {
- handlePhoneLogin();
- } else {
- handlePasswordSubmit();
- }
- };
-
- const handleInChange = (v: string) => {
- setError('');
- if (isAccountStep) {
- if (isPhone) setPhone(v);
- else setEmail(v);
- } else {
- if (isPhone) setCode(v);
- else setPassword(v);
- }
- };
-
- // ── Agreement content ──
- const termsBody = (<>
- <Text style={styles.agreementH3}>1. Terms of Service</Text>
- <Text style={styles.agreementP}>Welcome to Nuzzly Town.This app provides pet owners with community interaction, product reviews, and health management services.</Text>
- <Text style={styles.agreementP}>By using this app, you agree to these terms. If you do not agree, please stop using the app.</Text>
- <Text style={styles.agreementH3}>2. Account Registration</Text>
- <Text style={styles.agreementP}>You can register an account using your phone number or email. Please keep your account credentials secure.</Text>
- <Text style={styles.agreementP}>You are responsible for all activities under your account. Please contact us if you notice any unusual login activity.</Text>
- <Text style={styles.agreementH3}>3. User Behavior</Text>
- <Text style={styles.agreementP}>Users must comply with applicable laws and regulations. Do not post illegal or prohibited content.</Text>
- <Text style={styles.agreementP}>Users must not post false information, advertisements, spam, adult content, or violent content.</Text>
- <Text style={styles.agreementP}>Users must not maliciously attack, harass other users, or infringe on others' rights.</Text>
- <Text style={styles.agreementH3}>4. Content Standards</Text>
- <Text style={styles.agreementP}>Posted content should be authentic, objective, and valuable. Product reviews should be based on genuine experiences.</Text>
- <Text style={styles.agreementP}>Users retain copyright of their content. The app may use content within reasonable bounds.</Text>
- <Text style={styles.agreementP}>If content violates this agreement, the app reserves the right to delete it and suspend accounts.</Text>
- <Text style={styles.agreementH3}>5. Intellectual Property</Text>
- <Text style={styles.agreementP}>The app's interface design, icons, text, and software are protected intellectual property.</Text>
- <Text style={styles.agreementP}>No one may copy, modify, or distribute the app's content without authorization.</Text>
- <Text style={styles.agreementH3}>6. Disclaimer</Text>
- <Text style={styles.agreementP}>The app is not responsible for user-posted content. Users should judge content authenticity independently.</Text>
- <Text style={styles.agreementP}>The app reserves the right to modify this agreement. Updates will be published within the app.</Text>
- <View style={styles.agreementSpacer} />
- </>);
-
- const privacyBody = (<>
- <Text style={styles.agreementH3}>1. Information Collection</Text>
- <Text style={styles.agreementP}>We collect the following information to provide our services:</Text>
- <Text style={styles.agreementP}>1. Phone number: Used for login verification and account security.</Text>
- <Text style={styles.agreementP}>2. Device information: Including device Model and OS version, used to optimize app experience.</Text>
- <Text style={styles.agreementP}>3. Posted content: Text and images you post.</Text>
- <Text style={styles.agreementH3}>2. Information Usage</Text>
- <Text style={styles.agreementP}>The information we collect is used for:</Text>
- <Text style={styles.agreementP}>1. Providing, maintaining, and improving our services.</Text>
- <Text style={styles.agreementP}>2. Verifying your identity and ensuring account security.</Text>
- <Text style={styles.agreementP}>3. Sending you service notifications and verification codes.</Text>
- <Text style={styles.agreementP}>4. Retaining relevant content as required by law.</Text>
- <Text style={styles.agreementH3}>3. Information Protection</Text>
- <Text style={styles.agreementP}>We use industry-standard encryption to protect your personal information.</Text>
- <Text style={styles.agreementP}>We will not sell, rent, or trade your personal information to third parties.</Text>
- <Text style={styles.agreementP}>We only disclose personal information when required by law or necessity.</Text>
- <Text style={styles.agreementH3}>4. Data Storage</Text>
- <Text style={styles.agreementP}>Your personal information is stored on secure servers.</Text>
- <Text style={styles.agreementP}>We retain your personal information as required by applicable laws.</Text>
- <Text style={styles.agreementH3}>5. Your Rights</Text>
- <Text style={styles.agreementP}>You have the right to view, modify, and delete your personal information.</Text>
- <Text style={styles.agreementP}>You have the right to delete your account. Upon deletion, we will stop providing services and delete your information.</Text>
- <Text style={styles.agreementP}>You have the right to withdraw consent. However, this may affect service availability.</Text>
- <Text style={styles.agreementH3}>6. Minor Protection</Text>
- <Text style={styles.agreementP}>We take minor protection seriously. If you are a minor, please use this app under guardian supervision.</Text>
- <Text style={styles.agreementH3}>7. Policy Updates</Text>
- <Text style={styles.agreementP}> Not Updatethis Privacy Policy. Updateafter use withinMale. </Text>
- <View style={styles.agreementSpacer} />
- </>);
-
- const renderAgreementModal = (visible: boolean,
- title: string,
- body: React.ReactNode,
- scrolled: boolean,
- onClose: () => void,
- onAgree: () => void,
- ref: React.RefObject<ScrollView | null>) => (<Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
- <View style={styles.modalOverlay}>
- <TouchableOpacity style={styles.modalOverlayHit} activeOpacity={1} onPress={onClose} />
- <View style={[styles.modalContent, { paddingBottom: 12 + insets.bottom }]}>
- <View style={styles.modalHeader}>
- <TouchableOpacity style={styles.modalClose} onPress={onClose}>
- <CloseIcon size={16} color={colors.muted} />
- </TouchableOpacity>
- <Text style={styles.modalTitle}>{title}</Text>
- <View style={{ width: 32 }} />
- </View>
- <ScrollView
- ref={ref}
- style={styles.modalBody}
- onScroll={title === 'Terms of Service'? checkTermsScroll: checkPrivacyScroll}
- scrolleventThrottle={16}
- >
- {body}
- </ScrollView>
- <View style={[styles.modalFooter, { paddingBottom: insets.bottom? 0: 12 }]}>
- <TouchableOpacity
- activeOpacity={0.9}
- style={[styles.modalBtn,!scrolled && styles.modalBtnDisabled]}
- disabled={!scrolled}
- onPress={onAgree}
- >
- <Text style={[styles.modalBtnText,!scrolled && styles.modalBtnTextDisabled]}>
- {scrolled? 'Agree and Continue': 'Please scroll to the bottom'}
- </Text>
- </TouchableOpacity>
- </View>
- </View>
- </View>
- </Modal>);
-
- return (<View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
- <ToastContainer toasts={toasts} />
- <Image source={require('../../assets/images/mqpyqgao-logo.png')} style={styles.watermark} />
-
- <KeyboardAvoidingView
- style={{ flex: 1 }}
- behavior={Platform.OS === 'ios'? 'padding': undefined}
- >
- <ScrollView
- style={{ flex: 1 }}
- contentContainerStyle={styles.scrollContent}
- keyboardShouldPersistTaps="handled"
- keyboardDismissMode="on-drag"
- showsVerticalScrollIndicator={false}
- >
- {/* Logo */}
- <View style={styles.logo}>
- <Image source={require('../../assets/images/hero.png')} style={styles.logoImg} />
- </View>
-
- {/* Title (matches web: "Sign In" / "Sign Up") */}
- <Text style={styles.title}>{Mode === 'login'? 'Sign In': 'Sign Up'}</Text>
-
- {/* ── Login form (matches web LoginForm) ── */}
- <View style={styles.formContainer}>
- {/* Header area: fixed height to prevent layout shift when switching steps */}
- <View style={styles.headerArea}>
- {step === 'email'? (/* Arc icons (only in account step, matches web) */
- <View style={[styles.arcContainer, { height: ARC_HEIGHT }]}>
- {METHODS.map((m, i) => {
- const isActive = loginMethod === m.id;
- const Icon = m.icon;
- const pos = ARC_POSITIONS[i];
- return (<TouchableOpacity
- key={m.id}
- activeOpacity={0.7}
- onPress={() => selectMethod(m.id)}
- style={[styles.arcBtn,
- {
- left: '50%',
- marginLeft: pos.x - BTN_SIZE / 2,
- top: pos.y,
- transform: [{ translateY: isActive? -5: 0 }],
- },]}
- >
- <Icon size={m.size} color="#000000" />
- </TouchableOpacity>);
- })}
- </View>): (/* Password step header (matches web) */
- <View style={styles.pwdHeader}>
- <TouchableOpacity
- onPress={handleBack}
- style={styles.backBtn}
- hitSlop={8}
- >
- <ChevronLeftIcon size={20} color="#6B6B6B" />
- </TouchableOpacity>
- <Text style={styles.pwdSeparator}>|</Text>
- <Text style={styles.pwdEmail} numberOfLines={1}>
- {loginMethod === 'phone'? phone: email}
- </Text>
- </View>)}
- </View>
-
- {/* Single CurvedIn - stays mounted across method/step switches */}
- <CurvedIn
- ref={inRef}
- value={inValue}
- onChangeText={handleInChange}
- onSubmit={handleSubmit}
- onButtonPress={handleSubmit}
- placeholder={inPlaceholder}
- buttonText={inButtonText}
- buttonDisabled={inButtonDisabled}
- secureTextEntry={inSecureTextEntry}
- keyboardType={inKeyboardType}
- maxLength={inMaxLength}
- returnKeyType="go"
- blurOnSubmit
- showButton
- bend={12}
- height={52}
- fontSize={14}
- backgroundColor="#ffffff"
- textColor="#111111"
- placeholderColor="#b0b0b0"
- borderColor="#e5e5e5"
- buttonColor={inButtonColor}
- buttonTextColor="#ffffff"
- shadowColor={inButtonColor}
- />
-
- {/* Status area: fixed height to prevent layout shift */}
- <View style={styles.statusArea}>
- {error? (<Text style={styles.errorText}>{error}</Text>): loading? (<View style={styles.loadingContainer}>
- <ActivityIndicator size="small" color="#8B5E46" />
- </View>): null}
- </View>
-
- {/* Toggle login/signup (only for email method) */}
- {loginMethod === 'email' && (<View style={styles.toggleRow}>
- <Text style={styles.toggleText}>
- {Mode === 'login'? "Don't have an account?": 'Already have an account?'}
- </Text>
- <TouchableOpacity onPress={toggleMode}>
- <Text style={styles.toggleLink}>
- {Mode === 'login'? 'Sign Up Free': 'Sign In Now'}
- </Text>
- </TouchableOpacity>
- </View>)}
- </View>
-
- {/* Agreement checkbox */}
- <TouchableOpacity
- activeOpacity={0.8}
- style={styles.agreement}
- onPress={() => setAgreed((v) =>!v)}
- >
- <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
- {agreed && <Text style={styles.checkMark}>✓</Text>}
- </View>
- <Text style={styles.agreementText}>
- By signing in, you agree to
- <Text style={styles.agreementLink} onPress={() => setShowTerms(true)}>
- Terms of Service
- </Text>
- and
- <Text style={styles.agreementLink} onPress={() => setShowPrivacy(true)}>
- Privacy Policy
- </Text>
- </Text>
- </TouchableOpacity>
- </ScrollView>
- </KeyboardAvoidingView>
-
- {renderAgreementModal(showTerms, 'Terms of Service', termsBody, termsScrolled, () => setShowTerms(false), agreeTerms, termsRef)}
- {renderAgreementModal(showPrivacy,
- 'Privacy Policy',
- privacyBody,
- privacyScrolled,
- () => setShowPrivacy(false),
- agreePrivacy,
- privacyRef)}
- </View>);
+      {renderPhoneModal()}
+      {renderEmailModal()}
+      {renderAgreementModal(showTerms, '用户协议', termsBody, termsScrolled, () => setShowTerms(false), agreeTerms, termsRef)}
+      {renderAgreementModal(
+        showPrivacy,
+        '隐私政策',
+        privacyBody,
+        privacyScrolled,
+        () => setShowPrivacy(false),
+        agreePrivacy,
+        privacyRef
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
- container: {
- flex: 1,
- backgroundColor: colors.bg,
- },
- watermark: {
- position: 'absolute',
- top: -80,
- right: -60,
- width: 280,
- height: 280,
- opacity: 0.04,
- },
- scrollContent: {
- flexGrow: 1,
- alignItems: 'center',
- justifyContent: 'center',
- paddingHorizontal: 32,
- },
- logo: {
- width: 140,
- height: 180,
- marginBottom: 8,
- alignItems: 'center',
- justifyContent: 'center',
- },
- logoImg: {
- width: '100%',
- height: '100%',
- resizeMode: 'contain',
- },
- title: {
- fontSize: 28,
- fontWeight: '700',
- color: '#111111',
- marginTop: 4,
- marginBottom: 24,
- letterSpacing: -0.005,
- },
- formContainer: {
- width: '100%',
- maxWidth: 400,
- alignItems: 'center',
- },
- // ── Header area: fixed height to prevent layout shift ──
- headerArea: {
- width: '100%',
- height: ARC_HEIGHT + 16,
- justifyContent: 'flex-end',
- alignItems: 'center',
- },
- // ── Arc icons (matches web arc layout) ──
- arcContainer: {
- width: '100%',
- position: 'relative',
- },
- arcBtn: {
- position: 'absolute',
- width: BTN_SIZE,
- height: BTN_SIZE,
- alignItems: 'center',
- justifyContent: 'center',
- backgroundColor: 'transparent',
- },
- // ── Password step header (matches web) ──
- pwdHeader: {
- flexDirection: 'row',
- alignItems: 'center',
- justifyContent: 'center',
- gap: 8,
- },
- backBtn: {
- width: 32,
- height: 32,
- alignItems: 'center',
- justifyContent: 'center',
- },
- pwdSeparator: {
- fontSize: 13,
- color: '#999',
- },
- pwdEmail: {
- fontSize: 13,
- color: '#6B6B6B',
- maxWidth: 200,
- },
- // ── Status area: fixed height for error/loading ──
- statusArea: {
- height: 32,
- justifyContent: 'center',
- alignItems: 'center',
- marginTop: 8,
- },
- errorText: {
- fontSize: 13,
- color: '#ff3b30',
- textAlign: 'center',
- },
- loadingContainer: {
- alignItems: 'center',
- justifyContent: 'center',
- },
- // ── Toggle login/signup (matches web) ──
- toggleRow: {
- flexDirection: 'row',
- justifyContent: 'center',
- alignItems: 'center',
- marginTop: 8,
- },
- toggleText: {
- fontSize: 13,
- color: '#6B6B6B',
- },
- toggleLink: {
- fontSize: 13,
- color: '#FF7A59',
- fontWeight: '500',
- },
- // ── Agreement ──
- agreement: {
- marginTop: 24,
- alignSelf: 'center',
- flexDirection: 'row',
- alignItems: 'center',
- gap: 8,
- },
- checkbox: {
- width: 16,
- height: 16,
- borderRadius: 4,
- borderWidth: 1.5,
- borderColor: colors.border,
- alignItems: 'center',
- justifyContent: 'center',
- },
- checkboxChecked: {
- backgroundColor: colors.primary,
- borderColor: colors.primary,
- },
- checkMark: {
- color: '#fff',
- fontSize: 10,
- fontWeight: '700',
- },
- agreementText: {
- flexShrink: 1,
- fontSize: 12,
- color: colors.muted,
- lineHeight: 18,
- },
- agreementLink: {
- color: colors.primary,
- fontWeight: '500',
- },
- // ── Modal styles ──
- modalOverlay: {
- flex: 1,
- backgroundColor: 'rgba(0,0,0,0.5)',
- justifyContent: 'flex-end',
- },
- modalOverlayHit: {
- flex: 1,
- },
- modalContent: {
- width: '100%',
- maxHeight: '85%',
- backgroundColor: colors.bg,
- borderTopLeftRadius: 24,
- borderTopRightRadius: 24,
- overflow: 'hidden',
- },
- modalHeader: {
- flexDirection: 'row',
- alignItems: 'center',
- justifyContent: 'space-between',
- padding: 16,
- paddingHorizontal: 20,
- borderBottomWidth: 1,
- borderBottomColor: colors.sep,
- },
- modalClose: {
- width: 32,
- height: 32,
- borderRadius: 16,
- backgroundColor: 'rgba(0,0,0,0.05)',
- alignItems: 'center',
- justifyContent: 'center',
- },
- modalTitle: {
- fontSize: 16,
- fontWeight: '600',
- color: colors.fg,
- },
- modalBody: {
- padding: 20,
- },
- modalFooter: {
- padding: 12,
- paddingHorizontal: 20,
- borderTopWidth: 1,
- borderTopColor: colors.sep,
- },
- modalBtn: {
- width: '100%',
- height: 48,
- borderRadius: radius.btn,
- backgroundColor: colors.primary,
- alignItems: 'center',
- justifyContent: 'center',...shadows.btn,
- },
- modalBtnDisabled: {
- backgroundColor: colors.muted,
- opacity: 0.4,
- },
- modalBtnText: {
- color: '#fff',
- fontSize: 15,
- fontWeight: '600',
- },
- modalBtnTextDisabled: {
- color: 'rgba(255,255,255,0.8)',
- },
- agreementH3: {
- fontSize: 15,
- fontWeight: '600',
- color: colors.fg,
- marginTop: 16,
- marginBottom: 8,
- },
- agreementP: {
- fontSize: 13,
- lineHeight: 22,
- color: colors.muted,
- marginBottom: 4,
- },
- agreementSpacer: {
- height: 60,
- },
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+  watermark: {
+    position: 'absolute',
+    top: -80,
+    right: -60,
+    width: 280,
+    height: 280,
+    opacity: 0.04,
+    resizeMode: 'contain',
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  logo: {
+    width: 160,
+    height: 160,
+    marginTop: '12%',
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  logoImg: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: colors.muted,
+    marginBottom: 28,
+    letterSpacing: 0.01,
+  },
+  loginMain: {
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  btnPrimaryPhone: {
+    width: '100%',
+    height: 48,
+    borderRadius: radius.btn,
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    ...shadows.btn,
+  },
+  btnPrimaryPhoneText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 0.01,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    width: '100%',
+    marginTop: 20,
+    marginBottom: 16,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    fontSize: 12,
+    color: colors.muted,
+    letterSpacing: 0.02,
+  },
+  socialRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+  },
+  socialBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.card,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.sm,
+  },
+  loginAlt: {
+    marginTop: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  btnText: {
+    backgroundColor: 'transparent',
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '500',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    letterSpacing: 0.01,
+  },
+  loginAltDot: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  agreement: {
+    marginTop: 20,
+    maxWidth: 320,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  checkbox: {
+    width: 16,
+    height: 16,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    marginTop: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  checkMark: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  agreementText: {
+    flex: 1,
+    fontSize: 12,
+    color: colors.muted,
+    lineHeight: 18,
+  },
+  agreementLink: {
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalOverlayHit: {
+    flex: 1,
+  },
+  modalContent: {
+    width: '100%',
+    maxHeight: '85%',
+    backgroundColor: colors.bg,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.sep,
+  },
+  modalClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.fg,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  modalFooter: {
+    padding: 12,
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.sep,
+  },
+  modalBtn: {
+    width: '100%',
+    height: 48,
+    borderRadius: radius.btn,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.btn,
+  },
+  modalBtnDisabled: {
+    backgroundColor: colors.muted,
+    opacity: 0.4,
+  },
+  modalBtnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  modalBtnTextDisabled: {
+    color: 'rgba(255,255,255,0.8)',
+  },
+  formGroup: {
+    marginBottom: 16,
+  },
+  formLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.muted,
+    letterSpacing: 0.02,
+    marginBottom: 6,
+    paddingLeft: 4,
+  },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 48,
+    borderRadius: radius.btn,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    paddingHorizontal: 14,
+    gap: 10,
+  },
+  formInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 15,
+    color: colors.fg,
+  },
+  codeInput: {
+    paddingRight: 90,
+  },
+  codeBtn: {
+    position: 'absolute',
+    right: 8,
+    paddingHorizontal: 12,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  codeBtnDisabled: {
+    opacity: 0.4,
+  },
+  codeBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  eyeBtn: {
+    position: 'absolute',
+    right: 11,
+    padding: 4,
+  },
+  authSubmit: {
+    width: '100%',
+    height: 48,
+    borderRadius: radius.btn,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.btn,
+    marginTop: 8,
+  },
+  authSubmitDisabled: {
+    opacity: 0.45,
+  },
+  authSubmitText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  agreementH3: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.fg,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  agreementP: {
+    fontSize: 13,
+    lineHeight: 22,
+    color: colors.muted,
+    marginBottom: 4,
+  },
+  agreementSpacer: {
+    height: 60,
+  },
 });

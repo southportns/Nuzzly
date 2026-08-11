@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextIn, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PageHeader from '../../src/components/PageHeader';
 import EmptyState from '../../src/components/EmptyState';
-import { useFollowingups } from '../../src/hooks/useFollowingups';
+import { useFollowups } from '../../src/hooks/useFollowups';
 import { colors, spacing, radius, typography, shadows, sizes } from '../../src/theme/tokens';
 
 const STEP_LABELS = ['', '', '', '', ''];
@@ -38,7 +38,7 @@ export default function FollowingupCreate() {
  const router = useRouter();
  const { id } = useLocalSearchParams<{ id: string }>();
  const insets = useSafeAreaInsets();
- const { submitting, fetchSchedule, submitFollowingupEntry } = useFollowingups();
+ const { submitting, fetchSchedule, submitFollowupEntry } = useFollowups();
 
  const [schedule, setSchedule] = useState<any>(null);
  const [loading, setLoading] = useState(true);
@@ -78,7 +78,7 @@ export default function FollowingupCreate() {
  const handleSubmit = useCallback(async () => {
  if (submitting) return;
  try {
- await submitFollowingupEntry({
+ await submitFollowupEntry({
  schedule_id: id!,
  stool_status: form.stool_status,
  coat_status: form.coat_status,
@@ -91,7 +91,7 @@ export default function FollowingupCreate() {
  } catch (e: any) {
  console.error('[FollowingupCreate] submit error:', e.message);
  }
- }, [id, form, submitting, submitFollowingupEntry, router]);
+ }, [id, form, submitting, submitFollowupEntry, router]);
 
  useEffect(() => {
  if (!id) return;
@@ -264,7 +264,7 @@ export default function FollowingupCreate() {
  </View>
  <View style={styles.formGroup}>
  <Text style={styles.formLabel}>still whatthink?(Optional)</Text>
- <TextIn
+ <TextInput
  style={styles.formTextarea}
  value={form.health_notes}
  onChangeText={(text) => setForm((prev) => ({...prev, health_notes: text }))}

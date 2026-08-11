@@ -18,11 +18,11 @@ export interface PetAttachment {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  photo: 'Photo',
-  medical: 'Medical Record',
-  vaccine: 'Vaccine Certificate',
-  document: 'Document',
-  other: 'Other',
+  photo: '照片',
+  medical: '医疗文件',
+  vaccine: '疫苗证明',
+  document: '证件',
+  other: '其他',
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -65,7 +65,7 @@ export function usePetAttachments() {
     category?: string;
   }) => {
     const uid = await getUid();
-    if (!uid) throw new Error('Not Sign In');
+    if (!uid) throw new Error('未登录');
 
     const fileExt = payload.file.name.split('.').pop() || '';
     const fileName = `${payload.pet_id}/${Date.now()}.${fileExt}`;
@@ -112,7 +112,7 @@ export function usePetAttachments() {
 
   const deleteAttachment = useCallback(async (id: string) => {
     const attachment = attachments.find((a) => a.id === id);
-    if (!attachment) throw new Error('Attachment not found');
+    if (!attachment) throw new Error('附件不存在');
 
     await writeGateway('DELETE_PET_ATTACHMENT', { id });
     if (attachment.file_path) {
@@ -127,11 +127,11 @@ export function usePetAttachments() {
     return data?.publicUrl;
   }, []);
 
-  const getCategoryLabel = useCallback((category?: string) => CATEGORY_LABELS[category || ''] || category || 'Other', []);
+  const getCategoryLabel = useCallback((category?: string) => CATEGORY_LABELS[category || ''] || category || '其他', []);
   const getCategoryIcon = useCallback((category?: string) => CATEGORY_ICONS[category || ''] || '📎', []);
 
   const formatFileSize = useCallback((bytes?: number) => {
-    if (bytes == null) return 'Unknown';
+    if (bytes == null) return '未知';
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
