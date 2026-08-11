@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Nuzzly",
+    "name": "Nuzzly Town",
     "slug": "nuzzly-expo",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,7 +9,10 @@
     "scheme": "nuzzly",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nuzzly.app"
+      "bundleIdentifier": "com.nuzzly.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.nuzzly.app",
@@ -27,14 +30,26 @@
     },
     "plugins": [
       "expo-router",
-      "expo-status-bar",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "expo-updates"
     ],
+    "updates": {
+      "url": "https://u.expo.dev/f00ea2f7-8e11-4ff5-9bde-31078c5d2a65",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD"
+    },
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "f00ea2f7-8e11-4ff5-9bde-31078c5d2a65"
       }
+    },
+    "owner": "petrwd",
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }
