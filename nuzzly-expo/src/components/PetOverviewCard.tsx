@@ -62,7 +62,7 @@ function formatAgeFromDate(birthDate: string | null | undefined): string | null 
 
 function formatPetAge(pet: Pet): string {
  if (pet.birth_date) return formatAgeFromDate(pet.birth_date)?? '-';
- return `${pet.age_Y?? 0}Y old${pet.age_months?? 0}months`;
+ return `${pet.age_years ?? 0}岁 ${pet.age_months ?? 0}月`;
 }
 
 function calcDays(dateStr: string | null | undefined): number | null {

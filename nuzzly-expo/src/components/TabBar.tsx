@@ -1,14 +1,15 @@
 import { View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, usePathname } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, shadows } from '../theme/tokens';
 
 const tabs = [
-  { key: 'home', label: '首页', icon: require('../../assets/images/毛球镇.png'), href: '/' },
-  { key: 'community', label: '社区', icon: require('../../assets/images/管家 (1).svg'), href: '/community' },
-  { key: 'ai', label: 'AI', center: true, icon: require('../../assets/images/喂食碗.svg'), href: '/ai' },
-  { key: 'products', label: '产品', icon: require('../../assets/images/设置.png'), href: '/products' },
-  { key: 'profile', label: '我的', icon: require('../../assets/images/导航栏.png'), href: '/profile' },
+  { key: 'home', label: '首页', icon: 'home' as const, href: '/' },
+  { key: 'products', label: '产品', icon: 'cube' as const, href: '/products' },
+  { key: 'community', label: '', center: true, href: '/community' },
+  { key: 'ai', label: '镇长', icon: 'paw' as const, href: '/ai' },
+  { key: 'profile', label: '我的', icon: 'person' as const, href: '/profile' },
 ];
 
 export default function TabBar() {
@@ -25,28 +26,38 @@ export default function TabBar() {
     <View style={[styles.container, { bottom: 8 + insets.bottom }]}>
       {tabs.map((tab) => {
         const isActive = active(tab.href);
+
         if (tab.center) {
           return (
             <TouchableOpacity
               key={tab.key}
               activeOpacity={0.8}
-              onPress={() => router.push(tab.href)}
+              onPress={() => router.push(tab.href as any)}
               style={styles.centerBtn}
             >
               <View style={styles.centerCircle}>
-                <Image source={tab.icon} style={styles.centerIcon} />
+                <Image
+                  source={require('../../assets/images/daohanglogo.png')}
+                  style={styles.centerLogo}
+                  resizeMode="contain"
+                />
               </View>
             </TouchableOpacity>
           );
         }
+
         return (
           <TouchableOpacity
             key={tab.key}
             activeOpacity={0.7}
-            onPress={() => router.push(tab.href)}
+            onPress={() => router.push(tab.href as any)}
             style={styles.tabItem}
           >
-            <Image source={tab.icon} style={[styles.icon, isActive && styles.activeIcon]} />
+            <Ionicons
+              name={isActive ? tab.icon : (`${tab.icon}-outline` as any)}
+              size={22}
+              color={isActive ? colors.primary : colors.muted}
+            />
             <Text style={[styles.label, isActive && styles.activeLabel]}>{tab.label}</Text>
             {isActive && <View style={styles.dot} />}
           </TouchableOpacity>
@@ -79,15 +90,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     position: 'relative',
   },
-  icon: {
-    width: 24,
-    height: 24,
-    tintColor: colors.muted,
-    resizeMode: 'contain',
-  },
-  activeIcon: {
-    tintColor: colors.primary,
-  },
   label: {
     fontSize: 10,
     color: colors.muted,
@@ -113,15 +115,12 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary,
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.btn,
   },
-  centerIcon: {
-    width: 32,
-    height: 32,
-    tintColor: '#fff',
-    resizeMode: 'contain',
+  centerLogo: {
+    width: 65,
+    height: 65,
   },
 });
