@@ -23,7 +23,14 @@ eventsProcessed: number
 // ─── Projection Validator ─────────────────────────────────────────────────
 
 export class ProjectionValidator {
-private admin = createAdminClient()
+private admin: ReturnType<typeof createAdminClient> | null = null
+
+private getAdmin() {
+  if (!this.admin) {
+    this.admin = createAdminClient()
+  }
+  return this.admin
+}
 
 /**
 * Validate a single projection for consistency.
@@ -38,7 +45,7 @@ throw new Error(`[ProjectionValidator] Unknown projection: ${projectionName}`)
 const currentState = await projectionStore.getState(projectionName)
 
 // 2. Count total events in store for this projection's event types
-const { count: totalEvents, error: countError } = await (this.admin as any).from("event_store").select("*", { count: "exact", head: true }).in("event_type", def.eventTypes)
+const { count: totalEvents, error: countError } = await (this.getAdmin() as any).from("event_store").select("*", { count: "exact", head: true }).in("event_type", def.eventTypes)
 
 if (countError) {
 throw new Error(`[ProjectionValidator] failed to count events: ${countError.message}`)
@@ -117,19 +124,19 @@ private async findMissingEvents(def: { name: string; eventTypes: string[] },
 lastProcessedEventId: string | null): Promise<string[]> {
 if (!lastProcessedEventId) {
 // No events processed yet — check if there are any events at all
-const { data, error } = await (this.admin as any).from("event_store").select("event_id").in("event_type", def.eventTypes).limit(100).order("created_at", { ascending: true })
+const { data, error } = await (this.getAdmin() as any).from("event_store").select("event_id").in("event_type", def.eventTypes).limit(100).order("created_at", { ascending: true })
 
 if (error) return []
 return (data?? []).map((r: Record<string, unknown>) => r.event_id as string)
 }
 
 // Get the timestamp of last processed event
-const { data: lastEvent, error: lastError } = await (this.admin as any).from("event_store").select("created_at").eq("event_id", lastProcessedEventId).single()
+const { data: lastEvent, error: lastError } = await (this.getAdmin() as any).from("event_store").select("created_at").eq("event_id", lastProcessedEventId).single()
 
 if (lastError ||!lastEvent) return []
 
 // Find events after that timestamp
-const { data, error } = await (this.admin as any).from("event_store").select("event_id").in("event_type", def.eventTypes).gt("created_at", (lastEvent as Record<string, unknown>).created_at as string).order("created_at", { ascending: true })
+const { data, error } = await (this.getAdmin() as any).from("event_store").select("event_id").in("event_type", def.eventTypes).gt("created_at", (lastEvent as Record<string, unknown>).created_at as string).order("created_at", { ascending: true })
 
 if (error) return []
 return (data?? []).map((r: Record<string, unknown>) => r.event_id as string)

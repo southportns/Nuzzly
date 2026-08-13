@@ -266,7 +266,7 @@ return
 }
 
 // Load the event from Event Store
-const { data: eventData, error } = await (admin as any).from("event_store").select("*").eq("event_id", eventId).single()
+const { data: eventData, error } = await (getAdminClient() as any).from("event_store").select("*").eq("event_id", eventId).single()
 
 if (error ||!eventData) {
 console.error(`[ProjectionJob] failed to load event ${eventId}: ${error?.message}`)

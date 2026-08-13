@@ -22,13 +22,20 @@ createdAt: string
 // ─── Projection Store ──────────────────────────────────────────────────────
 
 export class ProjectionStore {
-private admin = createAdminClient()
+private admin: ReturnType<typeof createAdminClient> | null = null
+
+private getAdmin() {
+  if (!this.admin) {
+    this.admin = createAdminClient()
+  }
+  return this.admin
+}
 
 /**
 * Get current state for a projection.
 */
 async getState<T>(projectionName: string): Promise<ProjectionState<T>> {
-const { data, error } = await (this.admin as any).rpc("projection_get_state", {
+const { data, error } = await (this.getAdmin() as any).rpc("projection_get_state", {
 p_name: projectionName,
 })
 
@@ -59,7 +66,7 @@ async setState<T>(projectionName: string,
 version: number,
 eventId: string | null,
 state: T): Promise<void> {
-const { error } = await (this.admin as any).rpc("projection_upsert_state", {
+const { error } = await (this.getAdmin() as any).rpc("projection_upsert_state", {
 p_name: projectionName,
 p_version: version,
 p_event_id: eventId,
@@ -78,7 +85,7 @@ async createCheckpoint<T>(projectionName: string,
 version: number,
 eventId: string,
 snapshot: T): Promise<string> {
-const { data, error } = await (this.admin as any).rpc("projection_create_checkpoint", {
+const { data, error } = await (this.getAdmin() as any).rpc("projection_create_checkpoint", {
 p_name: projectionName,
 p_version: version,
 p_event_id: eventId,
@@ -96,7 +103,7 @@ return data as string
 * Get latest checkpoint for a projection.
 */
 async getLatestCheckpoint(projectionName: string): Promise<Checkpointrecords | null> {
-const { data, error } = await (this.admin as any).rpc("projection_get_latest_checkpoint", {
+const { data, error } = await (this.getAdmin() as any).rpc("projection_get_latest_checkpoint", {
 p_name: projectionName,
 })
 
@@ -121,7 +128,7 @@ createdAt: row.created_at as string,
 * Reset a projection — deletes state and all checkpoints.
 */
 async reset(projectionName: string): Promise<void> {
-const { error } = await (this.admin as any).rpc("projection_reset", {
+const { error } = await (this.getAdmin() as any).rpc("projection_reset", {
 p_name: projectionName,
 })
 

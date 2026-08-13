@@ -24,7 +24,14 @@ finalState: unknown
 // ─── Projection Rebuilder ──────────────────────────────────────────────────
 
 export class ProjectionRebuilder {
-private admin = createAdminClient()
+private admin: ReturnType<typeof createAdminClient> | null = null
+
+private getAdmin() {
+  if (!this.admin) {
+    this.admin = createAdminClient()
+  }
+  return this.admin
+}
 
 /**
 * Full rebuild: reset and replay all events for a projection.
@@ -95,7 +102,7 @@ throw new Error(`[ProjectionRebuilder] Unknown projection: ${projectionName}`)
 }
 
 // Load events for this aggregate
-const { data, error } = await (this.admin as any).from("event_store").select("*").eq("aggregate_id", aggregateId).in("event_type", def.eventTypes).order("created_at", { ascending: true })
+const { data, error } = await (this.getAdmin() as any).from("event_store").select("*").eq("aggregate_id", aggregateId).in("event_type", def.eventTypes).order("created_at", { ascending: true })
 
 if (error) {
 throw new Error(`[ProjectionRebuilder] failed to load events: ${error.message}`)
@@ -121,7 +128,7 @@ finalState: state,
 * Useful for debugging causal chains.
 */
 async replayByCorrelation(correlationId: string): Promise<ProjectionEvent[]> {
-const { data, error } = await (this.admin as any).from("event_store").select("*").eq("metadata->>correlation_id", correlationId).order("created_at", { ascending: true })
+const { data, error } = await (this.getAdmin() as any).from("event_store").select("*").eq("metadata->>correlation_id", correlationId).order("created_at", { ascending: true })
 
 if (error) {
 throw new Error(`[ProjectionRebuilder] failed to load events: ${error.message}`)
@@ -177,7 +184,7 @@ return this.rebuild(projectionName)
 // ─── Private Helpers ──────────────────────────────────────────────────
 
 private async loadAllEvents(def: ProjectionDefinition): Promise<ProjectionEvent[]> {
-const { data, error } = await (this.admin as any).from("event_store").select("*").in("event_type", def.eventTypes).order("created_at", { ascending: true })
+const { data, error } = await (this.getAdmin() as any).from("event_store").select("*").in("event_type", def.eventTypes).order("created_at", { ascending: true })
 
 if (error) {
 throw new Error(`[ProjectionRebuilder] failed to load events: ${error.message}`)
@@ -188,7 +195,7 @@ return (data?? []).map(this.toProjectionEvent)
 
 private async loadEventsAfter(def: ProjectionDefinition,
 afterTimestamp: string): Promise<ProjectionEvent[]> {
-const { data, error } = await (this.admin as any).from("event_store").select("*").in("event_type", def.eventTypes).gt("created_at", afterTimestamp).order("created_at", { ascending: true })
+const { data, error } = await (this.getAdmin() as any).from("event_store").select("*").in("event_type", def.eventTypes).gt("created_at", afterTimestamp).order("created_at", { ascending: true })
 
 if (error) {
 throw new Error(`[ProjectionRebuilder] failed to load events after checkpoint: ${error.message}`)

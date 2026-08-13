@@ -51,10 +51,17 @@ version: number
 // ─── Event Store ────────────────────────────────────────────────────────────
 
 export class EventStore {
-private admin = createAdminClient()
+private admin: ReturnType<typeof createAdminClient> | null = null
+
+private getAdmin() {
+  if (!this.admin) {
+    this.admin = createAdminClient()
+  }
+  return this.admin
+}
 
 async append(event: Omit<DomainEvent, "event_id">): Promise<string> {
-const { data, error } = await (this.admin as any).rpc("event_store_append", {
+const { data, error } = await (this.getAdmin() as any).rpc("event_store_append", {
 p_event_type: event.event_type,
 p_aggregate_id: event.aggregate_id as string,
 p_aggregate_type: event.aggregate_type,
@@ -73,7 +80,7 @@ return data as string
 }
 
 async queryByCorrelation(correlationId: string): Promise<DomainEvent[]> {
-const { data, error } = await (this.admin as any).rpc("event_store_query_by_correlation", {
+const { data, error } = await (this.getAdmin() as any).rpc("event_store_query_by_correlation", {
 p_correlation_id: correlationId,
 })
 
@@ -85,7 +92,7 @@ return (data as unknown[]).map(this.toDomainEvent)
 }
 
 async queryByCausation(causationId: string): Promise<DomainEvent[]> {
-const { data, error } = await (this.admin as any).rpc("event_store_query_by_causation", {
+const { data, error } = await (this.getAdmin() as any).rpc("event_store_query_by_causation", {
 p_causation_id: causationId,
 })
 
@@ -97,7 +104,7 @@ return (data as unknown[]).map(this.toDomainEvent)
 }
 
 async queryByDecision(decisionId: string): Promise<DomainEvent[]> {
-const { data, error } = await (this.admin as any).rpc("event_store_query_by_decision", {
+const { data, error } = await (this.getAdmin() as any).rpc("event_store_query_by_decision", {
 p_decision_id: decisionId,
 })
 

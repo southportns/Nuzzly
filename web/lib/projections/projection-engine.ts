@@ -26,7 +26,14 @@ processed: boolean
 // ─── Projection Engine ─────────────────────────────────────────────────────
 
 export class ProjectionEngine {
-private admin = createAdminClient()
+private admin: ReturnType<typeof createAdminClient> | null = null
+
+private getAdmin() {
+  if (!this.admin) {
+    this.admin = createAdminClient()
+  }
+  return this.admin
+}
 
 /**
 * Process a single event through all matching projections.
@@ -147,7 +154,7 @@ let events: ProjectionEvent[] = []
 
 if (checkpoint) {
 // Load events after checkpoint
-const { data, error } = await this.admin.from("event_store").select("*").in("event_type", def.eventTypes).gt("created_at", checkpoint.createdAt).order("created_at", { ascending: true })
+const { data, error } = await this.getAdmin().from("event_store").select("*").in("event_type", def.eventTypes).gt("created_at", checkpoint.createdAt).order("created_at", { ascending: true })
 
 if (error) {
 throw new Error(`[ProjectionEngine] failed to load events after checkpoint: ${error.message}`)
@@ -156,7 +163,7 @@ throw new Error(`[ProjectionEngine] failed to load events after checkpoint: ${er
 events = (data?? []).map(this.toProjectionEvent)
 } else {
 // Load all events
-const { data, error } = await this.admin.from("event_store").select("*").in("event_type", def.eventTypes).order("created_at", { ascending: true })
+const { data, error } = await this.getAdmin().from("event_store").select("*").in("event_type", def.eventTypes).order("created_at", { ascending: true })
 
 if (error) {
 throw new Error(`[ProjectionEngine] failed to load events: ${error.message}`)
