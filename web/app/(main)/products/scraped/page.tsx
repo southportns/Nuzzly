@@ -1,4 +1,4 @@
-import { readFileSync } from "fs"
+import { readFileSync, existsSync } from "fs"
 import { join } from "path"
 
 interface ScrapedProduct {
@@ -17,12 +17,15 @@ sourcePlatform: string
 }
 
 function getScrapedProducts(): ScrapedProduct[] {
-try {
 const filePath = join(process.cwd(), "../scripts/scraper/output/products.json")
+if (!existsSync(filePath)) {
+return []
+}
+try {
 const data = readFileSync(filePath, "utf-8")
 return JSON.parse(data)
 } catch (error) {
-console.error("failed to load scraped products:", error)
+console.error("failed to parse scraped products:", error)
 return []
 }
 }
