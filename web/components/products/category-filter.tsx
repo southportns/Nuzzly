@@ -2,14 +2,19 @@
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useTranslations, useLocale } from "next-intl"
 
 interface Category {
   id: string
   name: string
+  name_en: string | null
   slug: string
 }
 
 export function CategoryFilter({ categories }: { categories: Category[] }) {
+  const t = useTranslations("Product")
+  const locale = useLocale() as string
+  const isEn = locale === "en"
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const router = useRouter()
@@ -37,7 +42,7 @@ export function CategoryFilter({ categories }: { categories: Category[] }) {
             : "bg-[#F0EFED] text-[#111111] hover:bg-[#E5E4E2]"
         )}
       >
-        全部
+        {t("allCategories")}
       </button>
       {categories.map((cat) => (
         <button
@@ -51,7 +56,7 @@ export function CategoryFilter({ categories }: { categories: Category[] }) {
               : "bg-[#F0EFED] text-[#111111] hover:bg-[#E5E4E2]"
           )}
         >
-          {cat.name}
+          {isEn && cat.name_en ? cat.name_en : cat.name}
         </button>
       ))}
     </div>

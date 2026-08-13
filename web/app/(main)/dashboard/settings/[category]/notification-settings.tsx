@@ -14,37 +14,37 @@ export default function NotificationSettings() {
 
   const handleSave = () => {
     localStorage.setItem("nuzzly_notif", JSON.stringify(notif))
-    alert("通知设置已保存")
+    alert("Notification settings saved")
   }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-[28px] font-semibold leading-[1.1] tracking-normal text-[#111111]">
-          通知
+          Notifications
         </h1>
-        <p className="mt-2 text-[14px] text-[#6B6B6B]">管理你的通知偏好</p>
+        <p className="mt-2 text-[14px] text-[#6B6B6B]">Manage your notification preferences</p>
       </div>
 
       <SettingsCard>
         <div className="divide-y divide-[rgba(0,0,0,0.04)]">
           <SettingsToggle
-            label="推送通知"
+            label="Push Notifications"
             checked={notif.push}
             onChange={(checked) => setNotif({ ...notif, push: checked })}
           />
           <SettingsToggle
-            label="饮食提醒"
+            label="Diet Reminders"
             checked={notif.diet}
             onChange={(checked) => setNotif({ ...notif, diet: checked })}
           />
           <SettingsToggle
-            label="疫苗提醒"
+            label="Vaccine Reminders"
             checked={notif.vaccine}
             onChange={(checked) => setNotif({ ...notif, vaccine: checked })}
           />
           <SettingsToggle
-            label="社区互动"
+            label="Community Activity"
             checked={notif.social}
             onChange={(checked) => setNotif({ ...notif, social: checked })}
           />
@@ -55,7 +55,7 @@ export default function NotificationSettings() {
         onClick={handleSave}
         className="w-full rounded-full bg-[#FF7A59] py-3 text-[15px] font-semibold text-white transition-colors hover:bg-[#E86A4A]"
       >
-        保存
+        Save
       </button>
     </div>
   )

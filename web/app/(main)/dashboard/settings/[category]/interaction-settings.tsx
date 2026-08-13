@@ -14,37 +14,37 @@ export default function InteractionSettings() {
 
   const handleSave = () => {
     localStorage.setItem("nuzzly_interaction", JSON.stringify(interaction))
-    alert("互动设置已保存")
+    alert("Interaction settings saved")
   }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-[28px] font-semibold leading-[1.1] tracking-normal text-[#111111]">
-          互动设置
+          Interaction Settings
         </h1>
-        <p className="mt-2 text-[14px] text-[#6B6B6B]">管理你的社区互动偏好</p>
+        <p className="mt-2 text-[14px] text-[#6B6B6B]">Manage your community interaction preferences</p>
       </div>
 
       <SettingsCard>
         <div className="divide-y divide-[rgba(0,0,0,0.04)]">
           <SettingsToggle
-            label="允许评论"
+            label="Allow Comments"
             checked={interaction.allowComment}
             onChange={(checked) => setInteraction({ ...interaction, allowComment: checked })}
           />
           <SettingsToggle
-            label="允许关注"
+            label="Allow Follows"
             checked={interaction.allowFollow}
             onChange={(checked) => setInteraction({ ...interaction, allowFollow: checked })}
           />
           <SettingsToggle
-            label="点赞通知"
+            label="Like Notifications"
             checked={interaction.likeNotify}
             onChange={(checked) => setInteraction({ ...interaction, likeNotify: checked })}
           />
           <SettingsToggle
-            label="评论通知"
+            label="Comment Notifications"
             checked={interaction.commentNotify}
             onChange={(checked) => setInteraction({ ...interaction, commentNotify: checked })}
           />
@@ -55,7 +55,7 @@ export default function InteractionSettings() {
         onClick={handleSave}
         className="w-full rounded-full bg-[#FF7A59] py-3 text-[15px] font-semibold text-white transition-colors hover:bg-[#E86A4A]"
       >
-        保存
+        Save
       </button>
     </div>
   )

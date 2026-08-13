@@ -4,17 +4,19 @@ import { emojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-
-const tabs = [
-  { href: "/", label: "首页", icon: emojiIcon("Home") },
-  { href: "/products", label: "产品库", icon: emojiIcon("Search") },
-  { href: "/products/review", label: "发布", icon: emojiIcon("PlusCircle") },
-  { href: "/ai", label: "AI助手", icon: emojiIcon("Sparkles") },
-  { href: "/dashboard", label: "我的", icon: emojiIcon("User") },
-]
+import { useTranslations } from "next-intl"
 
 export function BottomNav() {
   const pathname = usePathname()
+  const t = useTranslations("Nav")
+
+  const tabs = [
+    { href: "/", label: t("home"), icon: emojiIcon("Home") },
+    { href: "/products", label: t("products"), icon: emojiIcon("Search") },
+    { href: "/products/review", label: t("publish"), icon: emojiIcon("PlusCircle") },
+    { href: "/ai", label: t("aiAssistant"), icon: emojiIcon("Sparkles") },
+    { href: "/dashboard", label: t("my"), icon: emojiIcon("User") },
+  ]
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-background/90 backdrop-blur-xl md:hidden" style={{ paddingBottom: "var(--safe-bottom)" }}>

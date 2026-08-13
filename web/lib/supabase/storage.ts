@@ -79,7 +79,7 @@ export async function uploadPetAvatar(
   petId: string
 ): Promise<UploadResult> {
   const result = await uploadFile(BUCKETS.petAvatars, file, `${userId}/${petId}`)
-  // 添加缓存破坏参数，防止 Next.js Image 组件缓存旧图片
+  // Add cache-busting parameter to prevent Next.js Image component from caching old images
   if (result.url) {
     result.url = `${result.url}?t=${Date.now()}`
   }
@@ -97,30 +97,30 @@ export async function deletePetAvatar(
   userId: string,
   path: string
 ): Promise<{ error: string | null }> {
-  // 移除可能存在的缓存破坏参数
+  // Remove any existing cache-busting parameter
   const cleanPath = path.split("?")[0]
 
-  // 如果是完整 URL，提取路径部分
+  // If it's a full URL, extract the path portion
   if (cleanPath.startsWith("http")) {
     try {
       const url = new URL(cleanPath)
-      // 路径格式: /storage/v1/object/public/pet-avatars/userId/petId/filename.jpg
+      // Path format: /storage/v1/object/public/pet-avatars/userId/petId/filename.jpg
       const pathMatch = url.pathname.match(/\/pet-avatars\/(.+)$/)
       if (pathMatch) {
         return deleteFile(BUCKETS.petAvatars, pathMatch[1])
       }
     } catch {
-      // URL 解析失败，尝试其他方式
+      // URL parsing failed, try other methods
     }
   }
 
-  // 如果是相对路径，格式: userId/petId/filename.jpg 或 userId/petId/filename.jpg?t=xxx
+  // If it's a relative path, format: userId/petId/filename.jpg or userId/petId/filename.jpg?t=xxx
   const parts = cleanPath.split("/")
   if (parts.length >= 3) {
     return deleteFile(BUCKETS.petAvatars, `${parts[parts.length - 3]}/${parts[parts.length - 2]}/${parts[parts.length - 1]}`)
   }
 
-  // 如果只有 filename，使用 userId 作为前缀
+  // If only filename is available, use userId as prefix
   return deleteFile(BUCKETS.petAvatars, `${userId}/${parts[parts.length - 1]}`)
 }
 

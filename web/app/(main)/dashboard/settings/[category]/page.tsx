@@ -13,49 +13,49 @@ import AboutSettings from "./about-settings"
 import FeedbackSettings from "./feedback-settings"
 
 export const metadata = {
-  title: "设置 — Nuzzly毛球镇",
+ title: "Settings — Nuzzly Town",
 }
 
 const validCategories = [
-  "account",
-  "membership",
-  "language",
-  "fontsize",
-  "notification",
-  "general",
-  "privacy",
-  "content",
-  "interaction",
-  "about",
-  "feedback",
+ "account",
+ "membership",
+ "language",
+ "fontsize",
+ "notification",
+ "general",
+ "privacy",
+ "content",
+ "interaction",
+ "about",
+ "feedback",
 ]
 
 export default async function SettingsCategoryPage({
-  params,
+ params,
 }: {
-  params: Promise<{ category: string }>
+ params: Promise<{ category: string }>
 }) {
-  const { category } = await params
-  const { data: { user } } = await getUser()
-  if (!user) redirect("/login")
+ const { category } = await params
+ const { data: { user } } = await getUser()
+ if (!user) redirect("/login")
 
-  if (!validCategories.includes(category)) {
-    redirect("/dashboard/settings")
-  }
+ if (!validCategories.includes(category)) {
+ redirect("/dashboard/settings")
+ }
 
-  const componentMap = {
-    account: <AccountSettings user={user} />,
-    membership: <MembershipSettings />,
-    language: <LanguageSettings />,
-    fontsize: <FontSizeSettings />,
-    notification: <NotificationSettings />,
-    general: <GeneralSettings />,
-    privacy: <PrivacySettings />,
-    content: <ContentSettings />,
-    interaction: <InteractionSettings />,
-    about: <AboutSettings />,
-    feedback: <FeedbackSettings />,
-  }
+ const componentMap = {
+ account: <AccountSettings user={user} />,
+ membership: <MembershipSettings />,
+ language: <LanguageSettings />,
+ fontsize: <FontSizeSettings />,
+ notification: <NotificationSettings />,
+ general: <GeneralSettings />,
+ privacy: <PrivacySettings />,
+ content: <ContentSettings />,
+ interaction: <InteractionSettings />,
+ about: <AboutSettings />,
+ feedback: <FeedbackSettings />,
+ }
 
-  return componentMap[category as keyof typeof componentMap]
+ return componentMap[category as keyof typeof componentMap]
 }

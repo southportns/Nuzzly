@@ -4,43 +4,32 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 interface NuzzlyLogoProps {
-  className?: string
-  mobile?: boolean
+className?: string
+mobile?: boolean
 }
 
 export function NuzzlyLogo({ className = "", mobile = false }: NuzzlyLogoProps) {
-  return (
-    <div className={cn("nuzzly-logo-root inline-flex items-center", className)}>
-      {/* 左侧：圆+动物（hover时旋转） */}
-      <div className="nuzzly-circle-wrap flex-shrink-0">
-        <Image
-          src="/Vector.svg"
-          alt="Nuzzly毛球镇"
-          width={128}
-          height={127}
-          className={cn("h-auto", mobile ? "w-12" : "w-20")}
-          style={{ transformOrigin: "49.8% 50%" }}
-          priority
-        />
-      </div>
-      {/* 右侧：文字（静态） */}
-      <Image
-        src="/Vector2.svg"
-        alt="Nuzzly毛球镇"
-        width={172}
-        height={85}
-        className={cn("h-auto scale-[0.92]", mobile ? "w-auto h-8" : "w-auto h-14")}
-        priority
-      />
-      <style>{`
-        .nuzzly-logo-root:hover .nuzzly-circle-wrap {
-          animation: nuzzly-spin 0.7s ease-in-out;
-        }
-        @keyframes nuzzly-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
-  )
+return (<div className={cn("nuzzly-logo-root inline-flex items-center", mobile? "h-12": "h-20", className)}>
+{/* new Logo:++ chars a SVG */}
+<div className="nuzzly-logo-wrap flex-shrink-0 h-full">
+<Image
+src="/Vector.svg"
+alt="Nuzzly Town"
+width={311}
+height={128}
+className="h-full w-auto"
+priority
+/>
+</div>
+<style>{`.nuzzly-logo-root:hover .nuzzly-logo-wrap {
+animation: nuzzly-bounce 0.6s ease-in-out;
+}
+@keyframes nuzzly-bounce {
+0% { transform: scale(1); }
+30% { transform: scale(1.08); }
+60% { transform: scale(0.97); }
+100% { transform: scale(1); }
+}
+`}</style>
+</div>)
 }

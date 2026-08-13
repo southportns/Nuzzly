@@ -97,6 +97,7 @@ interface CurvedInputProps {
   type?: string
   name?: string
   ariaLabel?: string
+  autoFocus?: boolean
   width?: number | string
   bend?: number
   height?: number
@@ -124,6 +125,7 @@ export default function CurvedInput({
   type = 'text',
   name,
   ariaLabel,
+  autoFocus = false,
   width = 400,
   bend = 20,
   height = 56,
@@ -155,9 +157,12 @@ export default function CurvedInput({
   const [w, setW] = useState(0)
   const [innerValue, setInnerValue] = useState(defaultValue)
   const [caretIndex, setCaretIndex] = useState(defaultValue.length)
+  const [selRange, setSelRange] = useState<[number, number] | null>(null)
   const [focused, setFocused] = useState(false)
   const [caretU, setCaretU] = useState(0)
   const [scrollLen, setScrollLen] = useState(0)
+  const [selU0, setSelU0] = useState(0)
+  const [selU1, setSelU1] = useState(0)
   const [btnTextW, setBtnTextW] = useState(0)
 
   const val = value !== undefined ? value : innerValue
@@ -172,6 +177,31 @@ export default function CurvedInput({
     })
     ro.observe(el)
     return () => ro.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (autoFocus) {
+      const id = setTimeout(() => inputRef.current?.focus(), 60)
+      return () => clearTimeout(id)
+    }
+  }, [autoFocus])
+
+  // Track text selection in real-time (including mouse drag selection)
+  useEffect(() => {
+    const handler = () => {
+      const input = inputRef.current
+      if (!input || document.activeElement !== input) return
+      const start = input.selectionStart ?? 0
+      const end = input.selectionEnd ?? 0
+      setCaretIndex(start)
+      if (start !== end) {
+        setSelRange([Math.min(start, end), Math.max(start, end)])
+      } else {
+        setSelRange(null)
+      }
+    }
+    document.addEventListener('selectionchange', handler)
+    return () => document.removeEventListener('selectionchange', handler)
   }, [])
 
   useEffect(() => {
@@ -229,6 +259,26 @@ export default function CurvedInput({
       setScrollLen(next)
     }
     setCaretU(layout.textStartU + (caretLen - next) * geom.uPerLen)
+
+    // Compute selection highlight positions
+    if (selRange && selRange[0] !== selRange[1] && textEl && display.length) {
+      try {
+        const s0 = Math.min(selRange[0], display.length)
+        const s1 = Math.min(selRange[1], display.length)
+        const selStartLen = s0 > 0 ? textEl.getSubStringLength(0, s0) : 0
+        const selEndLen = s1 > 0 ? textEl.getSubStringLength(0, s1) : 0
+        const su0 = layout.textStartU + (selStartLen - next) * geom.uPerLen
+        const su1 = layout.textStartU + (selEndLen - next) * geom.uPerLen
+        setSelU0(Math.min(su0, su1))
+        setSelU1(Math.max(su0, su1))
+      } catch {
+        setSelU0(0)
+        setSelU1(0)
+      }
+    } else {
+      setSelU0(0)
+      setSelU1(0)
+    }
   })
 
   const commitValue = (v: string) => {
@@ -236,13 +286,134 @@ export default function CurvedInput({
     onChange?.(v)
   }
 
+  // Helper: map a clientX/clientY to a character index in the display string
+  const pointToIndex = (clientX: number, clientY: number): number => {
+    const svg = svgRef.current
+    const textEl = textRef.current
+    if (!svg || !geom || !layout || !textEl || !display.length) return display.length
+    try {
+      const pt = new DOMPoint(clientX, clientY).matrixTransform(svg.getScreenCTM()!.inverse())
+      const target = scrollRef.current + (geom.uFromPoint(pt.x) - layout.textStartU) / geom.uPerLen
+      let best = 0
+      let bestDist = Infinity
+      for (let i = 0; i <= display.length; i++) {
+        const li = i === 0 ? 0 : textEl.getSubStringLength(0, i)
+        const d = Math.abs(li - target)
+        if (d < bestDist) {
+          bestDist = d
+          best = i
+        }
+      }
+      return best
+    } catch {
+      return display.length
+    }
+  }
+
+  // Helper: select a word at a given index
+  const wordBoundaryAt = (idx: number): [number, number] => {
+    const s = display
+    if (!s.length) return [0, 0]
+    const isWord = (c: string) => /[\w]/.test(c)
+    let start = Math.min(idx, s.length)
+    let end = start
+    // If clicking on a non-word char, just select that single char
+    if (start < s.length && !isWord(s[start])) {
+      return [start, start + 1]
+    }
+    while (start > 0 && isWord(s[start - 1])) start--
+    while (end < s.length && isWord(s[end])) end++
+    return [start, end]
+  }
+
+  // Pointer drag selection state
+  const dragStateRef = useRef<{ start: number; active: boolean } | null>(null)
+
+  const handleSurfacePointerDown = (e: React.PointerEvent) => {
+    const input = inputRef.current
+    if (!input) return
+    // Only respond to primary button
+    if (e.button !== 0) return
+    e.preventDefault()
+
+    const idx = pointToIndex(e.clientX, e.clientY)
+
+    // Check for double-click (select word)
+    const now = Date.now()
+    if (lastClickRef.current && now - lastClickRef.current.time < 350 && lastClickRef.current.idx === idx) {
+      // Double-click: select word
+      const [s, en] = wordBoundaryAt(idx)
+      input.focus()
+      try { input.setSelectionRange(s, en) } catch {}
+      setCaretIndex(en)
+      setSelRange([s, en])
+      dragStateRef.current = null
+      lastClickRef.current = null
+      return
+    }
+
+    lastClickRef.current = { time: now, idx }
+
+    // Single click: position caret, start potential drag selection
+    input.focus()
+    try { input.setSelectionRange(idx, idx) } catch {}
+    setCaretIndex(idx)
+    setSelRange(null)
+    dragStateRef.current = { start: idx, active: true }
+
+    // Capture pointer for drag tracking
+    const svg = svgRef.current
+    if (svg) {
+      try { svg.setPointerCapture(e.pointerId) } catch {}
+    }
+  }
+
+  const handleSurfacePointerMove = (e: React.PointerEvent) => {
+    if (!dragStateRef.current?.active) return
+    const input = inputRef.current
+    if (!input) return
+    const idx = pointToIndex(e.clientX, e.clientY)
+    const start = dragStateRef.current.start
+    const s = Math.min(start, idx)
+    const en = Math.max(start, idx)
+    try { input.setSelectionRange(s, en) } catch {}
+    setCaretIndex(idx)
+    if (s !== en) {
+      setSelRange([s, en])
+    } else {
+      setSelRange(null)
+    }
+  }
+
+  const handleSurfacePointerUp = (e: React.PointerEvent) => {
+    if (dragStateRef.current?.active) {
+      dragStateRef.current.active = false
+      dragStateRef.current = null
+    }
+    const svg = svgRef.current
+    if (svg) {
+      try { svg.releasePointerCapture(e.pointerId) } catch {}
+    }
+  }
+
+  const lastClickRef = useRef<{ time: number; idx: number } | null>(null)
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     commitValue(e.target.value)
     setCaretIndex(e.target.selectionStart ?? e.target.value.length)
+    setSelRange(null)
   }
 
   const handleSelect = (e: React.SyntheticEvent<HTMLInputElement>) => {
-    setCaretIndex((e.target as HTMLInputElement).selectionStart ?? val.length)
+    const target = e.target as HTMLInputElement
+    const start = target.selectionStart ?? 0
+    const end = target.selectionEnd ?? 0
+    setCaretIndex(start)
+    if (start !== end) {
+      setSelRange([Math.min(start, end), Math.max(start, end)])
+    } else {
+      setSelRange(null)
+    }
   }
 
   const handleSubmit = (e?: React.FormEvent) => {
@@ -251,35 +422,16 @@ export default function CurvedInput({
   }
 
   const handleSurfaceClick = (e: React.MouseEvent) => {
+    // Click is now handled by pointer events; this is a fallback for accessibility
     const input = inputRef.current
     if (!input) return
-    let idx = display.length
-    const svg = svgRef.current
-    const textEl = textRef.current
-    if (svg && geom && layout && textEl && display.length) {
-      try {
-        const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM()!.inverse())
-        const target = scrollRef.current + (geom.uFromPoint(pt.x) - layout.textStartU) / geom.uPerLen
-        let best = 0
-        let bestDist = Infinity
-        for (let i = 0; i <= display.length; i++) {
-          const li = i === 0 ? 0 : textEl.getSubStringLength(0, i)
-          const d = Math.abs(li - target)
-          if (d < bestDist) {
-            bestDist = d
-            best = i
-          }
-        }
-        idx = best
-      } catch {
-        idx = display.length
-      }
+    if (document.activeElement !== input) {
+      const idx = pointToIndex(e.clientX, e.clientY)
+      input.focus()
+      try { input.setSelectionRange(idx, idx) } catch {}
+      setCaretIndex(idx)
+      setSelRange(null)
     }
-    input.focus()
-    try {
-      input.setSelectionRange(idx, idx)
-    } catch {}
-    setCaretIndex(idx)
   }
 
   const safeType = ['text', 'search', 'tel', 'url', 'password'].includes(type) ? type : 'text'
@@ -317,7 +469,9 @@ export default function CurvedInput({
         height={round2(geom.svgH)}
         viewBox={`0 0 ${geom.W} ${round2(geom.svgH)}`}
         style={svgStyle}
-        onPointerDown={e => e.preventDefault()}
+        onPointerDown={handleSurfacePointerDown}
+        onPointerMove={handleSurfacePointerMove}
+        onPointerUp={handleSurfacePointerUp}
         onClick={handleSurfaceClick}
       >
         <defs>
@@ -332,6 +486,12 @@ export default function CurvedInput({
         <path id={layoutPathId} d={layoutPath} fill="none" />
 
         <g clipPath={`url(#${clipId})`}>
+          {selU0 !== selU1 && selRange && (
+            <path
+              d={bentRectPath(geom, selU0, selU1, vBase - fontSize * 0.95, vBase + fontSize * 0.45, 3)}
+              fill="rgba(255, 122, 89, 0.25)"
+            />
+          )}
           <text ref={textRef} style={{ fontSize: `${fontSize}px`, fontWeight: 500 }} fill={textColor} xmlSpace="preserve" aria-hidden="true">
             <textPath href={`#${layoutPathId}`}>{display}</textPath>
           </text>
@@ -394,7 +554,7 @@ export default function CurvedInput({
         onSelect={handleSelect}
         onKeyUp={handleSelect}
         onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+        onBlur={() => { setFocused(false); setSelRange(null) }}
         aria-label={ariaLabel || placeholder || 'Input'}
         autoComplete="off"
         autoCapitalize="none"

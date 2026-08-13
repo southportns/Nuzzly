@@ -1,9 +1,10 @@
 "use client"
 
-import { EmojiIcon } from "@/components/ui/emoji-icon"
+import { FluentEmoji, FLUENT_EMOJI } from "@/components/ui/fluent-emoji"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
+import { openLoginModal } from "@/hooks/use-login-modal"
 import { createDietLog } from "@/lib/supabase/actions/pet-form-actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,194 +12,195 @@ import { Label } from "@/components/ui/label"
 import { SelectDropdown, type SelectOption } from "@/components/ui/select-dropdown"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { MultiPetSelector } from "@/components/pets/multi-pet-selector"
+import { useTranslations } from "next-intl"
 
-const foodTypeOptions: SelectOption[] = [
-  { value: "dry_food", label: "干粮" },
-  { value: "wet_food", label: "湿粮/罐头" },
-  { value: "snack", label: "零食" },
-  { value: "supplement", label: "保健品" },
-  { value: "homemade", label: "自制猫饭" },
-  { value: "other", label: "其他" },
+type FoodCategory = "staple" | "supplement"
+
+const feedingFrequencyOptions: SelectOption[] = [
+{ value: "Daily1", label: "1/day" },
+{ value: "Daily2", label: "2/day" },
+{ value: "Daily3", label: "3/day" },
+{ value: "Weekly1-2", label: "1-2/week" },
+{ value: "Weekly3-4", label: "3-4/week" },
+{ value: "Irregular", label: "Irregular" },
 ]
 
-interface ProductOption {
-  id: string
-  name: string
-  brand: string
-}
+const feedingDurationOptions: SelectOption[] = [
+{ value: "Just started", label: "Just started" },
+{ value: "1 week", label: "1 week" },
+{ value: "1-2 weeks", label: "1-2 weeks" },
+{ value: "2-4 weeks", label: "2-4 weeks" },
+{ value: "1-3 months", label: "1-3 months" },
+{ value: "3-6 months", label: "3-6 months" },
+{ value: "6+ months", label: "6+ months" },
+{ value: "1+ year", label: "1+ year" },
+]
+
+interface ProductOption { id: string; name: string; brand: string }
 
 export function DietLogForm({ petId }: { petId: string }) {
-  const router = useRouter()
-  const { user } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [foodType, setFoodType] = useState("dry_food")
-  const [products, setProducts] = useState<ProductOption[]>([])
-  const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(null)
-  const [foodName, setFoodName] = useState("")
-  const [open, setOpen] = useState(false)
-  const supabase = createClient()
+const tHealth = useTranslations("Health")
+const router = useRouter()
+const { user } = useAuth()
+const [loading, setLoading] = useState(false)
+const [foodCategory, setFoodCategory] = useState<FoodCategory>("staple")
+const [products, setProducts] = useState<ProductOption[]>([])
+const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(null)
+const [foodName, setFoodName] = useState("")
+const [feedingFrequency, setFeedingFrequency] = useState("Daily1")
+const [feedingDuration, setFeedingDuration] = useState("")
+const [open, setOpen] = useState(false)
+const [productsLoaded, setProductsLoaded] = useState(false)
+const [applyToPets, setApplyToPets] = useState<string[]>([])
+const supabase = createClient()
 
-  // Load products for combobox
-  useEffect(() => {
-    async function loadProducts() {
-      const { data } = await supabase
-        .from("products")
-        .select("id, name, brand")
-        .eq("is_active", true)
-        .order("name")
-      setProducts(data || [])
-    }
-    loadProducts()
-  }, [])
+useEffect(() => {
+if (!open || productsLoaded) return
+async function loadProducts() {
+const { data } = await supabase.from("products").select("id, name, brand").eq("is_active", true).order("name")
+setProducts(data || [])
+setProductsLoaded(true)
+}
+loadProducts()
+}, [open, productsLoaded, supabase])
 
-  // Auto-set food type when selecting a product
-  const handleSelectProduct = useCallback((product: ProductOption | null) => {
-    setSelectedProduct(product)
-    if (product) {
-      setFoodType("dry_food")
-      setFoodName(product.name)
-    }
-  }, [])
+const handleSelectProduct = useCallback((product: ProductOption | null) => {
+setSelectedProduct(product)
+if (product) setFoodName(product.name)
+}, [])
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    if (!user) {
-      toast.error("请先登录")
-      return
-    }
-    const form = e.currentTarget
-    setLoading(true)
+async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+e.preventDefault()
+if (loading) return
+if (!user) { openLoginModal(); return }
+const form = e.currentTarget
+setLoading(true)
+const formData = new FormData(form)
+const dailyAmount = (formData.get("daily_amount") as string) || ""
+const notes = (formData.get("notes") as string) || ""
+const parts: string[] = []
+if (foodCategory === "staple") { if (dailyAmount) parts.push(dailyAmount) }
+else { parts.push(feedingFrequency) }
+if (feedingDuration) parts.push(feedingDuration)
+if (notes) parts.push(notes)
+const mergedNotes = parts.length > 0 ? parts.join(" | ") : null
 
-    const formData = new FormData(form)
-    const amount = (formData.get("amount") as string) || ""
-    const notes = (formData.get("notes") as string) || ""
-    const mergedNotes = amount ? `用量:${amount}${notes ? ` | ${notes}` : ""}` : notes || null
+const { error } = await createDietLog({
+pet_id: petId, food_name: foodName, food_type: foodCategory,
+logged_date: new Date().toISOString().split("T")[0],
+notes: mergedNotes, product_id: selectedProduct?.id ?? null,
+}, user.id)
 
-    const { error } = await createDietLog({
-      pet_id: petId,
-      food_name: foodName,
-      food_type: foodType,
-      logged_date: new Date().toISOString().split("T")[0],
-      notes: mergedNotes,
-      product_id: selectedProduct?.id ?? null,
-    }, user.id)
+let siblingCount = 0
+if (applyToPets.length > 0) {
+for (const siblingPetId of applyToPets) {
+const { error: sibErr } = await createDietLog({
+pet_id: siblingPetId, food_name: foodName, food_type: foodCategory,
+logged_date: new Date().toISOString().split("T")[0],
+notes: mergedNotes, product_id: selectedProduct?.id ?? null,
+}, user.id)
+if (!sibErr) siblingCount++
+}
+}
 
-    setLoading(false)
+setLoading(false)
+if (error) { toast.error(error.message); return }
+if (siblingCount > 0) {
+toast.success(tHealth("dietRecordAddedWithPets", { count: siblingCount }))
+} else {
+toast.success(tHealth("dietRecordAdded"))
+}
+form.reset()
+setFoodCategory("staple"); setSelectedProduct(null); setFoodName("")
+setFeedingFrequency("Daily1"); setFeedingDuration(""); setApplyToPets([])
+router.refresh()
+}
 
-    if (error) {
-      toast.error(error.message)
-      return
-    }
+return (<form onSubmit={handleSubmit} className="space-y-4">
+<div className="space-y-2">
+<Label>{tHealth("brandProduct")}</Label>
+<Popover open={open} onOpenChange={setOpen}>
+<PopoverTrigger asChild>
+<Button variant="outline" role="combobox" aria-expanded={open}
+className="w-full justify-between rounded-[12px] border-[rgba(0,0,0,0.08)] bg-white px-3.5 text-[14px] font-normal text-[#111111] hover:bg-white">
+{selectedProduct ? `${selectedProduct.brand} · ${selectedProduct.name}` : tHealth("searchBrandProduct")}
+</Button>
+</PopoverTrigger>
+<PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+<Command>
+<CommandInput placeholder={tHealth("searchBrandProduct")} className="h-9" />
+<CommandList>
+{!productsLoaded && open && (<div className="flex items-center justify-center py-6 text-[13px] text-[#9A9A95]">{tHealth("loadingProducts")}</div>)}
+{productsLoaded && <CommandEmpty>{tHealth("noProductFound")}</CommandEmpty>}
+<CommandGroup>
+{products.map((product) => (<CommandItem key={product.id} value={`${product.brand} ${product.name}`}
+onSelect={() => { handleSelectProduct(product); setOpen(false) }}>
+<FluentEmoji src={FLUENT_EMOJI.checkMark} alt="check mark" size={16}
+className={cn("mr-2", selectedProduct?.id === product.id ? "opacity-100" : "opacity-0")} />
+<span className="font-medium">{product.name}</span>
+<span className="ml-1 text-muted-foreground"> · {product.brand}</span>
+</CommandItem>))}
+</CommandGroup>
+</CommandList>
+</Command>
+</PopoverContent>
+</Popover>
+<p className="text-[11px] text-[#9A9A95]">{tHealth("selectProductHint")}</p>
+</div>
 
-    toast.success("饮食记录已添加")
-    form.reset()
-    setFoodType("dry_food")
-    setSelectedProduct(null)
-    setFoodName("")
-    router.refresh()
-  }
+<div className="grid grid-cols-2 gap-4">
+<div className="space-y-2">
+<Label htmlFor="food_name">{tHealth("foodNameLabel")}</Label>
+<Input id="food_name" name="food_name" required value={foodName}
+onChange={(e) => { setFoodName(e.target.value); if (selectedProduct && e.target.value !== selectedProduct.name) setSelectedProduct(null) }}
+placeholder={selectedProduct ? tHealth("foodNamePlaceholderAuto") : tHealth("foodNamePlaceholderEmpty")} />
+</div>
+<div className="space-y-2">
+<Label>{tHealth("typeLabel")}</Label>
+<div className="flex gap-1 rounded-[12px] border border-[rgba(0,0,0,0.08)] bg-[#F2F1EE] p-1">
+<button type="button" onClick={() => setFoodCategory("staple")}
+className={cn("flex-1 rounded-[8px] px-3 py-2 text-[14px] font-medium transition-all",
+foodCategory === "staple" ? "bg-white text-[#E85D4A] shadow-sm" : "text-[#6B6B6B] hover:text-[#111111]")}>
+{tHealth("stapleFood")}
+</button>
+<button type="button" onClick={() => setFoodCategory("supplement")}
+className={cn("flex-1 rounded-[8px] px-3 py-2 text-[14px] font-medium transition-all",
+foodCategory === "supplement" ? "bg-white text-[#E85D4A] shadow-sm" : "text-[#6B6B6B] hover:text-[#111111]")}>
+{tHealth("supplementFood")}
+</button>
+</div>
+</div>
+</div>
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Product search combobox */}
-      <div className="space-y-2">
-        <Label>品牌/产品</Label>
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="w-full justify-between rounded-[12px] border-[rgba(0,0,0,0.08)] bg-white px-3.5 text-[14px] font-normal text-[#111111] hover:bg-white"
-            >
-              {selectedProduct
-                ? `${selectedProduct.brand} · ${selectedProduct.name}`
-                : "搜索品牌或产品名..."}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-            <Command>
-              <CommandInput placeholder="搜索品牌或产品名..." className="h-9" />
-              <CommandList>
-                <CommandEmpty>未找到匹配的产品</CommandEmpty>
-                <CommandGroup>
-                  {products.map((product) => (
-                    <CommandItem
-                      key={product.id}
-                      value={`${product.brand} ${product.name}`}
-                      onSelect={() => {
-                        handleSelectProduct(product)
-                        setOpen(false)
-                      }}
-                    >
-                      <EmojiIcon name="Check"
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedProduct?.id === product.id ? "opacity-100" : "opacity-0",
-                        )}
-                      />
-                      <span className="font-medium">{product.name}</span>
-                      <span className="ml-1 text-muted-foreground">· {product.brand}</span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-        <p className="text-[11px] text-[#9A9A95]">选择产品后自动填充品牌信息，也可手动输入</p>
-      </div>
+<div className="grid grid-cols-2 gap-4">
+{foodCategory === "staple" ? (<div className="space-y-2">
+<Label htmlFor="daily_amount">{tHealth("dailyAmount")}</Label>
+<Input id="daily_amount" name="daily_amount" placeholder={tHealth("dailyAmountPlaceholder")} />
+</div>) : (<div className="space-y-2">
+<Label>{tHealth("feedingFrequency")}</Label>
+<SelectDropdown value={feedingFrequency} onChange={setFeedingFrequency} options={feedingFrequencyOptions} />
+</div>)}
+<div className="space-y-2">
+<Label>{tHealth("feedingDuration")}</Label>
+<SelectDropdown value={feedingDuration} onChange={setFeedingDuration}
+options={feedingDurationOptions} placeholder={tHealth("feedingDurationPlaceholder")} />
+</div>
+</div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="food_name">食物名称 *</Label>
-          <Input
-            id="food_name"
-            name="food_name"
-            required
-            value={foodName}
-            onChange={(e) => {
-              setFoodName(e.target.value)
-              if (selectedProduct && e.target.value !== selectedProduct.name) {
-                setSelectedProduct(null)
-              }
-            }}
-            placeholder={selectedProduct ? "已自动填充" : "例如：渴望六种鱼"}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>食物类型</Label>
-          <SelectDropdown
-            value={foodType}
-            onChange={setFoodType}
-            options={foodTypeOptions}
-          />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="amount">用量</Label>
-          <Input id="amount" name="amount" placeholder="例如：50g" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="notes">备注</Label>
-          <Input id="notes" name="notes" placeholder="可选备注" />
-        </div>
-      </div>
-      <Button type="submit" size="sm" disabled={loading}>
-        {loading && <EmojiIcon name="Loader2" className="mr-2 size-4 animate-spin" />}
-        添加记录
-      </Button>
-    </form>
-  )
+<div className="space-y-2">
+<Label htmlFor="notes">{tHealth("notesLabel")}</Label>
+<Input id="notes" name="notes" placeholder={tHealth("notesPlaceholder")} />
+</div>
+
+<MultiPetSelector currentPetId={petId} selectedPetIds={applyToPets} onChange={setApplyToPets} />
+
+<Button type="submit" size="sm" disabled={loading}>
+{loading && <FluentEmoji src={FLUENT_EMOJI.hourglass} alt="hourglass" size={16} className="mr-2 animate-spin" />}
+{tHealth("addRecordBtn")}
+</Button>
+</form>)
 }

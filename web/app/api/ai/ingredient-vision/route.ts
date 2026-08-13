@@ -1,349 +1,340 @@
-// POST /api/ai/ingredient-vision — 成分分析图片识别（多模态视觉理解，流式）
-// 接收: { image: string (base64 data URL), note?: string, petId?: string }
-// 流程: 鉴权 → (可选)查询宠物信息 → 构建 system prompt → 调用 Vision LLM 流式 API → SSE 推送
+// POST /api/ai/ingredient-vision — Ingredient Analysis Image Recognition (multimodal vision, streaming)
+// Receives: { image: string (base64 data URL), note?: string, petId?: string }
+// Process: auth → (optional) fetch pet info → build system prompt → call Vision LLM streaming API → SSE push
 //
-// Provider 通过环境变量 VISION_PROVIDER 切换:
-//   - "glm"         (默认, 测试阶段, GLM-4V-Flash 免费)
-//   - "volcengine"  (上线后切换, doubao-seed-1.6-vision)
-// 切换只需改环境变量, 代码无需改动
+// Provider switch via VISION_PROVIDER env var:
+// - "openai" (Primary, Singapore market — GPT-4o vision)
+// - "glm" (Testing, free — China only, GLM-4V-Flash)
+// - "volcengine" (China production — doubao-seed-1.6-vision)
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-// ============== Provider 配置 ==============
-type VisionProvider = "glm" | "volcengine"
+// ============== Provider Configuration ==============
+type VisionProvider = "openai" | "glm" | "volcengine"
 
 interface ProviderConfig {
-  baseURL: string
-  model: string
-  apiKeyEnv: string
-  modelEnv: string
-  defaultModel: string
-  label: string
+baseURL: string
+model: string
+apiKeyEnv: string
+modelEnv: string
+defaultModel: string
+label: string
 }
 
 const PROVIDERS: Record<VisionProvider, ProviderConfig> = {
-  // 智谱 GLM-4V-Flash（测试阶段，免费）
-  glm: {
-    baseURL: "https://open.bigmodel.cn/api/paas/v4",
-    model: "",
-    apiKeyEnv: "ZHIPU_API_KEY",
-    modelEnv: "ZHIPU_VL_MODEL",
-    defaultModel: "glm-4v-flash",
-    label: "智谱 GLM-4V-Flash",
-  },
-  // 火山方舟 doubao-seed-1.6-vision（上线后）
-  volcengine: {
-    baseURL: "https://ark.cn-beijing.volces.com/api/v3",
-    model: "",
-    apiKeyEnv: "VOLCENGINE_ARK_API_KEY",
-    modelEnv: "VOLCENGINE_VL_MODEL",
-    defaultModel: "doubao-seed-1.6-vision",
-    label: "火山方舟 doubao-seed-1.6-vision",
-  },
+// OpenAI GPT-4o (Primary — Singapore market, works globally)
+openai: {
+baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+model: "",
+apiKeyEnv: "OPENAI_API_KEY",
+modelEnv: "OPENAI_VISION_MODEL",
+defaultModel: "gpt-4o",
+label: "OpenAI GPT-4o Vision",
+},
+// Zhipu GLM-4V-Flash (Testing phase, free — China only)
+glm: {
+baseURL: "https://open.bigmodel.cn/api/paas/v4",
+model: "",
+apiKeyEnv: "ZHIPU_API_KEY",
+modelEnv: "ZHIPU_VL_MODEL",
+defaultModel: "glm-4v-flash",
+label: "Zhipu GLM-4V-Flash",
+},
+// Volcengine Ark doubao-seed-1.6-vision (China production)
+volcengine: {
+baseURL: "https://ark.cn-beijing.volces.com/api/v3",
+model: "",
+apiKeyEnv: "VOLCENGINE_ARK_API_KEY",
+modelEnv: "VOLCENGINE_VL_MODEL",
+defaultModel: "doubao-seed-1.6-vision",
+label: "Volcengine Ark doubao-seed-1.6-vision",
+},
 }
 
 function getProvider(): VisionProvider {
-  const raw = (process.env.VISION_PROVIDER || "glm").toLowerCase().trim()
-  return raw === "volcengine" ? "volcengine" : "glm"
+const raw = (process.env.VISION_PROVIDER || "openai").toLowerCase().trim()
+if (raw === "glm") return "glm"
+if (raw === "volcengine") return "volcengine"
+return "openai"
 }
 
 function resolveProviderConfig() {
-  const key = getProvider()
-  const cfg = { ...PROVIDERS[key] }
-  cfg.model = process.env[cfg.modelEnv] || cfg.defaultModel
-  return { key, cfg }
+const key = getProvider()
+const cfg = {...PROVIDERS[key] }
+cfg.model = process.env[cfg.modelEnv] || cfg.defaultModel
+return { key, cfg }
 }
 
-const BASE_SYSTEM_PROMPT = `你是"球球"🐱，毛球镇的超级可爱智能宠物顾问，现在专注于宠物食品成分分析。
+const BASE_SYSTEM_PROMPT = `You are "Pomi" 🐱, the super cute and intelligent pet care consultant of Nuzzly Town, now focusing on pet food ingredient analysis.
 
-## 你的任务
-用户会上传猫粮/狗粮包装上的成分表图片，图片中通常包含"原料组成""添加剂组成""成分分析保证值"三部分。你需要识别其中的关键信息并给出结构化分析。
+## Your Task
+The user will upload an image of a cat/dog food packaging ingredient label. The label typically contains three sections: "Ingredients", "Additives", and "Guaranteed Analysis". You need to recognize the key information and provide a structured analysis.
 
-## 输出模板（必须严格按以下章节输出）
+## Output Template (Must strictly follow these sections)
 
-喵~ 球球来帮你分析这份成分表啦 🐾
+Meow~ Pomi is here to analyze this ingredient label for you! 🐾
 
-### 1. 配方总览
-用 2-3 句话概括：主要成分类别、蛋白来源质量、谷物/碳水情况、添加剂是否安全。
+### 1. Formula Overview
+Summarize in 2-3 sentences: main ingredient categories, protein source quality, grain/carb status, additive safety.
 
-### 2. 主要原料分析
-按原料在配料表中的真实顺序，分为以下 4 类列出（不要逐字罗列所有微量元素，按类别归纳）：
+### 2. Key Ingredient Analysis
+List ingredients in their actual order on the label, grouped into these 4 categories (do not list every trace mineral individually — summarize by category):
 
-**动物蛋白来源**（配料表前 5 位中的肉类/肉粉/鱼粉等）：
-- **成分名**：作用与评价（风险等级：**低/中/高**）
+**Animal Protein Sources** (meat/meat meal/fish meal in the top 5 ingredients):
+- **Ingredient name**: role and review (Risk level: **Low/Medium/High**)
 
-**谷物/碳水来源**（如碎米、小麦粉、玉米等，若没有则写"无明显谷物来源"）：
-- **成分名**：作用与评价（风险等级）
+**Grain/Carb Sources** (e.g. rice, wheat flour, corn — if none, write "No obvious grain sources"):
+- **Ingredient name**: role and review (Risk level)
 
-**脂肪与油脂来源**（如鸡油、鱼油、牛油等）：
-- **成分名**：作用与评价（风险等级）
+**Fat & Oil Sources** (e.g. chicken fat, fish oil, beef tallow):
+- **Ingredient name**: role and review (Risk level)
 
-**功能性添加剂**（如益生元、酵母、纤维素、牛磺酸等，可合并归纳，不要逐个列出维生素和矿物质）：
-- **类别名**：作用与评价（风险等级）
+**Functional Additives** (e.g. probiotics, enzymes, cellulose, taurine — can be grouped, do not list every vitamin and mineral individually):
+- **Category name**: role and review (Risk level)
 
-### 3. 营养指标评价
-根据图片中的"成分分析保证值"评价：
-- 粗蛋白是否达标（猫粮≥30% 优质，≥25% 合格；狗粮≥25% 优质）
-- 粗脂肪是否合适（猫 10-25%，狗 10-20%）
-- 粗纤维、钙磷比等是否健康
+### 3. Nutritional Metrics Review
+Based on the "Guaranteed Analysis" values in the image, review:
+- Whether Crude Protein meets standards (Cat food ≥30% excellent, ≥25% acceptable; Dog food ≥25% excellent)
+- Whether Crude Fat is appropriate (Cats 10-25%, Dogs 10-20%)
+- Whether crude fiber, calcium-phosphorus ratio, etc. are healthy
 
-### 4. 适合对象
-- 适合：生命阶段、品种、特殊需求（如幼猫、成猫、老年猫、肠胃敏感猫咪等）
-- 不太适合：哪些情况不建议选
+### 4. Suitable For
+- Suitable for: life stage, breed, special needs (e.g. kittens, adult cats, senior cats, cats with sensitive stomachs)
+- Not suitable for: which situations to avoid
 
-### 5. 注意事项
-仅列出真正需要警惕的成分或情况（最多 3 条），如无则写"未发现明显风险成分"。
+### 5. Warnings
+Only list ingredients or situations that genuinely warrant caution (max 3 items). If none, write "No obvious risk ingredients found."
 
-## 严格规则（必须遵守）
-1. **分组归纳**：维生素和矿物质统一合并成一条"维生素与矿物质预混料"，不要逐个列出（这是防止重复循环的关键）
-2. **不重复**：每个成分只出现一次，绝不重复
-3. **不编造**：识别不清的成分直接跳过，不要用"***"或"未知成分"占位
-4. **简洁**：每个 bullet 不超过 30 字
-5. **使用中文**：成分名优先用中文
-6. **格式**：用 Markdown，加粗风险等级，开头加"喵~"或"汪~"，适当 emoji`
+## Strict Rules (Must Follow)
+1. **Group and summarize**: Vitamins and minerals should be combined into a single "Vitamin & Mineral Premix" entry — do not list individually (this prevents duplicate looping)
+2. **No duplicates**: Each ingredient appears only once, never repeat
+3. **No fabrication**: Skip ingredients that are unclear — do not use "***" or "unknown ingredient" as placeholders
+4. **Be concise**: Each bullet point should not exceed 30 words
+5. **Use English**: Ingredient names should be in English
+6. **Format**: Use Markdown, bold the risk levels, start with "Meow~" or "Woof~", and use appropriate emojis`
 
-// 构建宠物上下文文本（用于注入 system prompt）
-// 注意：所有字段都会进入 LLM 上下文，敏感信息需脱敏
+// Build pet context text (injected into system prompt)
+// Note: all fields enter the LLM context; sensitive info should be sanitized
 function buildPetContext(pet: {
-  name: string
-  breed: string | null
-  species: string
-  stomach_health: string
-  age_years: number | null
-  weight_kg: number | null
-  life_stage: string | null
-  disease_history: string | null
+name: string
+breed: string | null
+species: string
+stomach_health: string
+age_years: number | null
+weight_kg: number | null
+life_stage: string | null
+disease_history: string | null
 }): string {
-  const parts: string[] = [`姓名：${pet.name}`]
+const parts: string[] = [`Name: ${pet.name}`]
 
-  // 种类映射为中文
-  const speciesMap: Record<string, string> = {
-    cat: "猫",
-    dog: "狗",
-  }
-  parts.push(`种类：${speciesMap[pet.species] ?? pet.species}`)
-  parts.push(`品种：${pet.breed ?? "未知"}`)
+parts.push(`Species: ${pet.species === "cat"? "Cat": pet.species === "dog"? "Dog": pet.species}`)
+parts.push(`Breed: ${pet.breed?? "Unknown"}`)
 
-  if (pet.life_stage) {
-    const lifeStageMap: Record<string, string> = {
-      puppy: "幼犬",
-      kitten: "幼猫",
-      adult: "成年",
-      senior: "老年",
-    }
-    parts.push(`生命阶段：${lifeStageMap[pet.life_stage] ?? pet.life_stage}`)
-  }
-
-  if (pet.age_years != null) {
-    parts.push(`年龄：约 ${pet.age_years} 岁`)
-  }
-
-  if (pet.weight_kg != null) {
-    parts.push(`体重：${pet.weight_kg} kg`)
-  }
-
-  // 肠胃状况
-  const stomachMap: Record<string, string> = {
-    sensitive: "敏感（需低敏配方、易消化蛋白）",
-    normal: "正常",
-    fragile: "脆弱（需特别护理）",
-  }
-  if (pet.stomach_health) {
-    parts.push(`肠胃状况：${stomachMap[pet.stomach_health] ?? pet.stomach_health}`)
-  }
-
-  // 病史（截断防止 prompt 过长）
-  if (pet.disease_history && pet.disease_history.trim()) {
-    const history = pet.disease_history.trim().slice(0, 500)
-    parts.push(`病史记录：${history}`)
-  }
-
-  return parts.join("；")
+if (pet.life_stage) {
+const lifeStageMap: Record<string, string> = {
+puppy: "Puppy",
+kitten: "Kitten",
+adult: "Adult",
+senior: "Senior",
+}
+parts.push(`Life Stage: ${lifeStageMap[pet.life_stage]?? pet.life_stage}`)
 }
 
-// 鉴权 helper（复用 chat/route.ts 的逻辑）
+if (pet.age_years!= null) {
+parts.push(`Age: ~${pet.age_years} years`)
+}
+
+if (pet.weight_kg!= null) {
+parts.push(`Weight: ${pet.weight_kg} kg`)
+}
+
+// Stomach condition
+const stomachMap: Record<string, string> = {
+sensitive: "Sensitive (needs hypoallergenic formula, easily digestible protein)",
+normal: "Normal",
+very_sensitive: "Very Sensitive (needs special care)",
+}
+if (pet.stomach_health) {
+parts.push(`Stomach Condition: ${stomachMap[pet.stomach_health]?? pet.stomach_health}`)
+}
+
+// Disease history (truncated to prevent prompt overflow)
+if (pet.disease_history && pet.disease_history.trim()) {
+const history = pet.disease_history.trim().slice(0, 500)
+parts.push(`Disease History: ${history}`)
+}
+
+return parts.join("; ")
+}
+
+// Auth helper (reused from chat/route.ts)
 async function getAuthUser(request: Request, supabase: Awaited<ReturnType<typeof createClient>>) {
-  const auth = request.headers.get("authorization") || request.headers.get("Authorization")
-  const bearer = auth?.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : null
-  if (bearer) {
-    const r = await supabase.auth.getUser(bearer)
-    return { user: r.data?.user ?? null, error: r.error ?? null }
-  }
-  const r = await supabase.auth.getUser()
-  return { user: r.data?.user ?? null, error: r.error ?? null }
+const auth = request.headers.get("authorization") || request.headers.get("Authorization")
+const bearer = auth?.toLowerCase().startsWith("bearer ")? auth.slice(7).trim(): null
+if (bearer) {
+const r = await supabase.auth.getUser(bearer)
+return { user: r.data?.user?? null, error: r.error?? null }
+}
+const r = await supabase.auth.getUser()
+return { user: r.data?.user?? null, error: r.error?? null }
 }
 
-const MAX_IMAGE_SIZE = 8 * 1024 * 1024 // 8MB base64 字符串上限
+const MAX_IMAGE_SIZE = 8 * 1024 * 1024 // 8MB base64 string limit
 const MAX_NOTE_LENGTH = 1000
 
 export async function POST(request: Request) {
-  try {
-    const { image, note, petId } = (await request.json().catch(() => ({}))) as {
-      image?: string
-      note?: string
-      petId?: string
-    }
+try {
+const { image, note, petId } = (await request.json().catch(() => ({}))) as {
+image?: string
+note?: string
+petId?: string
+}
 
-    if (!image || typeof image !== "string") {
-      return NextResponse.json({ error: "image 必填（base64 data URL）" }, { status: 400 })
-    }
+if (!image || typeof image!== "string") {
+return NextResponse.json({ error: "Image is required (base64 data URL)" }, { status: 400 })
+}
 
-    if (!image.startsWith("data:image/")) {
-      return NextResponse.json({ error: "image 必须是 data URL 格式" }, { status: 400 })
-    }
+if (!image.startsWith("data:image/")) {
+return NextResponse.json({ error: "Image must be in data URL format" }, { status: 400 })
+}
 
-    if (image.length > MAX_IMAGE_SIZE) {
-      return NextResponse.json({ error: "图片过大，请压缩后上传" }, { status: 400 })
-    }
+if (image.length > MAX_IMAGE_SIZE) {
+return NextResponse.json({ error: "Image too large, please compress before uploading" }, { status: 400 })
+}
 
-    if (note && typeof note === "string" && note.length > MAX_NOTE_LENGTH) {
-      return NextResponse.json({ error: "补充说明过长" }, { status: 400 })
-    }
+if (note && typeof note === "string" && note.length > MAX_NOTE_LENGTH) {
+return NextResponse.json({ error: "Note text too long" }, { status: 400 })
+}
 
-    if (petId && typeof petId !== "string") {
-      return NextResponse.json({ error: "petId 格式错误" }, { status: 400 })
-    }
+if (petId && typeof petId!== "string") {
+return NextResponse.json({ error: "Invalid petId format" }, { status: 400 })
+}
 
-    // 鉴权
-    const supabase = await createClient()
-    const { user, error: userErr } = await getAuthUser(request, supabase)
-    if (userErr || !user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 })
-    }
+// Auth
+const supabase = await createClient()
+const { user, error: userErr } = await getAuthUser(request, supabase)
+if (userErr ||!user) {
+return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+}
 
-    // 解析 provider 配置
-    const { key, cfg } = resolveProviderConfig()
-    const apiKey = process.env[cfg.apiKeyEnv]
-    if (!apiKey) {
-      console.error(`[ai/ingredient-vision] 环境变量 ${cfg.apiKeyEnv} 未配置 (provider=${key})`)
-      return NextResponse.json(
-        { error: `Vision 服务未配置（${cfg.label}）` },
-        { status: 503 },
-      )
-    }
+// Resolve provider config
+const { key, cfg } = resolveProviderConfig()
+const apiKey = process.env[cfg.apiKeyEnv]
+if (!apiKey) {
+console.error(`[ai/ingredient-vision] Environment variable ${cfg.apiKeyEnv} not configured (provider=${key})`)
+return NextResponse.json({ error: `Vision service not configured (${cfg.label})` },
+{ status: 503 },)
+}
 
-    // 查询宠物信息（如果传了 petId）
-    // 用 service_role client 绕过 RLS, 因为已通过鉴权确保是用户自己的宠物
-    let petContextText = ""
-    if (petId) {
-      const { data: petData, error: petErr } = await supabase
-        .from("pets")
-        .select("id,name,breed,species,stomach_health,age_years,weight_kg,life_stage,disease_history,profile_id")
-        .eq("id", petId)
-        .eq("is_active", true)
-        .single()
+// Fetch pet info (if petId is provided)
+// Use service_role client to bypass RLS, since we already verified auth and ownership
+let petContextText = ""
+if (petId) {
+const { data: petData, error: petErr } = await supabase.from("pets").select("id,name,breed,species,stomach_health,age_years,weight_kg,life_stage,disease_history,profile_id").eq("id", petId).eq("is_active", true).single()
 
-      if (petErr || !petData) {
-        return NextResponse.json({ error: "宠物信息查询失败" }, { status: 404 })
-      }
+if (petErr ||!petData) {
+return NextResponse.json({ error: "failed to fetch pet info" }, { status: 404 })
+}
 
-      // 安全校验: 确保是当前登录用户自己的宠物
-      if (petData.profile_id !== user.id) {
-        return NextResponse.json({ error: "无权访问该宠物" }, { status: 403 })
-      }
+// Security check: ensure the pet belongs to the current authenticated user
+if (petData.profile_id!== user.id) {
+return NextResponse.json({ error: "Unauthorized access to this pet" }, { status: 403 })
+}
 
-      petContextText = buildPetContext(petData)
-    }
+petContextText = buildPetContext(petData)
+}
 
-    // 根据是否有宠物信息, 定制 system prompt
-    const systemPrompt = petContextText
-      ? `${BASE_SYSTEM_PROMPT}\n\n## 当前分析目标宠物\n${petContextText}\n\n请基于这只宠物的具体情况（品种、年龄、肠胃状况、病史等）进行针对性分析，特别关注：\n- 是否适合该品种的营养需求\n- 是否会加重现有肠胃问题\n- 是否与病史有冲突（如过敏原）\n- 给出针对这只宠物的具体建议`
-      : BASE_SYSTEM_PROMPT
+// Customize system prompt based on whether pet info is available
+const systemPrompt = petContextText? `${BASE_SYSTEM_PROMPT}\n\n## Current Analysis Target Pet\n${petContextText}\n\nPlease provide a targeted analysis based on this pet's specific situation (breed, age, stomach condition, disease history, etc.), paying special attention to:\n- Whether it suits the breed's nutritional needs\n- Whether it may worsen existing stomach issues\n- Whether it conflicts with disease history (e.g. allergens)\n- Provide specific advice for this pet`: BASE_SYSTEM_PROMPT
 
-    // 构建消息（OpenAI vision 格式，两家均兼容）
-    const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
-      {
-        type: "text",
-        text:
-          note && note.trim()
-            ? `请分析这张宠物食品成分表图片。用户补充说明：${note.trim()}`
-            : "请分析这张宠物食品成分表图片，识别所有成分并给出风险评估。",
-      },
-      { type: "image_url", image_url: { url: image } },
-    ]
+// Build messages (OpenAI vision format, compatible across all providers)
+const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
+{
+type: "text",
+text:
+note && note.trim()? `Please analyze this pet food ingredient label image. User note: ${note.trim()}`: "Please analyze this pet food ingredient label image, identify all ingredients, and provide a risk assessment.",
+},
+{ type: "image_url", image_url: { url: image } },
+]
 
-    const apiMessages = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userContent },
-    ]
+const apiMessages = [
+{ role: "system", content: systemPrompt },
+{ role: "user", content: userContent },
+]
 
-    // 调用 Vision 流式 API（OpenAI 兼容格式）
-    const response = await fetch(`${cfg.baseURL}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: cfg.model,
-        messages: apiMessages,
-        stream: true,
-        // 调参说明：GLM-4V-Flash 在成分表很长时容易陷入"重复循环"
-        // - temperature 0.5 平衡稳定性与避免循环
-        // - top_p 0.82 限制候选 token 范围，降低低质量 token 概率
-        // - frequency_penalty 0.5 强力惩罚重复 token
-        // - presence_penalty 0.4 鼓励引入新主题
-        // 注意: 火山方舟 doubao-seed-1.6-vision 同样支持这些参数
-        temperature: 0.5,
-        top_p: 0.82,
-        frequency_penalty: 0.5,
-        presence_penalty: 0.4,
-        // GLM-4V-Flash 上限 1024，火山方舟 doubao-seed-1.6-vision 上限远大于此
-        max_tokens: 1024,
-      }),
-    })
+// Call Vision streaming API (OpenAI-compatible format)
+const response = await fetch(`${cfg.baseURL}/chat/completions`, {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${apiKey}`,
+},
+body: JSON.stringify({
+model: cfg.model,
+messages: apiMessages,
+stream: true,
+// Tuning notes:
+// - temperature 0.5 balances stability and avoids looping
+// - top_p 0.82 limits candidate token range, reducing low-quality tokens
+// - frequency_penalty 0.5 strongly penalizes duplicate tokens
+// - presence_penalty 0.4 encourages introducing new topics
+temperature: 0.5,
+top_p: 0.82,
+frequency_penalty: 0.5,
+presence_penalty: 0.4,
+max_tokens: 1024,
+}),
+})
 
-    if (!response.ok) {
-      const err = await response.text()
-      console.error(`[ai/ingredient-vision] ${cfg.label} error:`, err)
-      return NextResponse.json({ error: "AI 服务暂时不可用" }, { status: 502 })
-    }
+if (!response.ok) {
+const err = await response.text()
+console.error(`[ai/ingredient-vision] ${cfg.label} error:`, err)
+return NextResponse.json({ error: "AI service temporarily unavailable" }, { status: 502 })
+}
 
-    // 流式转发 SSE（与 chat/route.ts 逻辑一致）
-    const encoder = new TextEncoder()
-    const stream = new ReadableStream({
-      async start(controller) {
-        const reader = response.body?.getReader()
-        if (!reader) {
-          controller.close()
-          return
-        }
+// Stream SSE response (same logic as chat/route.ts)
+const encoder = new TextEncoder()
+const stream = new ReadableStream({
+async start(controller) {
+const reader = response.body?.getReader()
+if (!reader) {
+controller.close()
+return
+}
 
-        const decoder = new TextDecoder()
-        try {
-          while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
+const decoder = new TextDecoder()
+try {
+while (true) {
+const { done, value } = await reader.read()
+if (done) break
 
-            const chunk = decoder.decode(value, { stream: true })
-            const lines = chunk.split("\n").filter((l) => l.trim())
-            for (const line of lines) {
-              controller.enqueue(encoder.encode(`${line}\n`))
-            }
-          }
-        } catch (e) {
-          console.error(`[ai/ingredient-vision] ${cfg.label} stream error:`, e)
-        } finally {
-          controller.close()
-        }
-      },
-    })
+const chunk = decoder.decode(value, { stream: true })
+const lines = chunk.split("\n").filter((l) => l.trim())
+for (const line of lines) {
+controller.enqueue(encoder.encode(`${line}\n`))
+}
+}
+} catch (e) {
+console.error(`[ai/ingredient-vision] ${cfg.label} stream error:`, e)
+} finally {
+controller.close()
+}
+},
+})
 
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    })
-  } catch (err) {
-    console.error("[ai/ingredient-vision POST] unhandled:", err)
-    return NextResponse.json(
-      { error: "服务异常，请稍后再试" },
-      { status: 500 },
-    )
-  }
+return new Response(stream, {
+headers: {
+"Content-Type": "text/event-stream",
+"Cache-Control": "no-cache",
+Connection: "keep-alive",
+},
+})
+} catch (err) {
+console.error("[ai/ingredient-vision POST] unhandled:", err)
+return NextResponse.json({ error: "Server error, please try again later" },
+{ status: 500 },)
+}
 }

@@ -119,7 +119,7 @@ a,
   --sidebar-border: rgba(0, 0, 0, 0.06);
   --sidebar-ring: #FF7A5933;
 
-  --font-sans: 'Quicksand', 'Varela Round', 'Inter', 'SF Pro Display', 'HarmonyOS Sans', system-ui, -apple-system, 'Noto Sans SC', 'PingFang SC', sans-serif;
+  --font-sans: 'Quicksand', 'Varela Round', 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
 }
 
 /* ── Dark Theme ── */
@@ -167,7 +167,10 @@ a,
 @layer base {
   * { @apply border-border outline-ring/50; }
   body { @apply bg-background text-foreground antialiased; }
-  html { @apply font-sans; }
+  /* 始终为滚动条预留空间，避免页面/弹框切换时滚动条出现/消失导致 fixed/sticky 导航栏水平偏移。
+     scrollbar-gutter: stable 在配合 ::-webkit-scrollbar 自定义样式时在 Chrome 中可能失效，
+     因此额外使用 overflow-y: scroll 强制始终显示滚动条，彻底消除布局抖动。 */
+  html { @apply font-sans; overflow-y: scroll; scrollbar-gutter: stable; }
   a { color: inherit; text-decoration: none; }
 }
 

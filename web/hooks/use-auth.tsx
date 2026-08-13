@@ -44,12 +44,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const supabase = supabaseRef.current
     let mounted = true
+    // Track the last uid we loaded profile for, to avoid duplicate
+    // fetches from initializeAuth + onAuthStateChange firing in parallel
+    let lastLoadedUid: string | undefined | null = "__UNINIT__"
 
     const loadProfile = async (uid: string | undefined) => {
       if (!uid) {
         setIsAdmin(false)
+        lastLoadedUid = undefined
         return
       }
+      if (uid === lastLoadedUid) return
+      lastLoadedUid = uid
       try {
         const { data } = await supabase
           .from("profiles")
@@ -66,22 +72,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initializeAuth = async () => {
       try {
-        const { data: { user: authUser } } = await supabase.auth.getUser()
+        const { data: { user: authUser }, error } = await supabase.auth.getUser()
 
         if (!mounted) return
+
+        // If getUser() returns an error (e.g. refresh token is invalid/expired),
+        // clear the stale local session so it doesn't keep retrying.
+        if (error) {
+          await supabase.auth.signOut({ scope: "local" })
+          setUser(null)
+          setIsAdmin(false)
+          setLoading(false)
+          return
+        }
 
         setUser(authUser ?? null)
         await loadProfile(authUser?.id)
         setLoading(false)
       } catch (error) {
         console.error("Auth initialization failed:", error)
-        if (mounted) setLoading(false)
+        // Clear stale session on any unexpected auth error
+        try {
+          await supabase.auth.signOut({ scope: "local" })
+        } catch {}
+        if (mounted) {
+          setUser(null)
+          setIsAdmin(false)
+          setLoading(false)
+        }
       }
     }
 
     initializeAuth()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Skip the initial session event — initializeAuth already handles it
+      if (event === "INITIAL_SESSION") return
+
+      // When the token refresh fails, clear the stale local session
+      // to prevent repeated refresh attempts on every page load.
+      // Use setTimeout to avoid calling auth methods synchronously
+      // inside onAuthStateChange (can cause Supabase SDK deadlocks).
+      if ((event as string) === "TOKEN_REFRESH_FAILED") {
+        setTimeout(() => {
+          supabase.auth.signOut({ scope: "local" }).catch(() => {})
+        }, 0)
+        setUser(null)
+        setIsAdmin(false)
+        setLoading(false)
+        return
+      }
+
       setUser(session?.user ?? null)
       await loadProfile(session?.user?.id)
       setLoading(false)
@@ -97,7 +138,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await supabaseRef.current.auth.signOut({ scope: "global" })
     } catch {
-      // Network error — still redirect to clear local session
+      // Global signOut failed (e.g. refresh token already invalid) —
+      // fall back to local signOut to clear stale cookies.
+      try {
+        await supabaseRef.current.auth.signOut({ scope: "local" })
+      } catch {}
     }
     window.location.href = "/"
   }, [])

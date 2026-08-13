@@ -1,134 +1,203 @@
 "use client"
 
 import { EmojiIcon } from "@/components/ui/emoji-icon"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
+import { useTranslations } from "next-intl"
 
 export function HeroVideo({ petCount = 0 }: { petCount?: number }) {
-  const { user } = useAuth()
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [hasEnded, setHasEnded] = useState(false)
-  const [videoLoaded, setVideoLoaded] = useState(false)
-  const [displayCount, setDisplayCount] = useState(0)
-  const finalCount = petCount + 55029
+const { user } = useAuth()
+const router = useRouter()
+const t = useTranslations("Hero")
+const videoRef = useRef<HTMLVideoElement>(null)
+const [videoLoaded, setVideoLoaded] = useState(false)
+const [isMuted, setIsMuted] = useState(true)
+const [displayCount, setDisplayCount] = useState(0)
+const finalCount = petCount + 55029
 
-  useEffect(() => {
-    const duration = 1500
-    const steps = 60
-    let current = 0
-    let step = 0
+// Loading gate: show hero content only after video is ready
+const [heroReady, setHeroReady] = useState(false)
 
-    const timer = setInterval(() => {
-      step++
-      const progress = 1 - Math.pow(1 - step / steps, 3)
-      current = Math.round(finalCount * progress)
-      setDisplayCount(current)
+useEffect(() => {
+const duration = 1500
+const steps = 60
+let current = 0
+let step = 0
 
-      if (step >= steps) {
-        setDisplayCount(finalCount)
-        clearInterval(timer)
-      }
-    }, duration / steps)
+const timer = setInterval(() => {
+step++
+const progress = 1 - Math.pow(1 - step / steps, 3)
+current = Math.round(finalCount * progress)
+setDisplayCount(current)
 
-    return () => clearInterval(timer)
-  }, [finalCount])
+if (step >= steps) {
+setDisplayCount(finalCount)
+clearInterval(timer)
+}
+}, duration / steps)
 
-  const handleReplay = useCallback(() => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0
-      videoRef.current.play().catch(() => {})
-      setHasEnded(false)
-    }
-  }, [])
+return () => clearInterval(timer)
+}, [finalCount])
 
-  const handleVideoCanPlay = useCallback(() => {
-    setVideoLoaded(true)
-  }, [])
+// Fallback: if video takes too long (>4s), show hero anyway
+useEffect(() => {
+const fallback = setTimeout(() => {
+if (!videoLoaded) {
+setVideoLoaded(true)
+setHeroReady(true)
+}
+}, 4000)
+return () => clearTimeout(fallback)
+}, [videoLoaded])
 
-  return (
-    <div className="relative aspect-[2.5/1] w-full">
-      {/* LCP element: static image loads immediately */}
-      <img
-        src="/hero-background.png"
-        alt="Nuzzly town"
-        fetchPriority="high"
-        className="absolute inset-0 h-full w-full object-cover"
-      />
-      {/* Video loads in background, covers image when ready */}
-      <video
-        ref={videoRef}
-        src="/nuzzly-town.mp4"
-        autoPlay
-        muted
-        playsInline
-        preload="auto"
-        onCanPlay={handleVideoCanPlay}
-        onEnded={() => setHasEnded(true)}
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
-          videoLoaded ? "opacity-100" : "opacity-0"
-        }`}
-      />
+const handleVideoCanPlay = useCallback(() => {
+setVideoLoaded(true)
+setHeroReady(true)
+const v = videoRef.current
+if (!v) return
+v.volume = 0.7
+// 尝试带声音播放,浏览器策略阻止 保持静音
+v.muted = false
+v.play().catch(() => {
+v.muted = true
+v.play().catch(() => {})
+setIsMuted(true)
+})
+if (!v.muted) setIsMuted(false)
+}, [])
 
-      {/* Warm gradient overlay */}
-      <div className="absolute inset-0 z-[5] bg-gradient-to-r from-[#3D2817]/60 via-[#3D2817]/30 to-transparent" />
+const handleReplay = useCallback(() => {
+if (videoRef.current) {
+videoRef.current.currentTime = 0
+videoRef.current.volume = 0.7
+videoRef.current.play().catch(() => {})
+}
+}, [])
 
-      {/* Content Overlay */}
-      <div className="absolute inset-0 z-10 flex items-center">
-        <div className="w-full max-w-[600px] px-8 md:px-16">
-          <span className="mb-4 block text-[12px] font-bold uppercase tracking-[0.2em] text-[#FFB59E] drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] md:mb-6 md:text-[13px]">
-            Pet Food Trust Infrastructure
-          </span>
+const toggleMute = useCallback(() => {
+const v = videoRef.current
+if (!v) return
+v.muted =!v.muted
+if (!v.muted) v.volume = 0.7
+setIsMuted(v.muted)
+if (!v.muted) {
+v.play().catch(() => {})
+}
+}, [])
 
-          <h1 className="text-[36px] font-bold leading-[1.05] tracking-[-0.04em] text-[#FFF8F0] drop-shadow-[0_2px_8px_rgba(40,20,5,0.45)] md:text-[52px] lg:text-[64px]">
-            让每一次选择
-            <br />
-            都值得信赖
-          </h1>
+return (<div className="relative aspect-[2.5/1] w-full">
+{/* LCP element: static image loads immediately */}
+<Image
+src="/hero-background.png"
+alt="Nuzzly town"
+fill
+priority
+sizes="100vw"
+className="absolute inset-0 h-full w-full object-cover"
+/>
+{/* Video loads in background, covers image when ready */}
+<video
+ref={videoRef}
+src="/nuzzly-town.mp4"
+autoPlay
+muted
+playsInline
+preload="auto"
+onCanPlay={handleVideoCanPlay}
+className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+videoLoaded? "opacity-100": "opacity-0"
+}`}
+/>
 
-          <p className="mt-4 max-w-[420px] text-[14px] leading-[1.8] text-white/80 drop-shadow-[0_1px_4px_rgba(40,20,5,0.4)] md:mt-6 md:text-[16px] lg:text-[18px]">
-            基于长期数据与真实口碑，建立透明、可信赖的猫咪消费决策基础设施。
-          </p>
+{/* Warm gradient overlay */}
+<div className="absolute inset-0 z-[5] bg-gradient-to-r from-[#3D2817]/60 via-[#3D2817]/30 to-transparent" />
 
-          <Button
-            asChild
-            className="mt-6 h-[48px] rounded-full bg-[#FF7A59] px-7 text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(255,122,89,0.25)] transition-transform hover:translate-y-[-2px] md:mt-8 md:h-[52px] md:px-8 md:text-[16px]"
-          >
-            <Link href={user ? "/dashboard" : "/signup"}>立即加入</Link>
-          </Button>
-        </div>
-      </div>
+{/* Loading overlay — shown until video is ready */}
+{!heroReady && (
+<div className="absolute inset-0 z-[6] flex items-center justify-center bg-[#3D2817]/40 backdrop-blur-sm transition-opacity duration-500">
+<div className="flex flex-col items-center gap-3">
+{/* Animated loading dots */}
+<div className="flex gap-1.5">
+<span className="size-2 rounded-full bg-white/70 animate-[bounce_0.6s_ease-in-out_infinite]" style={{ animationDelay: "0ms" }} />
+<span className="size-2 rounded-full bg-white/70 animate-[bounce_0.6s_ease-in-out_infinite]" style={{ animationDelay: "150ms" }} />
+<span className="size-2 rounded-full bg-white/70 animate-[bounce_0.6s_ease-in-out_infinite]" style={{ animationDelay: "300ms" }} />
+</div>
+<span className="text-[12px] font-medium tracking-wide text-white/60 uppercase">{t("loading") || "Loading"}</span>
+</div>
+</div>
+)}
 
-      {/* Floating Data Card */}
-      <div className="absolute right-[15%] top-[30%] z-20 hidden rounded-[14px] bg-[#3D2817]/70 backdrop-blur-xl px-4 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10 md:block lg:right-[18%]">
-        <div className="flex items-center gap-2">
-          <EmojiIcon name="Check" size={14} className="flex-shrink-0 mt-0.5" />
-          <span className="text-[12px] text-white/80 leading-none">累计追踪</span>
-          <span className="text-[14px] font-semibold text-white leading-none">{displayCount.toLocaleString()}+</span>
-          <span className="text-[12px] text-white/80 leading-none">只猫咪</span>
-        </div>
-      </div>
+{/* Content Overlay — fades in when hero is ready */}
+<div className={`absolute inset-0 z-10 flex items-center transition-all duration-700 ${
+heroReady? "opacity-100 translate-y-0": "opacity-0 translate-y-4"
+}`}>
+<div className="w-full max-w-[600px] px-8 md:px-16">
+<span className="mb-4 block text-[12px] font-bold uppercase tracking-[0.2em] text-[#FFB59E] drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] md:mb-6 md:text-[13px]">
+{t("badge")}
+</span>
 
-      {/* Replay button - shown after video ends */}
-      {hasEnded && (
-        <button
-          onClick={handleReplay}
-          className="absolute bottom-6 right-6 z-20 flex size-12 items-center justify-center rounded-full bg-white/60 text-[#FF7A59] shadow-[0_4px_16px_rgba(0,0,0,0.15)] backdrop-blur-sm transition-all hover:scale-110 hover:bg-white/80"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 18 18" className="ml-0.5">
-            <path d="M12.031,10.08c.388-.227,.62-.63,.62-1.08s-.232-.853-.62-1.08c0,0,0,0,0,0l-3.651-2.129c-.387-.226-.866-.226-1.252-.004-.387,.223-.627,.638-.627,1.084v4.259c0,.446,.24,.861,.627,1.084,.192,.11,.407,.166,.623,.166,.218,0,.436-.057,.63-.169l3.651-2.13Z" fill="currentColor" />
-            <path d="M9,1c-.414,0-.75,.336-.75,.75s.336,.75,.75,.75c3.584,0,6.5,2.916,6.5,6.5s-2.916,6.5-6.5,6.5c-.414,0-.75,.336-.75,.75s.336,.75,.75,.75c4.411,0,8-3.589,8-8S13.411,1,9,1Z" fill="currentColor" />
-            <path d="M3.343,13.596c-.293,.293-.293,.768,0,1.061,.293,.293,.768,.293,1.061,0,.293-.293,.293-.768,0-1.061s-.768-.293-1.061,0Z" fill="currentColor" />
-            <circle cx="1.75" cy="9" r=".75" fill="currentColor" />
-            <path d="M3.343,3.343c-.293,.293-.293,.768,0,1.061s.768,.293,1.061,0,.293-.768,0-1.061c-.293-.293-.768-.293-1.061,0Z" fill="currentColor" />
-            <path d="M6.513,15.005c-.383-.158-.821,.023-.98,.406-.159,.383,.023,.821,.406,.98,.383,.158,.821-.023,.98-.406s-.023-.822-.406-.98Z" fill="currentColor" />
-            <path d="M2.015,11.082c-.383,.158-.564,.597-.406,.98,.159,.383,.597,.564,.98,.406,.383-.158,.564-.597,.406-.98-.159-.383-.597-.564-.98-.406Z" fill="currentColor" />
-            <path d="M2.589,5.533c-.383-.159-.821,.023-.98,.406-.159,.383,.023,.822,.406,.98,.383,.158,.821-.023,.98-.406,.159-.383-.023-.821-.406-.98Z" fill="currentColor" />
-            <path d="M6.513,2.995c.383-.158,.564-.597,.406-.98-.159-.383-.597-.564-.98-.406-.383,.159-.564,.597-.406,.98s.597,.564,.98,.406Z" fill="currentColor" />
-          </svg>
-        </button>
-      )}
-    </div>
-  )
+<h1 className="text-[36px] font-bold leading-[1.05] tracking-[-0.04em] text-[#FFF8F0] drop-shadow-[0_2px_8px_rgba(40,20,5,0.45)] md:text-[52px] lg:text-[64px]">
+{t("title")}
+</h1>
+
+<p className="mt-4 max-w-[420px] text-[14px] leading-[1.8] text-white/80 drop-shadow-[0_1px_4px_rgba(40,20,5,0.4)] md:mt-6 md:text-[16px] lg:text-[18px]">
+{t("subtitle")}
+</p>
+
+<Button
+type="button"
+onClick={() => (user? router.push("/dashboard"): router.push("/login"))}
+className="mt-6 h-[48px] rounded-full bg-[#FF7A59] px-7 text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(255,122,89,0.25)] transition-transform hover:translate-y-[-2px] md:mt-8 md:h-[52px] md:px-8 md:text-[16px] whitespace-nowrap"
+>
+{t("cta")}
+</Button>
+</div>
+</div>
+
+{/* Floating Data Card */}
+<div className={`absolute right-[15%] top-[30%] z-20 hidden rounded-[14px] bg-[#3D2817]/70 backdrop-blur-xl px-4 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10 transition-all duration-700 md:block lg:right-[18%] ${
+heroReady? "opacity-100 translate-x-0": "opacity-0 translate-x-4"
+}`}>
+<div className="flex items-center gap-2">
+<EmojiIcon name="Check" size={14} className="flex-shrink-0 mt-0.5" />
+<span className="text-[12px] text-white/80 leading-none">{t("statPets")}</span>
+<span className="text-[14px] font-semibold text-white leading-none">{displayCount.toLocaleString()}+</span>
+</div>
+</div>
+
+{/* Sound toggle button */}
+<button
+onClick={toggleMute}
+className={`absolute bottom-6 right-20 z-20 flex size-11 items-center justify-center rounded-full bg-white/60 text-[#3D2817] shadow-[0_4px_16px_rgba(0,0,0,0.15)] backdrop-blur-sm transition-all hover:scale-110 hover:bg-white/80 ${
+heroReady? "opacity-100": "opacity-0 pointer-events-none"
+}`}
+title={isMuted? "Unmute": "Mute"}
+>
+{isMuted? (<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" />
+<line x1="23" y1="9" x2="17" y2="15" />
+<line x1="17" y1="9" x2="23" y2="15" />
+</svg>): (<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" />
+<path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+<path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+</svg>)}
+</button>
+
+{/* Replay button - always visible */}
+<button
+onClick={handleReplay}
+className={`absolute bottom-6 right-6 z-20 flex size-11 items-center justify-center rounded-full bg-white/60 text-[#FF7A59] shadow-[0_4px_16px_rgba(0,0,0,0.15)] backdrop-blur-sm transition-all hover:scale-110 hover:bg-white/80 ${
+heroReady? "opacity-100": "opacity-0 pointer-events-none"
+}`}
+title="Replay"
+>
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+<polygon points="8 5 19 12 8 19 8 5" fill="currentColor" />
+</svg>
+</button>
+</div>)
 }

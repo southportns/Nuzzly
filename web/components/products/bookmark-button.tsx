@@ -4,31 +4,33 @@ import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { useState, useTransition } from "react"
 import { createBookmarkAction, deleteBookmarkAction } from "@/app/(main)/products/[productId]/actions"
 import { cn } from "@/lib/utils"
+import { openLoginModal } from "@/hooks/use-login-modal"
 import { toast } from "sonner"
 import { trackIntentEvent } from "@/lib/tracking/intent-tracker"
+import { useTranslations } from "next-intl"
 
 export function BookmarkButton({ productId, userId, initialBookmarked }: { productId: string; userId?: string; initialBookmarked: boolean }) {
+  const t = useTranslations("Common")
   const [bookmarked, setBookmarked] = useState(initialBookmarked)
   const [isPending, startTransition] = useTransition()
 
   function handleToggle() {
     startTransition(async () => {
       if (!userId) {
-        toast.error("请先登录")
+        openLoginModal()
         return
       }
-      // P1: route through Write Gateway
       if (bookmarked) {
         const { error } = await deleteBookmarkAction(userId, productId, userId)
         if (error) { toast.error(error.message); return }
         setBookmarked(false)
-        toast.success("已取消收藏")
+        toast.success(t("cancelBookmark"))
         await trackIntentEvent({ userId, eventType: "product_unbookmark", productId })
       } else {
         const { error } = await createBookmarkAction(userId, productId, userId)
         if (error) { toast.error(error.message); return }
         setBookmarked(true)
-        toast.success("已收藏")
+        toast.success(t("bookmarked"))
         await trackIntentEvent({ userId, eventType: "product_bookmark", productId })
       }
     })
@@ -49,7 +51,7 @@ export function BookmarkButton({ productId, userId, initialBookmarked }: { produ
       <EmojiIcon name="Heart"
         className={cn("size-4 transition-all", bookmarked && "fill-[#FF7A59]")}
       />
-      {bookmarked ? "已收藏" : "收藏"}
+      {bookmarked ? t("bookmarked") : t("bookmark")}
     </button>
   )
 }

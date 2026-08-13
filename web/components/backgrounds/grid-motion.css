@@ -1,0 +1,87 @@
+/* GridMotion — react-bits JS+CSS 变体的本地实现 */
+/* 4 行 × 7 列 = 28 个 cell，鼠标水平移动时各 row 视差反向平移 */
+
+.grid-motion-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle, var(--gm-gradient, #000) 0%, transparent 100%);
+  /* 左边缘渐隐：让 GridMotion 与左侧模块柔和衔接 */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 12%, black 100%);
+}
+
+/* 顶层遮罩：登录页使用整体页面渐变背景，此处保持透明让底层渐变透出 */
+.grid-motion-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: none;
+}
+
+/* 整个 4×7 网格容器：稍微旋转，溢出可视区域，形成倾斜视差 */
+.grid-motion-grid {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  display: grid;
+  grid-template-rows: repeat(4, auto);
+  grid-template-columns: 1fr;
+  gap: 6px;
+  transform: rotate(-15deg);
+  transform-origin: center;
+  z-index: 2;
+  pointer-events: none;
+  /* 放大网格：2× 父容器尺寸，使每个 cell 等比放大 */
+  width: 200%;
+  height: 200%;
+  will-change: transform, filter;
+}
+
+/* 单行：7 列等分 */
+.grid-motion-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 16px;
+  will-change: transform, filter;
+}
+
+/* 单个 cell：圆角方块 */
+.grid-motion-item {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+/* cell 内图片层 */
+.grid-motion-item-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+/* cell 内文字层 */
+.grid-motion-item-content {
+  position: relative;
+  z-index: 1;
+  padding: 16px;
+}
+
+/* 尊重用户的减弱动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .grid-motion-row {
+    transform: none !important;
+  }
+}

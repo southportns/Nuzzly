@@ -1,83 +1,91 @@
 import { EmojiIcon } from "@/components/ui/emoji-icon"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { LoginButton } from "@/components/auth/login-button"
+import { getTranslations } from "next-intl/server"
 
-export const metadata = {
-  title: "保护计划 — Nuzzly毛球镇",
+export async function generateMetadata() {
+  const t = await getTranslations("Protection")
+  return { title: `${t("title")} — Nuzzly Town` }
 }
 
-const features = [
-  {
-    iconName: "AlertTriangle",
-    title: "风险预警系统",
-    description: "实时监控产品异常反馈，自动发出风险预警。",
-    status: "已上线",
-  },
-  {
-    iconName: "Clock",
-    title: "长期追踪机制",
-    description: "7/30/90/180 天定期提醒，确保数据时间价值。",
-    status: "已上线",
-  },
-  {
-    iconName: "FileCheck",
-    title: "凭证验证体系",
-    description: "AI 验证购买凭证真实性，提升评价可信度。",
-    status: "开发中",
-  },
-  {
-    iconName: "Users",
-    title: "可信用户等级",
-    description: "基于活跃度与凭证评估用户可信度。",
-    status: "已上线",
-  },
-  {
-    iconName: "Bell",
-    title: "配方变更追踪",
-    description: "追踪产品配方变更历史，保护知情权。",
-    status: "开发中",
-  },
-  {
-    iconName: "ShieldCheck",
-    title: "产品透明度指数",
-    description: "从成分、工厂、检测等维度评估透明度。",
-    status: "规划中",
-  },
-]
+export default async function ProtectionPage() {
+  const t = await getTranslations("Protection")
 
-const principles = [
-  {
-    iconName: "BarChart3",
-    title: "不做官方定性",
-    description: "展示数据与统计，让用户基于数据自行决策。",
-  },
-  {
-    iconName: "Ban",
-    title: "严格打击水军",
-    description: "凭证 + 信任分 + 行为分三重反作弊机制。",
-  },
-  {
-    iconName: "Lock",
-    title: "保护用户隐私",
-    description: "评价匿名化处理，用户数据严格保密。",
-  },
-]
+  const features = [
+    {
+      iconName: "AlertTriangle",
+      title: t("featureRiskAlert.title"),
+      description: t("featureRiskAlert.description"),
+      status: t("statusLive"),
+      statusKey: "live",
+    },
+    {
+      iconName: "Clock",
+      title: t("featureLongTermTracking.title"),
+      description: t("featureLongTermTracking.description"),
+      status: t("statusLive"),
+      statusKey: "live",
+    },
+    {
+      iconName: "FileCheck",
+      title: t("featureReceiptVerification.title"),
+      description: t("featureReceiptVerification.description"),
+      status: t("statusInDev"),
+      statusKey: "dev",
+    },
+    {
+      iconName: "Users",
+      title: t("featureTrustedTiers.title"),
+      description: t("featureTrustedTiers.description"),
+      status: t("statusLive"),
+      statusKey: "live",
+    },
+    {
+      iconName: "Bell",
+      title: t("featureRecipeTracking.title"),
+      description: t("featureRecipeTracking.description"),
+      status: t("statusInDev"),
+      statusKey: "dev",
+    },
+    {
+      iconName: "ShieldCheck",
+      title: t("featureTransparencyIndex.title"),
+      description: t("featureTransparencyIndex.description"),
+      status: t("statusPlanned"),
+      statusKey: "planned",
+    },
+  ]
 
-export default function ProtectionPage() {
+  const principles = [
+    {
+      iconName: "BarChart3",
+      title: t("principleNoVerdicts.title"),
+      description: t("principleNoVerdicts.description"),
+    },
+    {
+      iconName: "Ban",
+      title: t("principleAntiFraud.title"),
+      description: t("principleAntiFraud.description"),
+    },
+    {
+      iconName: "Lock",
+      title: t("principlePrivacy.title"),
+      description: t("principlePrivacy.description"),
+    },
+  ]
+
   return (
     <div className="bg-[#F7F6F3]">
       <div className="mx-auto max-w-[1440px] px-6 py-8 md:px-12 md:py-10">
         {/* ========== Hero ========== */}
         <div className="text-center">
           <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#FF7A59]">
-            Protection Plan
+            {t("badge")}
           </span>
           <h1 className="mt-2 text-[32px] font-bold leading-[1.05] tracking-[-0.04em] text-[#111111] md:text-[40px]">
-            消费者保护计划
+            {t("title")}
           </h1>
           <p className="mx-auto mt-2 max-w-[640px] text-[14px] leading-[1.7] text-[#6B6B6B] md:text-[15px]">
-            通过多重机制保护消费者权益，
-            确保每一位铲屎官获得真实、可信的产品信息。
+            {t("subtitle")}
           </p>
         </div>
 
@@ -98,9 +106,9 @@ export default function ProtectionPage() {
                       <span
                         className={
                           "rounded-full px-2 py-0.5 text-[10px] font-medium " +
-                          (f.status === "已上线"
+                          (f.statusKey === "live"
                             ? "bg-[#A8C5A0]/20 text-[#5A8A50]"
-                            : f.status === "开发中"
+                            : f.statusKey === "dev"
                             ? "bg-[#E8A87C]/20 text-[#C47A3C]"
                             : "bg-[#F0EFED] text-[#6B6B6B]")
                         }
@@ -123,10 +131,10 @@ export default function ProtectionPage() {
               {/* Centered title block */}
               <div className="text-center">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#FF7A59]">
-                  Principles
+                  {t("principlesBadge")}
                 </span>
                 <h2 className="mt-1 text-[15px] font-bold tracking-[-0.01em] text-[#111111]">
-                  我们的原则
+                  {t("principlesTitle")}
                 </h2>
               </div>
 
@@ -154,12 +162,9 @@ export default function ProtectionPage() {
 
               {/* CTA */}
               <div className="pt-3">
-                <Button
-                  asChild
-                  className="h-[40px] w-full rounded-full bg-[#FF7A59] text-[13px] font-semibold text-white hover:bg-[#E86A4A]"
-                >
-                  <Link href="/signup">加入保护计划</Link>
-                </Button>
+                <LoginButton className="flex h-[40px] w-full items-center justify-center rounded-full bg-[#FF7A59] text-[13px] font-semibold text-white transition-colors hover:bg-[#E86A4A]">
+                  {t("joinPlan")}
+                </LoginButton>
               </div>
             </div>
           </div>

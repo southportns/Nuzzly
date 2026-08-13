@@ -33,7 +33,7 @@ export default async function FollowupPage({
 
   return (
     <div className="mx-auto max-w-lg px-6 py-8">
-      <h1 className="text-2xl font-bold mb-6">长期追踪反馈</h1>
+      <h1 className="text-2xl font-bold mb-6">Long-term Tracking Feedback</h1>
       <FollowupWizard
         scheduleId={schedule.id}
         productName={reviewData.products.name}

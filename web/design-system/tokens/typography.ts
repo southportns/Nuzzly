@@ -1,4 +1,4 @@
-// Nuzzly毛球镇 V2 Design Tokens — Typography
+// NuzzlyTown V2 Design Tokens — Typography
 // Style: Apple Minimal — large hero, tight tracking, warm serif feel via sans
 
 export const typography = {

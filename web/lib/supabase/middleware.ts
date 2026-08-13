@@ -21,6 +21,10 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
+  // getUser() will automatically attempt to refresh an expired access token
+  // using the refresh token from cookies. If the refresh token is invalid,
+  // the server client calls setAll() with expired cookie values to clear
+  // them, and returns { data: { user: null }, error: ... }.
   const {
     data: { user },
   } = await supabase.auth.getUser()

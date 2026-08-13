@@ -1,25 +1,15 @@
 "use client"
 
 import { EmojiIcon } from "@/components/ui/emoji-icon"
-import { useAuth } from "@/hooks/use-auth"
-import { openLoginModal } from "@/hooks/use-login-modal"
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
-
-interface Profile {
-  id: string
-  display_name: string | null
-  avatar_url: string | null
-  trust_score: number | null
-  user_number: number | null
-  username: string | null
-  bio: string | null
-}
+import { useAuth } from "@/hooks/use-auth"
+import { openLoginModal } from "@/hooks/use-login-modal"
 
 export function UserProfileCard() {
   const { user } = useAuth()
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null; trust_score: number | null; user_number: number | null; username: string | null; bio: string | null } | null>(null)
   const [followerCount, setFollowerCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -28,25 +18,12 @@ export function UserProfileCard() {
   const supabase = supabaseRef.current
 
   useEffect(() => {
-    if (!user?.id) {
-      setLoading(false)
-      return
-    }
+    if (!user?.id) { setLoading(false); return }
     async function load() {
       const [{ data: p }, { count: fc }, { count: fgc }] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id, display_name, avatar_url, trust_score, user_number, username, bio")
-          .eq("id", user!.id)
-          .single(),
-        supabase
-          .from("community_follows")
-          .select("*", { count: "exact", head: true })
-          .eq("following_id", user!.id),
-        supabase
-          .from("community_follows")
-          .select("*", { count: "exact", head: true })
-          .eq("follower_id", user!.id),
+        supabase.from("public_profiles").select("display_name, avatar_url, trust_score, user_number, username, bio").eq("id", user!.id).single(),
+        supabase.from("community_follows").select("*", { count: "exact", head: true }).eq("following_id", user!.id),
+        supabase.from("community_follows").select("*", { count: "exact", head: true }).eq("follower_id", user!.id),
       ])
       if (p) setProfile(p)
       setFollowerCount(fc || 0)
@@ -64,16 +41,10 @@ export function UserProfileCard() {
             <EmojiIcon name="User" className="size-7 text-[#B5A594]" />
           </div>
           <div className="text-center">
-            <div className="text-[14px] font-semibold text-[#2D2118]">登录后查看更多</div>
-            <div className="mt-1 text-[12px] text-[#B5A594]">加入社区，分享你的养宠故事</div>
+<div className="text-[14px] font-semibold text-[#2D2118]">Sign in to see more</div>
+      <div className="mt-1 text-[12px] text-[#B5A594]">Join the community and share your pet stories</div>
           </div>
-          <button
-            type="button"
-            onClick={() => openLoginModal()}
-            className="mt-1 rounded-full bg-[#8B5E46] px-6 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#7A523D]"
-          >
-            立即登录
-          </button>
+          <button type="button" onClick={() => openLoginModal()} className="mt-1 rounded-full bg-[#8B5E46] px-6 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#7A523D]">NowSign In</button>
         </div>
       </div>
     )
@@ -85,7 +56,6 @@ export function UserProfileCard() {
         <div className="flex flex-col items-center gap-3 py-4">
           <div className="size-16 animate-pulse rounded-full bg-[#F5EDE5]" />
           <div className="h-4 w-20 animate-pulse rounded bg-[#F5EDE5]" />
-          <div className="h-3 w-16 animate-pulse rounded bg-[#F5EDE5]" />
         </div>
       </div>
     )
@@ -93,18 +63,8 @@ export function UserProfileCard() {
 
   if (!profile) return null
 
-  const trustLevel =
-    (profile.trust_score || 0) >= 80
-      ? { label: "钻石", color: "from-[#B8D4E3] to-[#7BA7BC]" }
-      : (profile.trust_score || 0) >= 60
-        ? { label: "金牌", color: "from-[#F5DEB3] to-[#D4A574]" }
-        : (profile.trust_score || 0) >= 40
-          ? { label: "银牌", color: "from-[#E0E0E0] to-[#B0B0B0]" }
-          : { label: "铜牌", color: "from-[#E8D5C4] to-[#C4A882]" }
-
   return (
     <div className="rounded-2xl border border-[#E8E0D8] bg-white p-5 shadow-[0_1px_4px_rgba(139,94,70,0.06)]">
-      {/* 头像 + 名称 */}
       <div className="flex flex-col items-center">
         <div className="relative">
           {profile.avatar_url ? (
@@ -116,51 +76,32 @@ export function UserProfileCard() {
               {(profile.username || profile.display_name || "U")[0]}
             </div>
           )}
-          <div className={`absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-gradient-to-br ${trustLevel.color} text-[8px] font-bold text-white shadow-sm`}>
-            {trustLevel.label[0]}
-          </div>
         </div>
         <div className="mt-2.5 text-center">
-          <div className="text-[15px] font-bold text-[#2D2118]">{profile.username || profile.display_name || "匿名用户"}</div>
-          <div className="mt-0.5 text-[11px] text-[#B5A594]">
-            ID: nuzzmily{String(profile.user_number || 0).padStart(3, "0")}
-          </div>
+          <div className="text-[15px] font-bold text-[#2D2118]">{profile.username || profile.display_name || "Anonymous"}</div>
+          <div className="mt-0.5 text-[11px] text-[#B5A594]">ID: nuzzmily{String(profile.user_number || 0).padStart(3, "0")}</div>
         </div>
       </div>
-
-      {/* 信任分 */}
-      <div className="mt-4 rounded-xl bg-[#FAF7F4] p-3">
+      <div className="mt-3 rounded-xl bg-[#FAF7F4] px-3 py-2">
         <div className="flex items-center justify-between">
-          <span className="text-[12px] text-[#B5A594]">信任分</span>
+          <span className="text-[12px] text-[#B5A594]">Trust Score</span>
           <span className="text-[14px] font-bold text-[#8B5E46]">{profile.trust_score || 0}</span>
         </div>
-        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#E8E0D8]">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-[#8B5E46] to-[#D4A574] transition-all duration-500"
-            style={{ width: `${Math.min(100, profile.trust_score || 0)}%` }}
-          />
+        <div className="mt-1 h-1 overflow-hidden rounded-full bg-[#E8E0D8]">
+          <div className="h-full rounded-full bg-gradient-to-r from-[#8B5E46] to-[#D4A574] transition-all duration-500" style={{ width: `${Math.min(100, profile.trust_score || 0)}%` }} />
         </div>
       </div>
-
-      {/* 粉丝 / 关注 */}
       <div className="mt-3 flex items-center justify-center gap-6 text-center">
         <div>
           <div className="text-[16px] font-bold text-[#2D2118]">{followerCount}</div>
-          <div className="text-[11px] text-[#B5A594]">粉丝</div>
+          <div className="text-[11px] text-[#B5A594]">Followers</div>
         </div>
         <div className="h-6 w-px bg-[#E8E0D8]" />
         <div>
           <div className="text-[16px] font-bold text-[#2D2118]">{followingCount}</div>
-          <div className="text-[11px] text-[#B5A594]">关注</div>
+          <div className="text-[11px] text-[#B5A594]">Follow</div>
         </div>
       </div>
-
-      {/* 简介 */}
-      {profile.bio && (
-        <div className="mt-3 rounded-xl bg-[#FAF7F4] p-3">
-          <p className="text-[12px] leading-relaxed text-[#7A6352]">{profile.bio}</p>
-        </div>
-      )}
     </div>
   )
 }

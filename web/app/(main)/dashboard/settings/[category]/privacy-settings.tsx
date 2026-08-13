@@ -14,37 +14,37 @@ export default function PrivacySettings() {
 
   const handleSave = () => {
     localStorage.setItem("nuzzly_privacy", JSON.stringify(privacy))
-    alert("隐私设置已保存")
+    alert("Privacy settings saved")
   }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-[28px] font-semibold leading-[1.1] tracking-normal text-[#111111]">
-          隐私
+          Privacy
         </h1>
-        <p className="mt-2 text-[14px] text-[#6B6B6B]">管理你的隐私设置</p>
+        <p className="mt-2 text-[14px] text-[#6B6B6B]">Manage your privacy settings</p>
       </div>
 
       <SettingsCard>
         <div className="divide-y divide-[rgba(0,0,0,0.04)]">
           <SettingsToggle
-            label="公开我的主页"
+            label="Public Profile"
             checked={privacy.publicProfile}
             onChange={(checked) => setPrivacy({ ...privacy, publicProfile: checked })}
           />
           <SettingsToggle
-            label="显示评价记录"
+            label="Show Reviews"
             checked={privacy.showReviews}
             onChange={(checked) => setPrivacy({ ...privacy, showReviews: checked })}
           />
           <SettingsToggle
-            label="允许推荐算法"
+            label="Allow Recommendations"
             checked={privacy.allowRecommend}
             onChange={(checked) => setPrivacy({ ...privacy, allowRecommend: checked })}
           />
           <SettingsToggle
-            label="分享使用数据"
+            label="Share Usage Data"
             checked={privacy.shareData}
             onChange={(checked) => setPrivacy({ ...privacy, shareData: checked })}
           />
@@ -55,7 +55,7 @@ export default function PrivacySettings() {
         onClick={handleSave}
         className="w-full rounded-full bg-[#FF7A59] py-3 text-[15px] font-semibold text-white transition-colors hover:bg-[#E86A4A]"
       >
-        保存
+        Save
       </button>
     </div>
   )

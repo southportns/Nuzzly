@@ -22,7 +22,7 @@ export async function createIntentEvent(record: {
     timestamp: Date.now(),
     idempotencyKey: generateIdempotencyKey("CREATE_INTENT_EVENT", {
       profile_id: record.profile_id,
-      product_id: record.product_id,
+      product_id: record.product_id ?? "",
       event_type: record.event_type,
     }),
     source: "api",

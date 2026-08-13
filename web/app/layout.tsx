@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -13,29 +15,37 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Nuzzly毛球镇 — 猫咪消费信任基础设施",
-  description: "基于长期真实反馈与社区追踪数据，建立透明、可信赖的猫咪消费基础设施",
+  title: "Nuzzly Town — Pet Care Trust Infrastructure",
+  description: "Building transparent, trustworthy pet care infrastructure through long-term real-world feedback and community-tracked data.",
   icons: {
     icon: "/favicon.png",
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Nuzzly毛球镇",
+    title: "Nuzzly Town",
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="zh-CN" className="h-full antialiased" suppressHydrationWarning>
+    <html lang={locale} className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <link rel="preload" as="video" href="/nuzzly-town.mp4" type="video/mp4" />
+      </head>
       <body className="min-h-full flex flex-col">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <NextIntlClientProvider messages={messages}>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </NextIntlClientProvider>
         <Toaster />
       </body>
     </html>

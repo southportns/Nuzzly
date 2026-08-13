@@ -1,28 +1,19 @@
-import { useEffect, useState } from "react"
+"use client"
 
-type Listener = (open: boolean) => void
-const listeners = new Set<Listener>()
-
+/**
+ * 统一登录入口 — 所有调用 openLoginModal() 的地方都会跳转到 /login 页面
+ */
 export function openLoginModal() {
-  for (const l of listeners) l(true)
+  window.location.href = "/login"
 }
 
 export function closeLoginModal() {
-  for (const l of listeners) l(false)
+  // no-op: 不再有弹窗
 }
 
+/**
+ * 兼容旧接口，返回固定值。Header 等组件已不再需要此 hook。
+ */
 export function useLoginModal() {
-  const [open, setOpen] = useState(false)
-  useEffect(() => {
-    const l: Listener = (v) => setOpen(v)
-    listeners.add(l)
-    return () => { listeners.delete(l); }
-  }, [])
-  // also expose local setter so components (like Header) can control the modal
-  const setModalOpen = (v: boolean) => {
-    // update local state and notify other listeners
-    setOpen(v)
-    for (const l of listeners) l(v)
-  }
-  return [open, setModalOpen] as const
+  return [false, (_v: boolean) => {}] as const
 }

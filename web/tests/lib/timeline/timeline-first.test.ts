@@ -186,7 +186,7 @@ describe("Timeline Context Builder", () => {
     })
 
     const result = await buildTimelineContext(
-      "猫咪吃了两周后大便变软，但一个月后适应了，现在很好",
+      "Cat吃了两周后大便变软，但一months后适should了，现在很好",
       "test-product-id",
       "test-pet-id"
     )
@@ -206,7 +206,7 @@ describe("Timeline Context Builder", () => {
     })
 
     const context = await buildTimelineContext(
-      "猫咪吃了两周后大便变软，但一个月后适应了",
+      "Cat吃了两周后大便变软，但一months后适should了",
       "test-product-id"
     )
 

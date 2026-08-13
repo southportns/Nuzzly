@@ -87,7 +87,7 @@ export async function getEventTimeline(petId: string, days: number = 30) {
 
   if (error) throw error
 
-  // 按日期分组
+  // 按Date分组
   const grouped: Record<string, PetEvent[]> = {}
   for (const event of (data as PetEvent[]) || []) {
     const date = event.event_time?.split('T')[0] || 'unknown'

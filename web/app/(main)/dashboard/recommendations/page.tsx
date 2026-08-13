@@ -2,21 +2,26 @@ import { EmojiIcon } from "@/components/ui/emoji-icon"
 import { redirect } from "next/navigation"
 import { getUser } from "@/lib/supabase/query"
 import { createClient } from "@/lib/supabase/server"
+import { getTranslations, getLocale } from "next-intl/server"
 
 export const metadata = {
-  title: "推荐反馈 — Nuzzly毛球镇",
-}
-
-const eventMeta: Record<string, { label: string; iconName: string; color: string }> = {
-  accept: { label: "采纳推荐", iconName: "ThumbsUp", color: "text-[#FF7A59] bg-[#FF7A59]/10" },
-  reject: { label: "拒绝推荐", iconName: "ThumbsDown", color: "text-[#ff3b30] bg-[#ff3b30]/10" },
-  click: { label: "点击查看", iconName: "MousePointerClick", color: "text-[#7BA7BC] bg-[#7BA7BC]/10" },
-  view: { label: "浏览", iconName: "Eye", color: "text-[#6B6B6B] bg-[#6B6B6B]/10" },
+  title: "Recommendation Feedback — Nuzzly Town",
 }
 
 export default async function RecommendationsPage() {
   const { data: { user } } = await getUser()
   if (!user) redirect("/login")
+
+  const t = await getTranslations("Recommendations")
+  const locale = await getLocale()
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-US"
+
+  const eventMeta: Record<string, { label: string; iconName: string; color: string }> = {
+    accept: { label: t("accepted"), iconName: "ThumbsUp", color: "text-[#FF7A59] bg-[#FF7A59]/10" },
+    reject: { label: t("rejected"), iconName: "ThumbsDown", color: "text-[#ff3b30] bg-[#ff3b30]/10" },
+    click: { label: t("clicked"), iconName: "MousePointerClick", color: "text-[#7BA7BC] bg-[#7BA7BC]/10" },
+    view: { label: t("viewed"), iconName: "Eye", color: "text-[#6B6B6B] bg-[#6B6B6B]/10" },
+  }
 
   const supabase = await createClient()
   const { data } = await supabase
@@ -42,24 +47,24 @@ export default async function RecommendationsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-[28px] font-semibold leading-[1.1] tracking-normal text-[#111111]">
-          推荐反馈
+          {t("title")}
         </h1>
         <p className="mt-2 text-[14px] text-[#6B6B6B]">
-          你的反馈帮助我们更精准地推荐适合的产品
+          {t("subtitle")}
         </p>
       </div>
 
       <section className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-5">
-          <p className="text-[12px] text-[#6B6B6B]">已采纳</p>
+          <p className="text-[12px] text-[#6B6B6B]">{t("accepted")}</p>
           <p className="mt-1 text-[28px] font-semibold text-[#FF7A59]">{accept}</p>
         </div>
         <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-5">
-          <p className="text-[12px] text-[#6B6B6B]">已拒绝</p>
+          <p className="text-[12px] text-[#6B6B6B]">{t("rejected")}</p>
           <p className="mt-1 text-[28px] font-semibold text-[#ff3b30]">{reject}</p>
         </div>
         <div className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-5">
-          <p className="text-[12px] text-[#6B6B6B]">点击查看</p>
+          <p className="text-[12px] text-[#6B6B6B]">{t("clicked")}</p>
           <p className="mt-1 text-[28px] font-semibold text-[#7BA7BC]">{click}</p>
         </div>
       </section>
@@ -78,12 +83,12 @@ export default async function RecommendationsPage() {
                     <span className="flex flex-col">
                       <span className="text-[14px] font-medium text-[#111111]">{meta.label}</span>
                       {e.product_id ? (
-                        <span className="text-[11.5px] text-[#6B6B6B]">产品 #{e.product_id.slice(0, 8)}</span>
+                        <span className="text-[11.5px] text-[#6B6B6B]">{t("product")} #{e.product_id.slice(0, 8)}</span>
                       ) : null}
                     </span>
                   </span>
                   <span className="text-[12px] text-[#6B6B6B]">
-                    {new Date(e.created_at).toLocaleString("zh-CN", { hour12: false })}
+                    {new Date(e.created_at).toLocaleString(dateLocale, { hour12: false })}
                   </span>
                 </li>
               )
@@ -92,8 +97,8 @@ export default async function RecommendationsPage() {
         ) : (
           <div className="py-12 text-center">
             <EmojiIcon name="MessageSquare" className="mx-auto size-10 text-[#D2D1CF]" />
-            <p className="mt-3 text-[14px] text-[#6B6B6B]">暂无推荐反馈记录</p>
-            <p className="mt-1 text-[12px] text-[#D2D1CF]">与推荐卡片互动后会自动记录</p>
+            <p className="mt-3 text-[14px] text-[#6B6B6B]">{t("noRecords")}</p>
+            <p className="mt-1 text-[12px] text-[#D2D1CF]">{t("interactHint")}</p>
           </div>
         )}
       </section>

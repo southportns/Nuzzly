@@ -39,41 +39,41 @@ export type NLPExtraction = Tables<"nlp_extractions">
 
 // ===== RWD Enum Types =====
 export type PetEventType =
-  | 'food_start'
-  | 'food_stop'
-  | 'food_switch'
-  | 'food_amount_change'
-  | 'symptom_observed'
-  | 'symptom_resolved'
-  | 'weight_change'
-  | 'energy_change'
-  | 'appetite_change'
-  | 'vet_visit'
-  | 'diagnosis'
-  | 'medication_start'
-  | 'medication_stop'
-  | 'vaccination'
-  | 'behavior_change'
-  | 'environment_change'
-  | 'review_posted'
-  | 'followup_completed'
-  | 'photo_uploaded'
+|'food_start'
+|'food_stop'
+|'food_switch'
+|'food_amount_change'
+|'symptom_observed'
+|'symptom_resolved'
+|'weight_change'
+|'energy_change'
+|'appetite_change'
+|'vet_visit'
+|'diagnosis'
+|'medication_start'
+|'medication_stop'
+|'vaccination'
+|'behavior_change'
+|'environment_change'
+|'review_posted'
+|'followup_completed'
+|'photo_uploaded'
 
-export type EventSource = 'user_input' | 'ai_extraction' | 'system_generated' | 'imported'
+export type EventSource ='user_input' |'ai_extraction' |'system_generated' |'imported'
 
-export type LifeStage = 'kitten' | 'young_adult' | 'adult' | 'senior'
+export type LifeStage ='kitten' |'young_adult' |'adult' |'senior'
 
-export type ActivityLevel = 'very_low' | 'low' | 'medium' | 'high' | 'very_high'
+export type ActivityLevel ='very_low' |'low' |'medium' |'high' |'very_high'
 
-export type ClimateType = 'tropical' | 'subtropical' | 'temperate' | 'continental' | 'arid' | 'cold'
+export type ClimateType ='tropical' |'subtropical' |'temperate' |'continental' |'arid' |'cold'
 
-export type HealthRecordType = 'weight' | 'symptom' | 'diagnosis' | 'medication' | 'vaccination' | 'checkup'
+export type HealthRecordType ='weight' |'symptom' |'diagnosis' |'medication' |'vaccination' |'checkup'
 
-export type CausalChainType = 'food_reaction' | 'health_progression' | 'treatment_outcome' | 'custom'
+export type CausalChainType ='food_reaction' |'health_progression' |'treatment_outcome' |'custom'
 
-export type SampleQuality = 'excellent' | 'good' | 'fair' | 'poor'
+export type SampleQuality ='excellent' |'good' |'fair' |'poor'
 
 // ===== Health Reminders =====
 export type HealthReminder = Tables<"health_reminders">
-export type HealthReminderType = 'vaccination' | 'medication' | 'checkup' | 'custom'
-export type RepeatInterval = 'none' | 'monthly' | 'quarterly' | 'yearly'
+export type HealthReminderType ='vaccination' |'medication' |'checkup' |'custom'
+export type RepeatInterval ='none' |'monthly' |'quarterly' |'yearly'

@@ -1,122 +1,123 @@
+"use client"
+
 import { EmojiIcon } from "@/components/ui/emoji-icon"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 import { formatPetAge } from "@/lib/utils"
+import { useTranslations, useLocale } from "next-intl"
 
 interface HealthOverviewProps {
-  pets: Array<{
-    id: string
-    name: string
-    species: string
-    breed: string | null
-    age_years: number
-    age_months: number
-    weight_kg: number | null
-    stomach_health: string | null
-    disease_history: string | null
-    neutered: boolean | null
-    photo_url?: string | null
-  }>
+pets: Array<{
+id: string
+name: string
+species: string
+breed: string | null
+age_years: number
+age_months: number
+weight_kg: number | null
+stomach_health: string | null
+disease_history: string | null
+neutered: boolean | null
+photo_url?: string | null
+}>
 }
 
-const stomachLabels: Record<string, { label: string; color: string }> = {
-  normal: { label: "肠胃正常", color: "#34C759" },
-  sensitive: { label: "肠胃敏感", color: "#FF9500" },
-  very_sensitive: { label: "极易敏感", color: "#FF3B30" },
+const stomachColors: Record<string, string> = {
+normal: "#34C759",
+sensitive: "#FF9500",
+very_sensitive: "#FF3B30",
+}
+
+const stomachLabelKeys: Record<string, string> = {
+normal: "stomachNormal",
+sensitive: "stomachSensitive",
+very_sensitive: "stomachVerySensitive",
 }
 
 export function HealthOverview({ pets }: HealthOverviewProps) {
-  return (
-    <section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <EmojiIcon name="Heart" className="size-5 text-[#FF7A59]" />
-          <span className="text-[15px] font-semibold text-[#111111]">宠物健康概览</span>
-        </div>
-        <Link href="/dashboard/pets" className="text-[12.5px] text-[#FF7A59] hover:underline">
-          详情
-        </Link>
-      </div>
+const t = useTranslations("Health")
+const locale = useLocale() as string
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {pets.map((pet) => {
-          const stomachInfo = stomachLabels[pet.stomach_health ?? "normal"] ?? stomachLabels.normal
-          const hasDisease = !!pet.disease_history
+return (<section className="rounded-[20px] border border-[rgba(0,0,0,0.05)] bg-white p-6">
+<div className="mb-4 flex items-center justify-between">
+<div className="flex items-center gap-2">
+<EmojiIcon name="Heart" className="size-5 text-[#FF7A59]" />
+<span className="text-[15px] font-semibold text-[#111111]">{t("petHealthOverview")}</span>
+</div>
+<Link href="/dashboard/pets" className="text-[12.5px] text-[#FF7A59] hover:underline">
+{t("details")}
+</Link>
+</div>
 
-          return (
-            <Link
-              key={pet.id}
-              href={`/dashboard/pets/${pet.id}`}
-              className="group rounded-[16px] border border-[rgba(0,0,0,0.05)] bg-[#F7F6F3] p-4 transition-all hover:bg-white hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)]"
-            >
-              {/* Pet Header */}
-              <div className="mb-3 flex items-center gap-3">
-                <div className="relative flex size-10 shrink-0 overflow-hidden rounded-xl bg-[#FF7A59]/10">
-                  {pet.photo_url ? (
-                    <Image src={pet.photo_url} alt={pet.name} fill className="object-cover" sizes="40px" />
-                  ) : (
-                    <div className="flex size-full items-center justify-center text-lg">
-                      {pet.species === "cat" ? "🐱" : pet.species === "dog" ? "🐶" : "🐾"}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-[14px] font-semibold text-[#111111]">{pet.name}</h3>
-                  <p className="text-[12px] text-[#6B6B6B]">
-                    {pet.breed ?? "未知"} · {formatPetAge(pet)}
-                  </p>
-                </div>
-              </div>
+<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+{pets.map((pet) => {
+const stomachKey = pet.stomach_health ?? "normal"
+const stomachColor = stomachColors[stomachKey] ?? stomachColors.normal
+const stomachLabel = t(stomachLabelKeys[stomachKey] ?? "stomachNormal")
+const hasDisease = !!pet.disease_history
 
-              {/* Health Stats */}
-              <div className="space-y-2">
-                {/* Stomach Health */}
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
-                    <EmojiIcon name="Utensils" className="size-3.5" />
-                    肠胃状况
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className="rounded-full text-[11px]"
-                    style={{ borderColor: stomachInfo.color, color: stomachInfo.color }}
-                  >
-                    {stomachInfo.label}
-                  </Badge>
-                </div>
+return (<Link
+key={pet.id}
+href={`/dashboard/pets/${pet.id}`}
+className="group rounded-[16px] border border-[rgba(0,0,0,0.05)] bg-[#F7F6F3] p-4 transition-all hover:bg-white hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)]"
+>
+{/* Pet Header */}
+<div className="mb-3 flex items-center gap-3">
+<div className="relative flex size-10 shrink-0 overflow-hidden rounded-xl bg-[#FF7A59]/10">
+{pet.photo_url ? (<Image src={pet.photo_url} alt={pet.name} fill className="object-cover" sizes="40px" />) : (<div className="flex size-full items-center justify-center text-lg">
+{pet.species === "cat" ? "🐱" : pet.species === "dog" ? "🐶" : "🐾"}
+</div>)}
+</div>
+<div>
+<h3 className="text-[14px] font-semibold text-[#111111]">{pet.name}</h3>
+<p className="text-[12px] text-[#6B6B6B]">
+{pet.breed ?? t("unknownBreed")} · {formatPetAge(pet, locale)}
+</p>
+</div>
+</div>
 
-                {/* Weight */}
-                {pet.weight_kg && (
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
-                      <EmojiIcon name="Activity" className="size-3.5" />
-                      体重
-                    </span>
-                    <span className="text-[12px] font-medium text-[#111111]">{Number(pet.weight_kg).toFixed(2)} kg</span>
-                  </div>
-                )}
+{/* Health Stats */}
+<div className="space-y-2">
+{/* Stomach Health */}
+<div className="flex items-center justify-between">
+<span className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
+<EmojiIcon name="Utensils" className="size-3.5" />
+{t("stomachCondition")}
+</span>
+<Badge
+variant="outline"
+className="rounded-full text-[11px]"
+style={{ borderColor: stomachColor, color: stomachColor }}
+>
+{stomachLabel}
+</Badge>
+</div>
 
-                {/* Disease Alert */}
-                {hasDisease && (
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
-                      <EmojiIcon name="Stethoscope" className="size-3.5" />
-                      疾病史
-                    </span>
-                    <Badge variant="destructive" className="rounded-full text-[11px]">
-                      <EmojiIcon name="AlertTriangle" className="mr-1 size-3" />
-                      有记录
-                    </Badge>
-                  </div>
-                )}
-              </div>
-            </Link>
-          )
-        })}
-      </div>
-    </section>
-  )
+{/* Weight */}
+{pet.weight_kg && (<div className="flex items-center justify-between">
+<span className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
+<EmojiIcon name="Activity" className="size-3.5" />
+{t("weightLabel")}
+</span>
+<span className="text-[12px] font-medium text-[#111111]">{Number(pet.weight_kg).toFixed(2)} kg</span>
+</div>)}
+
+{/* Disease Alert */}
+{hasDisease && (<div className="flex items-center justify-between">
+<span className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
+<EmojiIcon name="Stethoscope" className="size-3.5" />
+{t("diseaseAlert")}
+</span>
+<Badge variant="destructive" className="rounded-full text-[11px]">
+<EmojiIcon name="AlertTriangle" className="mr-1 size-3" />
+{t("hasRecord")}
+</Badge>
+</div>)}
+</div>
+</Link>)
+})}
+</div>
+</section>)
 }
-

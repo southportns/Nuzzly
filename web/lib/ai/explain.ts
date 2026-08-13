@@ -1,8 +1,8 @@
 // =============================================
-// P0 修复 — AI 风险情报模块桩
-// 原实现位于本文件,2026-06-10 前因仓库迁移被删除。
-// 当前为最小占位实现,直接返回 null。
-// 待 P1 / P2 阶段重新接入数据源后替换。
+// P0 Fix — AI Risk Intelligence Module Stub
+// Original implementation was in this file, deleted during repo migration before 2026-06-10.
+// Current is a minimal placeholder that returns null.
+// To be replaced when P1/P2 phase re-integrates data sources.
 // =============================================
 
 export interface RiskData {
@@ -40,11 +40,11 @@ export interface RiskData {
 }
 
 export async function getRiskIntelligence(_productId: string): Promise<RiskData | null> {
-  // P0 stub: 返回 null,RiskIntelPanel 内部已处理 null 情况(不渲染该卡片)
+  // P0 stub: returns null; RiskIntelPanel internally handles null (does not render the card)
   return null
 }
 
 export async function getVersionImpact(_productId: string): Promise<null> {
-  // P0 stub: 版本影响分析功能暂未实现
+  // P0 stub: Version Impact Analysis feature not yet implemented
   return null
 }

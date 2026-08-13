@@ -1,27 +1,27 @@
 // =============================================
 // Flywheel 端到端测试
-// 验证从数据采集到推荐加权的完整链路
+// 验证从Data采集到Recommended加权的完整链路
 // =============================================
 // 覆盖：
-//   - feature_snapshot 字段完整性 (extractNumber 读取飞轮 ETL 必需字段)
-//   - ETL 默认值降级 (DEFAULT_CONFIDENCE = 0.5)
-//   - 飞轮加权融合公式 (originalScore * 0.7 + effectiveness_score * 0.3)
-//   - 飞轮迭代统计 (evidence_quality_score)
+//   - feature_snapshot 字段完整性 (extractNumber 读取飞轮 ETL 必need to字段)
+//   - ETL Default值Downgrade (DEFAULT_CONFIDENCE = 0.5)
+//   - 飞轮加权融合Male式 (originalScore * 0.7 + effectiveness_score * 0.3)
+//   - 飞轮迭代Statistics (evidence_quality_score)
 //   - FlywheelInput.outcomes 17 个字段完整性
 //   - banditConfidence / rollbackRate / adverseEventRate 计算
-//   - outcomeStability / horizonAgreement 一致性指标
+//   - outcomeStability / horizonAgreement 一致性Metric
 //   - extractNumber helper 边界条件
 //   - gateway write idempotency (SHA-256)
 
 import { describe, it, expect } from 'vitest'
 import { createHash } from 'crypto'
 
-// ─── Inline helpers (匹配 flywheel-input-builder.ts 的实际实现) ──────────────
+// ─── Inline helpers (匹配 flywheel-input-builder.ts 的Actual实现) ──────────────
 
 /**
  * 从 JSONB 对象中提取数字字段。
  * 匹配 web/lib/timeline/flywheel-input-builder.ts 中 extractNumber 的实现：
- *   - 必须是 number 类型
+ *   - MustYes number Type
  *   - 排除 NaN
  *   - 排除 Infinity
  *   - 支持多 key fallback
@@ -48,7 +48,7 @@ function generateIdempotencyKey(type: string, payload: any): string {
 // ─── 测试用例 ────────────────────────────────────────────────────────────────
 
 describe('Flywheel feature_snapshot 完整性', () => {
-  it('recommendation_trace_log 的 feature_snapshot 应包含飞轮 ETL 必需字段', () => {
+  it('recommendation_trace_log 的 feature_snapshot should包含飞轮 ETL 必need to字段', () => {
     // mock recommendation_trace_log 行
     const mockRow = {
       id: 'rec-001',
@@ -69,7 +69,7 @@ describe('Flywheel feature_snapshot 完整性', () => {
     expect(extracted).toBe(0.7)
   })
 
-  it('feature_snapshot 缺失飞轮字段时，ETL 应使用默认值降级', () => {
+  it('feature_snapshot 缺失飞轮字段时，ETL should使用Default值Downgrade', () => {
     // mock recommendation_trace_log 不含 banditConfidence
     const mockRow = {
       id: 'rec-002',
@@ -78,28 +78,28 @@ describe('Flywheel feature_snapshot 完整性', () => {
         product_id: 'prod-002',
         strategy_id: 'default',
         segment_key: 'default',
-        // 没有 banditConfidence
+        // 没has banditConfidence
       },
     }
 
     const extracted = extractNumber(mockRow.feature_snapshot, ['banditConfidence'])
     expect(extracted).toBeNull()
 
-    // ETL 应使用默认值 0.5 (DEFAULT_CONFIDENCE)
+    // ETL should使用Default值 0.5 (DEFAULT_CONFIDENCE)
     const fallback = extracted ?? 0.5
     expect(fallback).toBe(0.5)
   })
 })
 
 describe('飞轮加权融合', () => {
-  it('originalScore * 0.7 + effectiveness_score * 0.3 应正确计算', () => {
+  it('originalScore * 0.7 + effectiveness_score * 0.3 should正确计算', () => {
     const originalScore = 80
     const effectivenessScore = 60
     const finalScore = originalScore * 0.7 + effectivenessScore * 0.3
     expect(finalScore).toBe(74)
   })
 
-  it('无 effectiveness_scores 时，finalScore = originalScore', () => {
+  it('No effectiveness_scores 时，finalScore = originalScore', () => {
     const originalScore = 80
     const effectivenessScore: number | null = null
     const finalScore =
@@ -110,14 +110,14 @@ describe('飞轮加权融合', () => {
   })
 })
 
-describe('Flywheel 迭代统计', () => {
-  it('evidence_quality_score 计算公式正确', () => {
+describe('Flywheel 迭代Statistics', () => {
+  it('evidence_quality_score 计算Male式正确', () => {
     // 见 data-flywheel.ts 的 computeEvidenceQualityScore 函数
     // 简化测试：覆盖率 + 证据数量 + 一致性
     const coverage = 0.8
     const evidenceCount = 10
     const consistency = 0.9
-    // 公式见 data-flywheel.ts:computeEvidenceQualityScore
+    // Male式见 data-flywheel.ts:computeEvidenceQualityScore
     const expected = Math.min(
       1,
       coverage * 0.4 + Math.min(1, evidenceCount / 10) * 0.3 + consistency * 0.3,
@@ -127,8 +127,8 @@ describe('Flywheel 迭代统计', () => {
   })
 })
 
-it('FlywheelInput.outcomes 每个 outcome 对象应包含 17 个字段', () => {
-  // 见 data-flywheel.ts 的 FlywheelInput 类型定义
+it('FlywheelInput.outcomes 每个 outcome 对象should包含 17 个字段', () => {
+  // 见 data-flywheel.ts 的 FlywheelInput Type定义
   const expectedFields = [
     'healthScoreDelta',
     'symptomImprovement',
@@ -242,7 +242,7 @@ it('horizonAgreement = max(0, min(1, 1 - stddev / maxAbs))', () => {
   const deltas = [10, 12, 8]
   const maxAbs = Math.max(...deltas.map(Math.abs))
   const mean = deltas.reduce((a, b) => a + b, 0) / deltas.length
-  // 使用样本方差 (n-1)，匹配实际飞轮多 horizon 一致性计算
+  // 使用样本方差 (n-1)，匹配Actual飞轮多 horizon 一致性计算
   const variance =
     deltas.reduce((acc, d) => acc + Math.pow(d - mean, 2), 0) / (deltas.length - 1)
   const stddev = Math.sqrt(variance)
@@ -253,19 +253,19 @@ it('horizonAgreement = max(0, min(1, 1 - stddev / maxAbs))', () => {
   expect(horizonAgreement).toBeCloseTo(0.833, 2)
 })
 
-it('extractNumber 应正确提取数字字段', () => {
+it('extractNumber should正确提取数字字段', () => {
   const obj = { a: 1, b: 2.5, c: '3', d: null, e: NaN, f: Infinity }
 
   expect(extractNumber(obj, ['a'])).toBe(1)
   expect(extractNumber(obj, ['b'])).toBe(2.5)
-  expect(extractNumber(obj, ['c'])).toBeNull() // string 不是 number
+  expect(extractNumber(obj, ['c'])).toBeNull() // string 不Yes number
   expect(extractNumber(obj, ['d'])).toBeNull() // null
   expect(extractNumber(obj, ['e'])).toBeNull() // NaN
   expect(extractNumber(obj, ['f'])).toBeNull() // Infinity
   expect(extractNumber(obj, ['x', 'y', 'a'])).toBe(1) // 多 key fallback
 })
 
-it('相同 type+payload 的 idempotency_key 应相同（SHA-256）', () => {
+it('相同 type+payload 的 idempotency_key should相同（SHA-256）', () => {
   const type = 'CREATE_PET'
   const payload = { name: 'Tom', species: 'cat' }
 

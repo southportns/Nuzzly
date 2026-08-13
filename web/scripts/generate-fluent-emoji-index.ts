@@ -53,7 +53,7 @@ function find3dFile(emojiDir: string, baseName: string): string | null {
     if (fs.existsSync(fullPath)) return candidate
   }
 
-  // 如果还是找不到，列出 3D 目录里的第一个 png
+  // 如果还Yes找不到，列出 3D 目录里的第一个 png
   const files = fs.readdirSync(dir3d).filter((f) => f.endsWith(".png"))
   return files.length > 0 ? files[0] : null
 }

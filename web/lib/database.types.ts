@@ -276,24 +276,27 @@ export type Database = {
           },
         ]
       }
-      breed_aliases: {
-        Row: {
-          alias: string
-          canonical: string
-          species: string
+        breed_aliases: {
+          Row: {
+            alias: string
+            canonical: string
+            canonical_en: string | null
+            species: string
+          }
+          Insert: {
+            alias: string
+            canonical: string
+            canonical_en?: string | null
+            species?: string
+          }
+          Update: {
+            alias?: string
+            canonical?: string
+            canonical_en?: string | null
+            species?: string
+          }
+          Relationships: []
         }
-        Insert: {
-          alias: string
-          canonical: string
-          species?: string
-        }
-        Update: {
-          alias?: string
-          canonical?: string
-          species?: string
-        }
-        Relationships: []
-      }
       causal_event_chains: {
         Row: {
           causal_strength: number | null
@@ -790,6 +793,7 @@ export type Database = {
           reminder_time: string | null
           sort_order: number
           title: string
+          title_en: string | null
           updated_at: string
           weight: number
         }
@@ -808,6 +812,7 @@ export type Database = {
           reminder_time?: string | null
           sort_order?: number
           title: string
+          title_en?: string | null
           updated_at?: string
           weight?: number
         }
@@ -826,6 +831,7 @@ export type Database = {
           reminder_time?: string | null
           sort_order?: number
           title?: string
+          title_en?: string | null
           updated_at?: string
           weight?: number
         }
@@ -2147,8 +2153,10 @@ export type Database = {
           name: string
           notes: string | null
           pet_id: string
+          recovered_on: string | null
           severity: string
           status: string
+          symptoms: string | null
           updated_at: string
         }
         Insert: {
@@ -2158,8 +2166,10 @@ export type Database = {
           name: string
           notes?: string | null
           pet_id: string
+          recovered_on?: string | null
           severity?: string
           status?: string
+          symptoms?: string | null
           updated_at?: string
         }
         Update: {
@@ -2169,8 +2179,10 @@ export type Database = {
           name?: string
           notes?: string | null
           pet_id?: string
+          recovered_on?: string | null
           severity?: string
           status?: string
+          symptoms?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2522,6 +2534,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          name_en: string | null
           slug: string
         }
         Insert: {
@@ -2530,6 +2543,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          name_en?: string | null
           slug: string
         }
         Update: {
@@ -2538,6 +2552,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          name_en?: string | null
           slug?: string
         }
         Relationships: []

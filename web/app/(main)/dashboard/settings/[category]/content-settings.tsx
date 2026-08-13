@@ -7,9 +7,9 @@ export default function ContentSettings() {
     <div className="space-y-6">
       <div>
         <h1 className="text-[28px] font-semibold leading-[1.1] tracking-normal text-[#111111]">
-          我的内容
+          My Content
         </h1>
-        <p className="mt-2 text-[14px] text-[#6B6B6B]">管理你发布和收藏的内容</p>
+        <p className="mt-2 text-[14px] text-[#6B6B6B]">Manage your posts and bookmarks</p>
       </div>
 
       <SettingsCard>
@@ -18,19 +18,19 @@ export default function ContentSettings() {
             href="/dashboard/followups"
             className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-[#F7F6F3]"
           >
-            <span className="text-[15px] text-[#111111]">我的评价</span>
+            <span className="text-[15px] text-[#111111]">My Reviews</span>
           </Link>
           <Link
             href="/dashboard/followups"
             className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-[#F7F6F3]"
           >
-            <span className="text-[15px] text-[#111111]">长期追踪</span>
+            <span className="text-[15px] text-[#111111]">Long-term Tracking</span>
           </Link>
           <Link
             href="/dashboard/bookmarks"
             className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-[#F7F6F3]"
           >
-            <span className="text-[15px] text-[#111111]">收藏的产品</span>
+            <span className="text-[15px] text-[#111111]">Bookmarked Products</span>
           </Link>
         </div>
       </SettingsCard>

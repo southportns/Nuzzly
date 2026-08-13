@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { SettingsCard } from "@/components/settings/settings-card"
+import { useState } from "react"
 
 export default function FontSizeSettings() {
   const [fontSize, setFontSize] = useState(14)
@@ -10,16 +10,16 @@ export default function FontSizeSettings() {
     <div className="space-y-6">
       <div>
         <h1 className="text-[28px] font-semibold leading-[1.1] tracking-normal text-[#111111]">
-          文字大小
+          Font Size
         </h1>
-        <p className="mt-2 text-[14px] text-[#6B6B6B]">调整界面文字显示大小</p>
+        <p className="mt-2 text-[14px] text-[#6B6B6B]">Adjust the display font size</p>
       </div>
 
       <SettingsCard className="p-6 text-center">
         <p style={{ fontSize: `${fontSize}px` }} className="text-[#111111]">
-          这是预览文字效果
+          This is a preview of the font size
         </p>
-        <p className="mt-2 text-[12px] text-[#6B6B6B]">较小的辅助文字</p>
+        <p className="mt-2 text-[12px] text-[#6B6B6B]">Smaller helper text</p>
       </SettingsCard>
 
       <SettingsCard className="p-6">
@@ -42,7 +42,7 @@ export default function FontSizeSettings() {
       </SettingsCard>
 
       <button className="w-full rounded-full bg-[#FF7A59] py-3 text-[15px] font-semibold text-white transition-colors hover:bg-[#E86A4A]">
-        保存
+        Save
       </button>
     </div>
   )
