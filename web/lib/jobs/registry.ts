@@ -16,8 +16,15 @@ computeDelayedRewardProxyJob,
 
 const jobRuntime = new JobRuntime()
 
-// ── Helper: get admin client ──
-const admin = createAdminClient()
+// ── Helper: get admin client (lazy init to avoid build-time env var errors) ──
+let admin: ReturnType<typeof createAdminClient> | null = null
+
+function getAdminClient() {
+  if (!admin) {
+    admin = createAdminClient()
+  }
+  return admin
+}
 
 // ── Handler 1: create_pet_event_from_review ──
 // Replaces: after_review_create_event trigger
@@ -28,18 +35,18 @@ handler: async (job: JobRecord) => {
 const { productId, authorId, reviewText, usageDuration, overallRating, stoolRating, wouldRepurchase } = job.payload as Record<string, string | number | boolean>
 
 // Get pet info from review author
-const { data: profile } = await admin.from("profiles").select("id").eq("id", authorId as string).single()
+const { data: profile } = await getAdminClient().from("profiles").select("id").eq("id", authorId as string).single()
 
 if (!profile) return
 
 // Get pet associated with this profile
-const { data: pet } = await admin.from("pets").select("id").eq("profile_id", profile.id).limit(1).single()
+const { data: pet } = await getAdminClient().from("pets").select("id").eq("profile_id", profile.id).limit(1).single()
 
 if (!pet) return
 
 // Create pet event
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const { error } = await admin.from("pet_events").insert({
+const { error } = await getAdminClient().from("pet_events").insert({
 pet_id: pet.id,
 profile_id: profile.id,
 event_type: "review_submitted" as any,
@@ -82,7 +89,7 @@ scheduled_date: new Date(now.getTime() + day * 24 * 60 * 60 * 1000).toISOString(
 }))
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const { error } = await admin.from("review_followup_schedules").insert(schedules as any)
+const { error } = await getAdminClient().from("review_followup_schedules").insert(schedules as any)
 
 if (error) {
 console.error("[create_followup_schedules] failed to insert schedules:", error.message)
@@ -102,7 +109,7 @@ handler: async (job: JobRecord) => {
 const { authorId } = job.payload as Record<string, string>
 
 // Enqueue a nested job for reputation computation
-await admin.rpc("job_enqueue", {
+await getAdminClient().rpc("job_enqueue", {
 p_job_type: "recompute_reputation",
 p_target_profile_id: authorId,
 p_priority: 3,
@@ -123,16 +130,16 @@ handler: async (job: JobRecord) => {
 const { scheduleId } = job.payload as Record<string, string>
 
 // Get product_id from the schedule
-const { data: schedule } = await admin.from("review_followup_schedules").select("review_id").eq("id", scheduleId).single()
+const { data: schedule } = await getAdminClient().from("review_followup_schedules").select("review_id").eq("id", scheduleId).single()
 
 if (!schedule) return
 
-const { data: review } = await admin.from("product_reviews").select("product_id").eq("id", schedule.review_id).single()
+const { data: review } = await getAdminClient().from("product_reviews").select("product_id").eq("id", schedule.review_id).single()
 
 if (!review) return
 
 // Enqueue metrics refresh job
-await admin.rpc("job_enqueue", {
+await getAdminClient().rpc("job_enqueue", {
 p_job_type: "refresh_product_metrics",
 p_target_id: review.product_id,
 p_priority: 3,
@@ -154,7 +161,7 @@ const { timelineGroupId } = job.payload as Record<string, string>
 
 // Call the existing trust recalculation function
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-await (admin.rpc as any)("pflid.recalc_timeline_group_trust", {
+await (getAdminClient().rpc as any)("pflid.recalc_timeline_group_trust", {
 p_timeline_group_id: timelineGroupId,
 })
 },
@@ -173,7 +180,7 @@ const { productId } = job.payload as Record<string, string>
 
 // Call the existing metrics generation function
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-await (admin.rpc as any)("pflid.generate_timeline_metrics", {
+await (getAdminClient().rpc as any)("pflid.generate_timeline_metrics", {
 p_product_id: productId,
 p_date: new Date().toISOString().split("T")[0],
 })
@@ -193,7 +200,7 @@ const { productId } = job.payload as Record<string, string>
 
 // Call the existing score comparison function
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-await (admin.rpc as any)("pflid.trigger_score_comparison", {
+await (getAdminClient().rpc as any)("pflid.trigger_score_comparison", {
 p_product_id: productId,
 })
 },
@@ -209,7 +216,7 @@ jobType: "recompute_reputation",
 handler: async (job: JobRecord) => {
 const { targetProfileId } = job.payload as Record<string, string>
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-await (admin.rpc as any)("pflid.recompute_reputation", {
+await (getAdminClient().rpc as any)("pflid.recompute_reputation", {
 p_profile_id: targetProfileId,
 })
 },
@@ -222,7 +229,7 @@ jobRuntime.register({
 jobType: "refresh_product_metrics",
 handler: async (job: JobRecord) => {
 const { targetId } = job.payload
-await admin.rpc("refresh_product_metrics", {
+await getAdminClient().rpc("refresh_product_metrics", {
 target_date: new Date().toISOString().split("T")[0],
 })
 },
@@ -236,7 +243,7 @@ jobType: "recalc_timeline_trust",
 handler: async (job: JobRecord) => {
 const { targetId } = job.payload as Record<string, string>
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-await (admin.rpc as any)("pflid.recalc_timeline_group_trust", {
+await (getAdminClient().rpc as any)("pflid.recalc_timeline_group_trust", {
 p_timeline_group_id: targetId,
 })
 },
@@ -388,3 +395,4 @@ timeoutMs: 60_000,
 })
 
 export { jobRuntime }
+

@@ -55,9 +55,16 @@ errors: string[]
 // ─── Job Runtime ────────────────────────────────────────────────────────────
 
 export class JobRuntime {
-private registry: Map<string, JobDefinition> = new Map()
-private running = false
-private admin = createAdminClient()
+  private registry: Map<string, JobDefinition> = new Map()
+  private running = false
+  private adminInstance: ReturnType<typeof createAdminClient> | null = null
+
+  private get admin() {
+    if (!this.adminInstance) {
+      this.adminInstance = createAdminClient()
+    }
+    return this.adminInstance
+  }
 
 register(def: JobDefinition): void {
 this.registry.set(def.jobType, def)
